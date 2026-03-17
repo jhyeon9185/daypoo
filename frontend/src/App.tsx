@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { SplashPage } from './pages/SplashPage';
 import { MainPage } from './pages/MainPage';
+import { MapPage } from './pages/MapPage';
 
 function LoginPage() {
   return (
@@ -12,11 +13,12 @@ function LoginPage() {
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/poop-map">
       <Routes>
         <Route path="/" element={<SplashPage />} />
         <Route path="/main" element={<MainPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/map" element={<MapPage />} />
       </Routes>
     </BrowserRouter>
   );
