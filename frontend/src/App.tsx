@@ -12,7 +12,7 @@ function LoginPage() {
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/poop-map">
       <Routes>
         <Route path="/" element={<SplashPage />} />
         <Route path="/main" element={<MainPage />} />
