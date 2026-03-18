@@ -7,11 +7,18 @@ import { AnimatedUnderlink } from './AnimatedUnderlink';
 // 실제 프로젝트에서는 AuthContext 등으로 교체하세요
 const MOCK_IS_LOGGED_IN = false;
 
-export function Navbar() {
+export function Navbar({ openAuth }: { openAuth: (mode: 'login' | 'signup') => void }) {
   const { scrollY } = useScroll();
   const scale = useTransform(scrollY, [0, 100], [1, 0.97]);
   const [hasNotif] = useState(true); // 알림 뱃지 (실제론 API 연동)
   const [isLoggedIn] = useState(MOCK_IS_LOGGED_IN);
+
+  const handleLogoClick = (e: React.MouseEvent) => {
+    // 메인 페이지이거나 홈 경로일 때만 스무스 스크롤
+    if (window.location.pathname.endsWith('/main') || window.location.pathname.endsWith('/')) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   return (
     <div
@@ -47,6 +54,7 @@ export function Navbar() {
         {/* 로고 */}
         <Link
           to="/main"
+          onClick={handleLogoClick}
           style={{
             fontFamily: 'SchoolSafetyNotification, sans-serif',
             fontSize: '22px',
@@ -107,23 +115,20 @@ export function Navbar() {
           ) : (
             /* 비로그인 상태 */
             <>
-              <AnimatedUnderlink
-                to="/login"
-                text="로그인"
-                style={{ fontSize: '14px' }}
-                textColor="rgba(255,255,255,0.6)"
-                variant={2}
-              />
-              <Link
-                to="/signup"
-                className="px-4 py-2 rounded-full text-sm font-bold transition-all hover:scale-105 active:scale-95"
-                style={{
-                  backgroundColor: 'var(--amber)',
-                  color: '#1B4332',
-                }}
+              <button
+                onClick={() => openAuth('login')}
+                className="text-sm font-bold transition-all hover:text-white cursor-pointer"
+                style={{ color: 'rgba(255,255,255,0.6)', background: 'none', border: 'none' }}
+              >
+                로그인
+              </button>
+              <button
+                onClick={() => openAuth('signup')}
+                className="text-sm font-bold transition-all hover:text-white cursor-pointer"
+                style={{ color: 'rgba(255,255,255,0.6)', background: 'none', border: 'none' }}
               >
                 회원가입
-              </Link>
+              </button>
             </>
           )}
 

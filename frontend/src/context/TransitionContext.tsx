@@ -1,0 +1,54 @@
+import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { PaintCurtain } from '../components/PaintCurtain';
+
+type Phase = 'down' | 'up' | 'idle';
+
+interface TransitionContextType {
+  transitionTo: (path: string) => void;
+  phase: Phase;
+}
+
+const TransitionContext = createContext<TransitionContextType | undefined>(undefined);
+
+export function TransitionProvider({ children }: { children: ReactNode }) {
+  const navigate = useNavigate();
+  const [visible, setVisible] = useState(false);
+  const [phase, setPhase]     = useState<Phase>('idle');
+  const [targetPath, setTargetPath] = useState('');
+
+  const transitionTo = useCallback((path: string) => {
+    setTargetPath(path);
+    setVisible(true);
+    setPhase('down'); // 커튼 내려오기 시작
+  }, []);
+
+  const handleDownComplete = useCallback(() => {
+    navigate(targetPath);         // 페이지 이동
+    setPhase('up');               // 커튼 걷히기 시작
+  }, [navigate, targetPath]);
+
+  const handleUpComplete = useCallback(() => {
+    setPhase('idle');
+    setVisible(false);
+  }, []);
+
+  return (
+    <TransitionContext.Provider value={{ transitionTo, phase }}>
+      <PaintCurtain
+        isVisible={visible}
+        phase={phase}
+        onComplete={phase === 'down' ? handleDownComplete : handleUpComplete}
+      />
+      {children}
+    </TransitionContext.Provider>
+  );
+}
+
+export const useTransitionContext = () => {
+  const context = useContext(TransitionContext);
+  if (!context) {
+    throw new Error('useTransitionContext must be used within a TransitionProvider');
+  }
+  return context;
+};

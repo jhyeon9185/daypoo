@@ -14,7 +14,7 @@ export function EmergencyButton({ onClick }: EmergencyButtonProps) {
       animate={{ y: [0, -10, 0] }}
       transition={{
         duration: 2.2,
-        repeat: 999999, // Infinity 대신 큰 숫자 사용
+        repeat: Infinity,
         ease: 'easeInOut',
       }}
       // hover glow + scale

@@ -70,7 +70,7 @@ function createToiletMarker(kakao: any, map: any, toilet: ToiletData) {
 // ── MapPage ────────────────────────────────────────────────────────────
 type FilterMode = 'all' | 'favorite' | 'visited';
 
-export function MapPage() {
+export function MapPage({ openAuth }: { openAuth: (mode: 'login' | 'signup') => void }) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const markersRef = useRef<Map<string, any>>(new Map());
@@ -177,18 +177,21 @@ export function MapPage() {
 
   return (
     <div className="relative h-screen flex flex-col overflow-hidden" style={{ background: '#F2F7F4' }}>
-      <Navbar />
+      <Navbar openAuth={openAuth} />
 
       {/* ── 지도 컨테이너 ── */}
       <div className="flex-1 relative">
         <div ref={mapContainerRef} className="w-full h-full" style={{ borderRadius: '0' }} />
 
-        {/* 상단 그라데이션 오버레이 (밝기 감소 및 부드러운 경계 처리) */}
+        {/* 상단 그라데이션 오버레이 — 밝기와 범위를 줄여 자연스럽게 수정 */}
         <div 
-          className="absolute top-0 left-0 right-0 h-60 pointer-events-none z-10"
+          className="absolute top-0 left-0 right-0 h-[200px] pointer-events-none z-10"
           style={{
-            background: 'linear-gradient(to bottom, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 60%, transparent 100%)',
-            backdropFilter: 'blur(1px)',
+            background: 'linear-gradient(to bottom, rgba(242,247,244,0.9) 0%, rgba(242,247,244,0.6) 40%, transparent 100%)',
+            backdropFilter: 'blur(6px)',
+            WebkitBackdropFilter: 'blur(6px)',
+            maskImage: 'linear-gradient(to bottom, black 0%, black 30%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 30%, transparent 100%)',
           }}
         />
 
@@ -207,7 +210,7 @@ export function MapPage() {
 
         {/* ── 상단 검색 + 필터 바 ── */}
         <div
-          className="absolute top-32 left-1/2 -translate-x-1/2 z-20 w-full px-4"
+          className="absolute top-[160px] left-1/2 -translate-x-1/2 z-20 w-full px-4"
           style={{ maxWidth: '600px' }}
         >
           {/* 검색창 */}
