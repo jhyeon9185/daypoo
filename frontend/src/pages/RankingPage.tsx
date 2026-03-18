@@ -1,0 +1,630 @@
+import { useState, useRef, useCallback } from 'react';
+import { motion, AnimatePresence, useInView } from 'framer-motion';
+import { Navbar } from '../components/Navbar';
+import { Footer } from '../components/Footer';
+import { WaveDivider } from '../components/WaveDivider';
+import { Crown, TrendingUp, TrendingDown, Minus, ShoppingBag, X, MapPin, Star } from 'lucide-react';
+
+// ── 타입 ──────────────────────────────────────────────────────────────
+type TabKey = 'total' | 'local' | 'health';
+
+interface RankUser {
+  rank: number;
+  emoji: string;
+  nick: string;
+  title: string;
+  titleColor: string;
+  titleBg: string;
+  score: number;
+  scoreLabel: string;
+  change: number;
+  items: { icon: string; name: string; type: string }[];
+}
+
+// ── 데이터 ────────────────────────────────────────────────────────────
+const RANK_DATA: Record<TabKey, RankUser[]> = {
+  total: [
+    { rank:1, emoji:'💎', nick:'황금변기왕', title:'전설의 쾌변가', titleColor:'#E8A838', titleBg:'rgba(232,168,56,0.12)', score:1204, scoreLabel:'인증', change:0,
+      items:[{icon:'👑',name:'황금 왕관',type:'헤드 아이템'},{icon:'✨',name:'황금 오라',type:'이펙트'},{icon:'💎',name:'다이아 똥 마커',type:'마커 스킨'}] },
+    { rank:2, emoji:'🦊', nick:'변비탈출러', title:'화장실 정복자', titleColor:'#b0b8b4', titleBg:'rgba(176,184,180,0.1)', score:847, scoreLabel:'인증', change:2,
+      items:[{icon:'🦊',name:'여우 귀 아이템',type:'헤드 아이템'},{icon:'🌟',name:'실버 오라',type:'이펙트'}] },
+    { rank:3, emoji:'🐸', nick:'장건강지킴이', title:'쾌변 마스터', titleColor:'#cd7c4a', titleBg:'rgba(205,124,74,0.1)', score:712, scoreLabel:'인증', change:-1,
+      items:[{icon:'🐸',name:'개구리 모자',type:'헤드 아이템'}] },
+    { rank:4, emoji:'🧘', nick:'쾌변수련자', title:'인증 달인', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:634, scoreLabel:'인증', change:3, items:[] },
+    { rank:5, emoji:'🏃', nick:'급똥전문가', title:'스피드 런너', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:589, scoreLabel:'인증', change:0, items:[] },
+    { rank:6, emoji:'🌿', nick:'섬유질왕', title:'건강 구루', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:521, scoreLabel:'인증', change:1, items:[] },
+    { rank:7, emoji:'🦉', nick:'새벽배변러', title:'올빼미 쾌변가', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:498, scoreLabel:'인증', change:-2, items:[] },
+    { rank:8, emoji:'🍌', nick:'바나나형수호자', title:'4형 전도사', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:445, scoreLabel:'인증', change:4, items:[] },
+    { rank:9, emoji:'💧', nick:'수분충전소', title:'수분왕', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:412, scoreLabel:'인증', change:0, items:[] },
+    { rank:10, emoji:'🌅', nick:'아침루틴러', title:'모닝 쾌변왕', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:387, scoreLabel:'인증', change:1, items:[] },
+  ],
+  local: [
+    { rank:1, emoji:'🏠', nick:'강남쾌변왕', title:'우리동네 전설', titleColor:'#E8A838', titleBg:'rgba(232,168,56,0.12)', score:324, scoreLabel:'인증', change:0,
+      items:[{icon:'🏆',name:'동네왕 트로피',type:'헤드 아이템'}] },
+    { rank:2, emoji:'🏪', nick:'역삼동지킴이', title:'동네 스타', titleColor:'#b0b8b4', titleBg:'rgba(176,184,180,0.1)', score:287, scoreLabel:'인증', change:2, items:[] },
+    { rank:3, emoji:'🌳', nick:'대치동쾌변러', title:'지역 챔피언', titleColor:'#cd7c4a', titleBg:'rgba(205,124,74,0.1)', score:241, scoreLabel:'인증', change:1, items:[] },
+    { rank:4, emoji:'🚇', nick:'선릉역전사', title:'지하철 고수', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:198, scoreLabel:'인증', change:-1, items:[] },
+    { rank:5, emoji:'☕', nick:'카공쾌변러', title:'카페 탐험가', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:176, scoreLabel:'인증', change:3, items:[] },
+    { rank:6, emoji:'🏋️', nick:'헬스쾌변러', title:'운동 마니아', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:154, scoreLabel:'인증', change:0, items:[] },
+    { rank:7, emoji:'🍜', nick:'점심쾌변러', title:'점심 루틴왕', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:132, scoreLabel:'인증', change:2, items:[] },
+    { rank:8, emoji:'🌙', nick:'야간쾌변러', title:'밤의 탐험가', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:118, scoreLabel:'인증', change:-1, items:[] },
+    { rank:9, emoji:'🎯', nick:'정확한배변러', title:'타이밍 마스터', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:105, scoreLabel:'인증', change:1, items:[] },
+    { rank:10, emoji:'🌺', nick:'봄쾌변러', title:'계절 감성러', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:98, scoreLabel:'인증', change:0, items:[] },
+  ],
+  health: [
+    { rank:1, emoji:'🧬', nick:'장내세균왕', title:'마이크로바이옴 챔프', titleColor:'#E8A838', titleBg:'rgba(232,168,56,0.12)', score:98, scoreLabel:'점', change:0,
+      items:[{icon:'🧬',name:'DNA 헤드셋',type:'헤드 아이템'},{icon:'💚',name:'건강 오라',type:'이펙트'}] },
+    { rank:2, emoji:'🥗', nick:'샐러드요정', title:'식이섬유 마스터', titleColor:'#b0b8b4', titleBg:'rgba(176,184,180,0.1)', score:96, scoreLabel:'점', change:1, items:[] },
+    { rank:3, emoji:'🏋️', nick:'운동쾌변러', title:'활동성 챔피언', titleColor:'#cd7c4a', titleBg:'rgba(205,124,74,0.1)', score:94, scoreLabel:'점', change:-1, items:[] },
+    { rank:4, emoji:'💧', nick:'수분마스터', title:'수분 전도사', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:92, scoreLabel:'점', change:2, items:[] },
+    { rank:5, emoji:'🍎', nick:'과일러버', title:'자연식 고수', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:91, scoreLabel:'점', change:0, items:[] },
+    { rank:6, emoji:'🧘', nick:'명상쾌변러', title:'멘탈 케어러', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:89, scoreLabel:'점', change:3, items:[] },
+    { rank:7, emoji:'🌿', nick:'유산균왕', title:'프로바이오틱스 장인', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:88, scoreLabel:'점', change:0, items:[] },
+    { rank:8, emoji:'🏃', nick:'러닝건강러', title:'유산소 마니아', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:86, scoreLabel:'점', change:-1, items:[] },
+    { rank:9, emoji:'😴', nick:'수면건강러', title:'수면 마스터', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:85, scoreLabel:'점', change:2, items:[] },
+    { rank:10, emoji:'🫐', nick:'항산화왕', title:'베리 전도사', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:84, scoreLabel:'점', change:1, items:[] },
+  ],
+};
+
+const TAB_CONFIG: { key: TabKey; label: string; desc: string; icon: string }[] = [
+  { key: 'total',  label: '전체 랭킹',    desc: '누적 인증 횟수 기준',          icon: '🏆' },
+  { key: 'local',  label: '우리 동네 왕',  desc: '현재 위치 기반 지역 랭킹',     icon: '📍' },
+  { key: 'health', label: '건강왕',        desc: 'AI 쾌변 점수 기준',            icon: '💚' },
+];
+
+const MY_RANK = { rank: 128, nick: '나', emoji: '🙋', score: 47, change: 3, top: 10, needed: 15 };
+
+// ── 순위 변화 아이콘 ──────────────────────────────────────────────────
+function ChangeIcon({ change }: { change: number }) {
+  if (change > 0) return (
+    <span className="flex items-center gap-0.5 text-xs font-bold" style={{ color: '#52b788' }}>
+      <TrendingUp size={11} /> {change}
+    </span>
+  );
+  if (change < 0) return (
+    <span className="flex items-center gap-0.5 text-xs font-bold" style={{ color: '#E85D5D' }}>
+      <TrendingDown size={11} /> {Math.abs(change)}
+    </span>
+  );
+  return <Minus size={11} style={{ color: 'rgba(0,0,0,0.1)' }} />;
+}
+
+// ── 아이템 팝업 ───────────────────────────────────────────────────────
+function ItemPopup({ user, onClose }: { user: RankUser; onClose: () => void }) {
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="fixed inset-0 z-[200]"
+        style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }}
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.94, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.94, y: 10 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+        className="fixed z-[201]"
+        style={{
+          top: '50%', left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 'min(360px, calc(100vw - 32px))',
+          background: '#FFFFFF',
+          borderRadius: '28px',
+          border: '1px solid rgba(27,67,50,0.08)',
+          overflow: 'hidden',
+          boxShadow: '0 24px 80px rgba(27,67,50,0.15)',
+        }}
+      >
+        {/* 상단 컬러 바 */}
+        <div style={{ height: '3px', background: `linear-gradient(90deg, ${user.titleColor}, transparent)` }} />
+
+        <div className="p-6">
+          {/* 헤더 */}
+          <div className="flex items-start justify-between mb-5">
+            <div className="flex items-center gap-3">
+              <div
+                className="w-14 h-14 rounded-full flex items-center justify-center text-3xl"
+                style={{ background: '#f8fcf9', border: `2px solid ${user.titleColor}` }}
+              >
+                {user.emoji}
+              </div>
+              <div>
+                <span
+                  className="text-[10px] font-bold px-2 py-0.5 rounded-full block mb-1"
+                  style={{ background: user.titleBg, color: user.titleColor }}
+                >
+                  {user.title}
+                </span>
+                <p className="font-black text-[#1A2B27] text-base leading-tight">{user.nick}</p>
+                <p className="text-xs mt-0.5" style={{ color: 'rgba(0,0,0,0.4)' }}>
+                  {user.score.toLocaleString()}{user.scoreLabel}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-black/5"
+              style={{ color: 'rgba(0,0,0,0.3)' }}
+            >
+              <X size={16} />
+            </button>
+          </div>
+
+          {/* 착용 아이템 */}
+          <p
+            className="text-[10px] font-bold uppercase tracking-widest mb-3"
+            style={{ color: 'rgba(0,0,0,0.3)' }}
+          >
+            착용 아이템
+          </p>
+
+          {user.items.length === 0 ? (
+            <div
+              className="py-6 rounded-2xl text-center"
+              style={{ background: '#f8faf9' }}
+            >
+              <p className="text-sm" style={{ color: 'rgba(0,0,0,0.3)' }}>착용 중인 아이템이 없어요</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2 mb-5">
+              {user.items.map((item, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: -12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.08 }}
+                  className="flex items-center gap-3 p-3 rounded-2xl"
+                  style={{ background: '#f8fcf9', border: '1px solid rgba(27,67,50,0.05)' }}
+                >
+                  <span className="text-2xl flex-shrink-0">{item.icon}</span>
+                  <div className="flex-1">
+                    <p className="text-sm font-bold text-[#1A2B27]">{item.name}</p>
+                    <p className="text-xs" style={{ color: 'rgba(0,0,0,0.4)' }}>{item.type}</p>
+                  </div>
+                  <span
+                    className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                    style={{ background: 'rgba(232,168,56,0.12)', color: '#E8A838' }}
+                  >
+                    장착 중
+                  </span>
+                </motion.div>
+              ))}
+            </div>
+          )}
+
+          {/* 상점 버튼 */}
+          <button
+            className="w-full py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            style={{
+              background: 'linear-gradient(135deg, #E8A838 0%, #d4922a 100%)',
+              color: '#1B4332',
+              boxShadow: '0 4px 20px rgba(232,168,56,0.3)',
+            }}
+          >
+            <ShoppingBag size={16} />
+            상점 가서 이 아이템 보기 →
+          </button>
+        </div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+// ── 시상대 섹션 ───────────────────────────────────────────────────────
+function Podium({ users, onSelect }: { users: RankUser[]; onSelect: (u: RankUser) => void }) {
+  const [top1, top2, top3] = users;
+
+  const PodiumCard = ({ user, height, isFirst }: { user: RankUser; height: number; isFirst?: boolean }) => (
+    <motion.div
+      whileHover={{ y: -6 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+      onClick={() => onSelect(user)}
+      className="flex flex-col items-center cursor-pointer"
+      style={{ flex: isFirst ? '0 0 200px' : '0 0 160px' }}
+    >
+      {/* 아바타 영역 */}
+      <div className="relative mb-3" style={{ marginBottom: '12px' }}>
+        {isFirst && (
+          <motion.div
+            animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.7, 0.4] }}
+            transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+            className="absolute inset-0 rounded-full pointer-events-none"
+            style={{
+              background: 'radial-gradient(circle, rgba(232,168,56,0.5) 0%, transparent 70%)',
+              transform: 'scale(2)',
+            }}
+          />
+        )}
+        {isFirst && (
+          <motion.div
+            animate={{ y: [0, -5, 0] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+            className="absolute -top-7 left-1/2 -translate-x-1/2 text-2xl"
+          >
+            👑
+          </motion.div>
+        )}
+        <motion.div
+          className="rounded-full flex items-center justify-center relative z-10"
+          style={{
+            width: isFirst ? '80px' : '64px',
+            height: isFirst ? '80px' : '64px',
+            fontSize: isFirst ? '36px' : '28px',
+            background: isFirst
+              ? 'linear-gradient(135deg, #FFFFFF 0%, #f4faf6 100%)'
+              : 'linear-gradient(135deg, #FFFFFF 0%, #f9fbf9 100%)',
+            border: `3px solid ${user.titleColor}`,
+            boxShadow: isFirst ? `0 8px 24px ${user.titleColor}25` : '0 4px 12px rgba(0,0,0,0.05)',
+          }}
+          animate={{
+            boxShadow: [
+              `0 0 0px ${user.titleColor}00`,
+              `0 0 15px ${user.titleColor}40`,
+              `0 0 0px ${user.titleColor}00`
+            ]
+          }}
+          transition={{
+            duration: 2.5,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        >
+          {user.emoji}
+        </motion.div>
+      </div>
+
+      {/* 칭호 + 닉네임 */}
+      <span
+        className="text-[10px] font-bold px-2 py-0.5 rounded-full mb-1 text-center"
+        style={{ background: user.titleBg, color: user.titleColor, maxWidth: '90%' }}
+      >
+        {user.title}
+      </span>
+      <p className="font-black text-[#1A2B27] text-sm text-center leading-tight">{user.nick}</p>
+      <p className="text-xs mt-1" style={{ color: 'rgba(0,0,0,0.4)' }}>
+        {user.score.toLocaleString()}{user.scoreLabel}
+      </p>
+
+      {/* 시상대 블록 */}
+      <div
+        className="w-full mt-3 rounded-t-2xl flex items-end justify-center pb-3 shadow-sm"
+        style={{
+          height: `${height}px`,
+          background: isFirst
+            ? 'linear-gradient(180deg, #FFFFFF 0%, #f0f7f3 100%)'
+            : 'linear-gradient(180deg, #FFFFFF 0%, #f4f9f6 100%)',
+          border: `1px solid ${user.titleColor}20`,
+          fontSize: '28px',
+          fontWeight: 900,
+          color: `${user.titleColor}15`,
+          letterSpacing: '-0.04em',
+        }}
+      >
+        {user.rank}
+      </div>
+    </motion.div>
+  );
+
+  return (
+    <div className="flex items-end justify-center gap-4">
+      <PodiumCard user={top2} height={72} />
+      <PodiumCard user={top1} height={104} isFirst />
+      <PodiumCard user={top3} height={56} />
+    </div>
+  );
+}
+
+// ── 랭킹 리스트 아이템 ────────────────────────────────────────────────
+function RankItem({
+  user, index, onSelect,
+}: { user: RankUser; index: number; onSelect: (u: RankUser) => void }) {
+  const rankColor = user.rank === 1 ? '#E8A838' : user.rank === 2 ? '#b0b8b4' : user.rank === 3 ? '#cd7c4a' : 'rgba(255,255,255,0.25)';
+  const isTop3 = user.rank <= 3;
+  const glowColor = user.rank === 1 ? 'rgba(232, 168, 56, 0.4)' : user.rank === 2 ? 'rgba(148, 163, 184, 0.3)' : 'rgba(205, 124, 74, 0.3)';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ 
+        opacity: 1, 
+        y: 0,
+        boxShadow: isTop3 
+          ? [`0 4px 12px rgba(0,0,0,0.02), 0 0 0px ${glowColor}`, `0 4px 12px rgba(0,0,0,0.02), 0 0 12px ${glowColor}`, `0 4px 12px rgba(0,0,0,0.02), 0 0 0px ${glowColor}`]
+          : '0 4px 12px rgba(0,0,0,0.02)',
+        borderColor: isTop3 
+          ? [rankColor + '40', rankColor + '80', rankColor + '40'] 
+          : 'rgba(27,67,50,0.08)'
+      }}
+      transition={{ 
+        opacity: { duration: 0.4, delay: index * 0.04 },
+        y: { duration: 0.4, delay: index * 0.04 },
+        boxShadow: isTop3 
+          ? { duration: 2, repeat: Infinity, ease: 'easeInOut' } 
+          : { duration: 0.4, delay: index * 0.04 },
+        borderColor: isTop3 
+          ? { duration: 2, repeat: Infinity, ease: 'easeInOut' } 
+          : { duration: 0.4, delay: index * 0.04 }
+      }}
+      onClick={() => onSelect(user)}
+      whileHover={{ x: 4, scale: isTop3 ? 1.01 : 1 }}
+      className="flex items-center gap-4 px-5 py-4.5 rounded-2xl cursor-pointer transition-all"
+      style={{
+        background: '#FFFFFF',
+        border: '1.5px solid',
+        marginBottom: '8px',
+      }}
+    >
+      {/* 순위 */}
+      <span
+        className="w-8 text-center font-black text-base flex-shrink-0"
+        style={{ color: rankColor }}
+      >
+        {user.rank}
+      </span>
+
+      {/* 아바타 */}
+      <div
+        className="w-12 h-12 rounded-full flex items-center justify-center text-2xl flex-shrink-0"
+        style={{
+          background: '#f4f9f6',
+          border: `2px solid ${user.titleColor}20`,
+        }}
+      >
+        {user.emoji}
+      </div>
+
+      {/* 정보 */}
+      <div className="flex-1 min-w-0">
+        <span
+          className="text-sm font-bold px-2.5 py-1 rounded-full inline-block mb-1.5"
+          style={{ background: user.titleBg, color: user.titleColor }}
+        >
+          {user.title}
+        </span>
+        <p className="font-black text-[#1A2B27] text-lg leading-tight truncate">{user.nick}</p>
+      </div>
+
+      {/* 점수 + 변화 */}
+      <div className="flex flex-col items-end gap-1 flex-shrink-0">
+        <span className="font-black text-xl" style={{ color: '#52b788', letterSpacing: '-0.03em' }}>
+          {user.score.toLocaleString()}{user.scoreLabel}
+        </span>
+        <ChangeIcon change={user.change} />
+      </div>
+    </motion.div>
+  );
+}
+
+// ── 내 순위 고정 바 ───────────────────────────────────────────────────
+function MyRankBar() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.5, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      className="sticky bottom-4 mx-4 rounded-2xl px-4 py-3 flex items-center gap-3"
+      style={{
+        background: 'linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%)',
+        border: '1.5px solid #E8A838',
+        boxShadow: '0 8px 32px rgba(27,67,50,0.5)',
+        zIndex: 50,
+      }}
+    >
+      <div
+        className="w-9 h-9 rounded-full flex items-center justify-center text-xl flex-shrink-0"
+        style={{ background: 'rgba(255,255,255,0.1)', border: '2px solid #E8A838' }}
+      >
+        {MY_RANK.emoji}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <p className="font-black text-white text-sm">나의 순위: {MY_RANK.rank}위</p>
+          <ChangeIcon change={MY_RANK.change} />
+        </div>
+        <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.6)' }}>
+          TOP {MY_RANK.top}%까지 인증 {MY_RANK.needed}번 더 필요해요!
+        </p>
+      </div>
+      <button
+        className="px-4 py-2 rounded-xl font-black text-xs flex-shrink-0 transition-all hover:scale-105 active:scale-95"
+        style={{ background: '#E8A838', color: '#1B4332' }}
+      >
+        도전 →
+      </button>
+    </motion.div>
+  );
+}
+
+// ── 메인 페이지 ───────────────────────────────────────────────────────
+export function RankingPage({ openAuth }: { openAuth: (mode: 'login' | 'signup') => void }) {
+  const [tab, setTab] = useState<TabKey>('total');
+  const [selectedUser, setSelectedUser] = useState<RankUser | null>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const inView = useInView(listRef, { once: true, margin: '-40px' });
+
+  const users = RANK_DATA[tab];
+  const currentTab = TAB_CONFIG.find(t => t.key === tab)!;
+
+  const handleSelect = useCallback((user: RankUser) => {
+    setSelectedUser(user);
+  }, []);
+
+  return (
+    <div className="min-h-screen" style={{ background: '#F8FAF9' }}>
+      <Navbar openAuth={openAuth} />
+
+      {/* ── 히어로 + 시상대 ─────────────────────────────────── */}
+      <div className="relative overflow-hidden" style={{ background: '#F8FAF9' }}>
+        {/* 배경 글로우 */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: 'radial-gradient(ellipse 60% 40% at 50% 0%, rgba(232,168,56,0.12) 0%, transparent 70%)',
+          }}
+        />
+
+        <section className="relative z-10 pt-48 pb-32 px-6">
+          <div className="max-w-2xl mx-auto">
+            {/* 헤더 */}
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              className="text-center mb-10"
+            >
+              <span
+                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold mb-6"
+                style={{ background: 'rgba(232,168,56,0.1)', color: '#E8A838', border: '1px solid rgba(232,168,56,0.2)' }}
+              >
+                🏆 명예의 전당
+              </span>
+              <h1
+                className="font-black leading-tight"
+                style={{ fontSize: 'clamp(36px, 8vw, 64px)', color: '#1A2B27', letterSpacing: '-0.04em' }}
+              >
+                오늘의 쾌변
+                <br />
+                <span style={{
+                  background: 'linear-gradient(135deg, #E8A838 0%, #d4922a 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}>
+                  챔피언
+                </span>
+              </h1>
+            </motion.div>
+
+            {/* 탭 */}
+            <div
+              className="flex rounded-2xl p-1 mb-12"
+              style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.05)' }}
+            >
+              {TAB_CONFIG.map((t) => (
+                <button
+                  key={t.key}
+                  onClick={() => setTab(t.key)}
+                  className="flex-1 py-3 rounded-xl text-sm font-bold transition-all relative"
+                  style={{ color: tab === t.key ? '#fff' : 'rgba(0,0,0,0.4)' }}
+                >
+                  {tab === t.key && (
+                    <motion.div
+                      layoutId="tabBg"
+                      className="absolute inset-0 rounded-xl"
+                      style={{ background: '#E8A838', boxShadow: '0 4px 12px rgba(232,168,56,0.3)' }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                    />
+                  )}
+                  <span className="relative z-10 flex flex-col items-center gap-0.5">
+                    <span>{t.icon} {t.label}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {/* 탭 설명 */}
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={tab}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.25 }}
+                className="text-center text-sm mb-12"
+                style={{ color: 'rgba(0,0,0,0.4)' }}
+              >
+                {currentTab.desc}
+              </motion.p>
+            </AnimatePresence>
+
+            {/* 시상대 */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={tab}
+                initial={{ opacity: 0, scale: 0.97 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.97 }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <Podium users={users.slice(0, 3)} onSelect={handleSelect} />
+              </motion.div>
+            </AnimatePresence>
+
+            {/* 통계 칩 */}
+            <div className="grid grid-cols-3 gap-3 mt-8">
+              {[
+                { label: '오늘 참여자', value: '3,241', unit: '명' },
+                { label: '내 현재 순위', value: '128', unit: '위' },
+                { label: 'TOP10까지', value: '15', unit: '번' },
+              ].map((s, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 + i * 0.08 }}
+                  className="rounded-3xl p-6 text-center"
+                  style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.05)', boxShadow: '0 8px 24px rgba(27,67,50,0.04)' }}
+                >
+                  <p className="font-black text-4xl" style={{ color: '#E8A838', letterSpacing: '-0.04em' }}>
+                    {s.value}<span className="text-base font-bold ml-0.5">{s.unit}</span>
+                  </p>
+                  <p className="text-sm mt-1.5 font-bold" style={{ color: 'rgba(0,0,0,0.4)' }}>{s.label}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <WaveDivider fill="#eef5f0" />
+      </div>
+
+      {/* ── 랭킹 리스트 ─────────────────────────────────────── */}
+      <div className="relative overflow-hidden" style={{ background: '#eef5f0' }}>
+        <section className="pt-16 pb-12 px-6" ref={listRef}>
+          <div className="max-w-2xl mx-auto">
+            <div className="flex items-center justify-between mb-10">
+              <h2 className="font-black text-3xl text-[#1A2B27]" style={{ letterSpacing: '-0.03em' }}>
+                TOP 10
+              </h2>
+              <span className="text-base" style={{ color: 'rgba(0,0,0,0.3)' }}>
+                매일 자정 업데이트
+              </span>
+            </div>
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={tab}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
+              >
+                {inView && users.map((user, i) => (
+                  <RankItem
+                    key={`${tab}-${user.rank}`}
+                    user={user}
+                    index={i}
+                    onSelect={handleSelect}
+                  />
+                ))}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </section>
+
+        {/* 내 순위 고정 바 */}
+        <div className="max-w-2xl mx-auto px-0 pb-16">
+          <MyRankBar />
+        </div>
+      </div>
+
+      {/* 아이템 팝업 */}
+      {selectedUser && (
+        <ItemPopup user={selectedUser} onClose={() => setSelectedUser(null)} />
+      )}
+      <Footer />
+    </div>
+  );
+}

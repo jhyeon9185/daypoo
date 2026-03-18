@@ -82,58 +82,62 @@ interface UseToiletsOptions {
 }
 
 export function useToilets({ lat, lng, radius = 1000 }: UseToiletsOptions) {
-  const [toilets, setToilets] = useState<ToiletData[]>(MOCK_TOILETS);
+  const [toilets, setToilets] = useState<ToiletData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchToilets = useCallback(async () => {
+    // ── 공공데이터 API 호출 또는 백엔드 API 호출 ────────────────────
     const apiKey = import.meta.env.VITE_TOILET_API_KEY;
-
-    // API Key 없으면 Mock 데이터 사용
-    if (!apiKey) {
-      console.warn('[useToilets] VITE_TOILET_API_KEY 없음 → Mock 데이터 사용');
-      setToilets(MOCK_TOILETS);
-      return;
-    }
 
     try {
       setLoading(true);
       setError(null);
 
-      // 행정안전부 공중화장실 API 호출
-      // 위경도 기반 반경 검색 (pageNo, numOfRows 조정 가능)
-      const url = new URL('https://api.odcloud.kr/api/15012892/v1/uddi:6b4c6b30-0b56-4dc8-aa0d-b4f7c9a0b1c2');
-      url.searchParams.set('serviceKey', apiKey);
-      url.searchParams.set('page', '1');
-      url.searchParams.set('perPage', '100');
-      // 위경도 필터는 파라미터로 지원 안 되므로, 전체 fetch 후 프론트에서 필터링
-      url.searchParams.set('returnType', 'JSON');
+      let data: ToiletData[] = [];
 
-      const res = await fetch(url.toString());
-      if (!res.ok) throw new Error(`API 오류: ${res.status}`);
+      if (apiKey) {
+        // 1. 공공데이터 API 직접 호출 (기존 방식)
+        const url = new URL('https://api.odcloud.kr/api/15012892/v1/uddi:6b4c6b30-0b56-4dc8-aa0d-b4f7c9a0b1c2');
+        url.searchParams.set('serviceKey', apiKey);
+        url.searchParams.set('page', '1');
+        url.searchParams.set('perPage', '100');
+        url.searchParams.set('returnType', 'JSON');
 
-      const json = await res.json();
-      const items: RawToiletItem[] = json.data ?? json.items ?? [];
+        const res = await fetch(url.toString());
+        if (!res.ok) throw new Error(`API 오류: ${res.status}`);
 
-      const parsed = items
-        .map((item, i) => rawToToilet(item, i))
-        .filter((t): t is ToiletData => t !== null)
-        .filter((t) => {
-          // 현재 위치 기반 반경 필터링
-          const R = 6371000;
-          const dLat = ((t.lat - lat) * Math.PI) / 180;
-          const dLng = ((t.lng - lng) * Math.PI) / 180;
-          const a = Math.sin(dLat / 2) ** 2 +
-            Math.cos((lat * Math.PI) / 180) * Math.cos((t.lat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
-          const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-          return dist <= radius;
-        });
+        const json = await res.json();
+        const items: RawToiletItem[] = json.data ?? json.items ?? [];
+        data = items
+          .map((item, i) => rawToToilet(item, i))
+          .filter((t): t is ToiletData => t !== null);
+      } else {
+        // 2. 백엔드 API 호출 (통합 이후)
+        // console.warn('[useToilets] API Key 없음 -> 백엔드 연동 필요');
+        // const res = await fetch(`/api/v1/toilets?latitude=${lat}&longitude=${lng}&radius=${radius}`);
+        // if (res.ok) data = await res.json();
+        
+        // 현재는 API가 연결되지 않았으므로 빈 배열 유지 (Mock 데이터 사용 중지)
+        data = [];
+      }
 
-      setToilets(parsed.length > 0 ? parsed : MOCK_TOILETS);
+      // 위치 기반 필터링 (프론트엔드에서 수행)
+      const filtered = data.filter((t) => {
+        const R = 6371000;
+        const dLat = ((t.lat - lat) * Math.PI) / 180;
+        const dLng = ((t.lng - lng) * Math.PI) / 180;
+        const a = Math.sin(dLat / 2) ** 2 +
+          Math.cos((lat * Math.PI) / 180) * Math.cos((t.lat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+        const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return dist <= radius;
+      });
+
+      setToilets(filtered);
     } catch (e) {
       console.error('[useToilets] fetch 실패:', e);
       setError('화장실 데이터를 불러오지 못했습니다.');
-      setToilets(MOCK_TOILETS); // fallback
+      setToilets([]); 
     } finally {
       setLoading(false);
     }

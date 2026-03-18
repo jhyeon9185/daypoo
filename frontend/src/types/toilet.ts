@@ -97,7 +97,7 @@ export const MOCK_TOILETS: ToiletData[] = [
     isMixedGender: false, maleToilet: 4, maleUrinal: 6, femaleToilet: 6,
     disabledToilet: 2, childToilet: 1, hasDiaperTable: true,
     hasEmergencyBell: true, hasCCTV: true, managerName: '강남구청',
-    phone: '02-3423-5555', isVisited: true, isFavorite: true, rating: 4.2, reviewCount: 38,
+    phone: '02-3423-5555', isVisited: false, isFavorite: false, rating: 4.2, reviewCount: 38,
   },
   {
     id: 't2', name: '코엑스 광장 화장실', roadAddress: '서울 강남구 영동대로 513',
@@ -111,7 +111,7 @@ export const MOCK_TOILETS: ToiletData[] = [
     lat: 37.5045, lng: 127.0490, openTime: '05:30~24:00', isOpen24h: false,
     isMixedGender: false, maleToilet: 3, maleUrinal: 4, femaleToilet: 5,
     disabledToilet: 1, hasDiaperTable: false, hasEmergencyBell: true,
-    hasCCTV: true, isVisited: true, isFavorite: false, rating: 3.1, reviewCount: 57,
+    hasCCTV: true, isVisited: false, isFavorite: false, rating: 3.1, reviewCount: 57,
   },
   {
     id: 't4', name: '삼성역 1번출구 공중화장실', roadAddress: '서울 강남구 삼성동 159',
@@ -125,7 +125,7 @@ export const MOCK_TOILETS: ToiletData[] = [
     lat: 37.5150, lng: 127.0580, openTime: '06:00~21:00', isOpen24h: false,
     isMixedGender: true, maleToilet: 2, femaleToilet: 2,
     disabledToilet: 1, hasDiaperTable: false, hasEmergencyBell: true,
-    hasCCTV: false, managerName: '봉은사', isVisited: false, isFavorite: true, rating: 4.5, reviewCount: 12,
+    hasCCTV: false, managerName: '봉은사', isVisited: false, isFavorite: false, rating: 4.5, reviewCount: 12,
   },
 ];
 

@@ -203,7 +203,7 @@ export function HeroSection({ onCtaClick }: HeroSectionProps) {
               className="mt-4 text-sm"
               style={{ color: 'var(--text-sec)', opacity: 0.6 }}
             >
-              로그인 없이도 화장실 찾기 가능 · 기록은 가입 후
+              로그인 없이도 화장실 찾기 가능
             </motion.p>
           </motion.div>
 
@@ -309,7 +309,7 @@ export function HeroSection({ onCtaClick }: HeroSectionProps) {
       </section>
 
       {/* 3. FINAL CTA (Unified Background, no glow) */}
-      <section className="pt-24 pb-64 px-6" style={{ backgroundColor: 'var(--bg-light)' }}>
+      <section className="pt-24 pb-24 px-6" style={{ backgroundColor: 'var(--bg-light)' }}>
         <motion.div
           initial={{ opacity: 0, y: 32 }}
           whileInView={{ opacity: 1, y: 0 }}

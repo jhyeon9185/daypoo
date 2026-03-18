@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { useTransitionContext } from "../context/TransitionContext";
 
 // @ts-ignore - Math might be misidentified in this environment
 const safeMath = Math;
@@ -36,6 +37,7 @@ interface AnimatedUnderlinkProps {
   style?: React.CSSProperties;
 }
 
+
 export function AnimatedUnderlink({
   text,
   to,
@@ -47,6 +49,7 @@ export function AnimatedUnderlink({
   className,
   style = {},
 }: AnimatedUnderlinkProps) {
+  const { transitionTo } = useTransitionContext();
   const prefersReducedMotion = useReducedMotion();
   const [isHovered, setIsHovered] = useState(false);
   const [svgPath, setSvgPath] = useState<string>(() => (variant !== undefined ? svgVariants[variant % svgVariants.length] : svgVariants[0]));
@@ -55,6 +58,13 @@ export function AnimatedUnderlink({
   const [underlineWidth, setUnderlineWidth] = useState(0);
   const [underlineHeightPx, setUnderlineHeightPx] = useState(0);
   const textRef = useRef<HTMLSpanElement>(null);
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (to === '/ranking') {
+      e.preventDefault();
+      transitionTo(to);
+    }
+  };
 
   useEffect(() => {
     if (variant === undefined && nextIndex === null) {
@@ -168,6 +178,7 @@ export function AnimatedUnderlink({
   return (
     <Link
       to={to}
+      onClick={handleClick}
       style={{
         display: "inline-flex",
         flexDirection: "column",

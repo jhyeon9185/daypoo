@@ -8,27 +8,27 @@ import { EmergencyButton } from '../components/EmergencyButton';
 import { EmergencySheet } from '../components/EmergencySheet';
 import { WaveDivider } from '../components/WaveDivider';
 
-export function MainPage() {
+export function MainPage({ openAuth }: { openAuth: (mode: 'login' | 'signup') => void }) {
   const [sheetOpen, setSheetOpen] = useState(false);
 
   return (
     <div style={{ background: '#F8FAF9' }} className="relative min-h-screen">
-      <Navbar />
+      <Navbar openAuth={openAuth} />
       
       {/* Hero Section */}
-      <div className="relative">
+      <div className="relative overflow-hidden">
         <HeroSection onCtaClick={() => document.getElementById('map-scroll-target')?.scrollIntoView({ behavior: 'smooth' })} />
         <WaveDivider fill="#eef5f0" />
       </div>
 
       {/* AI Health Report Section */}
-      <div className="relative">
+      <div className="relative overflow-hidden">
         <ReportCard />
         <WaveDivider fill="#F8FAF9" />
       </div>
 
       {/* Map Section with Scroll Target */}
-      <div id="map-scroll-target" className="relative">
+      <div id="map-scroll-target" className="relative overflow-hidden pb-32">
         <MapSection />
         <WaveDivider fill="#111e18" />
       </div>
