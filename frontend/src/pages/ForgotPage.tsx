@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Mail, KeyRound, CheckCircle2, AlertCircle, RotateCcw } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Mail, KeyRound, CheckCircle2, AlertCircle, RotateCcw, ChevronDown } from 'lucide-react';
 
 // ── 타입 ──────────────────────────────────────────────────────────────
 type ForgotMode = 'password' | 'email';
@@ -157,6 +157,53 @@ function InputField({
           <p className="text-xs" style={{ color: '#7a9e8a' }}>{hint}</p>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+// ── 생년월일 드랍다운 ───────────────────────────────────────────────────
+function BirthDropdowns({ 
+  year, month, day, 
+  onYearChange, onMonthChange, onDayChange 
+}: { 
+  year: string; month: string; day: string; 
+  onYearChange: (v: string) => void; 
+  onMonthChange: (v: string) => void; 
+  onDayChange: (v: string) => void; 
+}) {
+  const currentYear = 2026;
+  const years = Array.from({ length: currentYear - 1920 + 1 }, (_, i) => currentYear - i);
+  const months = Array.from({ length: 12 }, (_, i) => i + 1);
+  
+  const getDaysInMonth = (y: number, m: number) => {
+    return new Date(y, m, 0).getDate();
+  };
+
+  const daysCount = year && month ? getDaysInMonth(parseInt(year), parseInt(month)) : 31;
+  const days = Array.from({ length: daysCount }, (_, i) => i + 1);
+
+  const SelectWrapper = ({ value, onChange, options, placeholder, suffix }: any) => (
+    <div className="relative group flex-1">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full bg-[#f4faf6] outline-none text-sm font-medium px-4 py-3.5 rounded-xl appearance-none border border-[#d4e8db] focus:border-[#1B4332] focus:bg-white transition-all cursor-pointer"
+        style={{ color: '#1a2b22' }}
+      >
+        <option value="" disabled>{placeholder}</option>
+        {options.map((opt: any) => <option key={opt} value={opt}>{opt}{suffix}</option>)}
+      </select>
+      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#7a9e8a] transition-colors group-hover:text-[#1B4332]">
+        <ChevronDown size={14} />
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="flex gap-2">
+      <SelectWrapper value={year} onChange={onYearChange} options={years} placeholder="년" suffix="년" />
+      <SelectWrapper value={month} onChange={onMonthChange} options={months} placeholder="월" suffix="월" />
+      <SelectWrapper value={day} onChange={onDayChange} options={days} placeholder="일" suffix="일" />
     </div>
   );
 }
@@ -456,8 +503,6 @@ function EmailForgot({ onBack }: { onBack: () => void }) {
     setStep('done');
   };
 
-  const [focusedBirth, setFocusedBirth] = useState<number | null>(null);
-
   const slideVar = {
     enter: { opacity: 0, x: 24 },
     center: { opacity: 1, x: 0 },
@@ -495,33 +540,14 @@ function EmailForgot({ onBack }: { onBack: () => void }) {
               <label className="text-xs font-bold block mb-1.5" style={{ color: '#5a7a6a', letterSpacing: '0.06em' }}>
                 생년월일
               </label>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { value: birthYear, onChange: setBirthYear, placeholder: '1990', label: '년', idx: 0 },
-                  { value: birthMonth, onChange: setBirthMonth, placeholder: '01', label: '월', idx: 1 },
-                  { value: birthDay, onChange: setBirthDay, placeholder: '01', label: '일', idx: 2 },
-                ].map((f) => (
-                  <div key={f.idx} className="relative">
-                    <input
-                      type="number" value={f.value}
-                      onChange={(e) => f.onChange(e.target.value)}
-                      onFocus={() => setFocusedBirth(f.idx)}
-                      onBlur={() => setFocusedBirth(null)}
-                      placeholder={f.placeholder}
-                      className="w-full bg-transparent outline-none text-sm font-medium px-3 py-3 rounded-xl text-center"
-                      style={{
-                        color: '#1a2b22', caretColor: '#1B4332',
-                        background: focusedBirth === f.idx ? '#fff' : '#f4faf6',
-                        border: focusedBirth === f.idx ? '1.5px solid #1B4332' : '1.5px solid #d4e8db',
-                        boxShadow: focusedBirth === f.idx ? '0 0 0 3px rgba(27,67,50,0.06)' : 'none',
-                        MozAppearance: 'textfield',
-                      }}
-                    />
-                    <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold pointer-events-none"
-                      style={{ color: '#7a9e8a' }}>{f.label}</span>
-                  </div>
-                ))}
-              </div>
+              <BirthDropdowns
+                year={birthYear}
+                month={birthMonth}
+                day={birthDay}
+                onYearChange={setBirthYear}
+                onMonthChange={setBirthMonth}
+                onDayChange={setBirthDay}
+              />
               <AnimatePresence>
                 {errors.birth && (
                   <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}

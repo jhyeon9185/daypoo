@@ -4,6 +4,7 @@ import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
 import { WaveDivider } from '../components/WaveDivider';
 import { Crown, TrendingUp, TrendingDown, Minus, ShoppingBag, X, MapPin, Star } from 'lucide-react';
+import { useRankings } from '../hooks/useRankings';
 
 // ── 타입 ──────────────────────────────────────────────────────────────
 type TabKey = 'total' | 'local' | 'health';
@@ -39,57 +40,11 @@ function ConicGlow({ color, thickness = 1.5, borderRadius = '16px' }: { color: s
 }
 
 // ── 데이터 ────────────────────────────────────────────────────────────
-const RANK_DATA: Record<TabKey, RankUser[]> = {
-  total: [
-    { rank:1, emoji:'💎', nick:'황금변기왕', title:'전설의 쾌변가', titleColor:'#E8A838', titleBg:'rgba(232,168,56,0.12)', score:1204, scoreLabel:'인증', change:0,
-      items:[{icon:'👑',name:'황금 왕관',type:'헤드 아이템'},{icon:'✨',name:'황금 오라',type:'이펙트'},{icon:'💎',name:'다이아 똥 마커',type:'마커 스킨'}] },
-    { rank:2, emoji:'🦊', nick:'변비탈출러', title:'화장실 정복자', titleColor:'#b0b8b4', titleBg:'rgba(176,184,180,0.1)', score:847, scoreLabel:'인증', change:2,
-      items:[{icon:'🦊',name:'여우 귀 아이템',type:'헤드 아이템'},{icon:'🌟',name:'실버 오라',type:'이펙트'}] },
-    { rank:3, emoji:'🐸', nick:'장건강지킴이', title:'쾌변 마스터', titleColor:'#cd7c4a', titleBg:'rgba(205,124,74,0.1)', score:712, scoreLabel:'인증', change:-1,
-      items:[{icon:'🐸',name:'개구리 모자',type:'헤드 아이템'}] },
-    { rank:4, emoji:'🧘', nick:'쾌변수련자', title:'인증 달인', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:634, scoreLabel:'인증', change:3, items:[] },
-    { rank:5, emoji:'🏃', nick:'급똥전문가', title:'스피드 런너', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:589, scoreLabel:'인증', change:0, items:[] },
-    { rank:6, emoji:'🌿', nick:'섬유질왕', title:'건강 구루', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:521, scoreLabel:'인증', change:1, items:[] },
-    { rank:7, emoji:'🦉', nick:'새벽배변러', title:'올빼미 쾌변가', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:498, scoreLabel:'인증', change:-2, items:[] },
-    { rank:8, emoji:'🍌', nick:'바나나형수호자', title:'4형 전도사', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:445, scoreLabel:'인증', change:4, items:[] },
-    { rank:9, emoji:'💧', nick:'수분충전소', title:'수분왕', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:412, scoreLabel:'인증', change:0, items:[] },
-    { rank:10, emoji:'🌅', nick:'아침루틴러', title:'모닝 쾌변왕', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:387, scoreLabel:'인증', change:1, items:[] },
-  ],
-  local: [
-    { rank:1, emoji:'🏠', nick:'강남쾌변왕', title:'우리동네 전설', titleColor:'#E8A838', titleBg:'rgba(232,168,56,0.12)', score:324, scoreLabel:'인증', change:0,
-      items:[{icon:'🏆',name:'동네왕 트로피',type:'헤드 아이템'}] },
-    { rank:2, emoji:'🏪', nick:'역삼동지킴이', title:'동네 스타', titleColor:'#b0b8b4', titleBg:'rgba(176,184,180,0.1)', score:287, scoreLabel:'인증', change:2, items:[] },
-    { rank:3, emoji:'🌳', nick:'대치동쾌변러', title:'지역 챔피언', titleColor:'#cd7c4a', titleBg:'rgba(205,124,74,0.1)', score:241, scoreLabel:'인증', change:1, items:[] },
-    { rank:4, emoji:'🚇', nick:'선릉역전사', title:'지하철 고수', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:198, scoreLabel:'인증', change:-1, items:[] },
-    { rank:5, emoji:'☕', nick:'카공쾌변러', title:'카페 탐험가', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:176, scoreLabel:'인증', change:3, items:[] },
-    { rank:6, emoji:'🏋️', nick:'헬스쾌변러', title:'운동 마니아', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:154, scoreLabel:'인증', change:0, items:[] },
-    { rank:7, emoji:'🍜', nick:'점심쾌변러', title:'점심 루틴왕', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:132, scoreLabel:'인증', change:2, items:[] },
-    { rank:8, emoji:'🌙', nick:'야간쾌변러', title:'밤의 탐험가', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:118, scoreLabel:'인증', change:-1, items:[] },
-    { rank:9, emoji:'🎯', nick:'정확한배변러', title:'타이밍 마스터', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:105, scoreLabel:'인증', change:1, items:[] },
-    { rank:10, emoji:'🌺', nick:'봄쾌변러', title:'계절 감성러', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:98, scoreLabel:'인증', change:0, items:[] },
-  ],
-  health: [
-    { rank:1, emoji:'🧬', nick:'장내세균왕', title:'마이크로바이옴 챔프', titleColor:'#E8A838', titleBg:'rgba(232,168,56,0.12)', score:98, scoreLabel:'점', change:0,
-      items:[{icon:'🧬',name:'DNA 헤드셋',type:'헤드 아이템'},{icon:'💚',name:'건강 오라',type:'이펙트'}] },
-    { rank:2, emoji:'🥗', nick:'샐러드요정', title:'식이섬유 마스터', titleColor:'#b0b8b4', titleBg:'rgba(176,184,180,0.1)', score:96, scoreLabel:'점', change:1, items:[] },
-    { rank:3, emoji:'🏋️', nick:'운동쾌변러', title:'활동성 챔피언', titleColor:'#cd7c4a', titleBg:'rgba(205,124,74,0.1)', score:94, scoreLabel:'점', change:-1, items:[] },
-    { rank:4, emoji:'💧', nick:'수분마스터', title:'수분 전도사', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:92, scoreLabel:'점', change:2, items:[] },
-    { rank:5, emoji:'🍎', nick:'과일러버', title:'자연식 고수', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:91, scoreLabel:'점', change:0, items:[] },
-    { rank:6, emoji:'🧘', nick:'명상쾌변러', title:'멘탈 케어러', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:89, scoreLabel:'점', change:3, items:[] },
-    { rank:7, emoji:'🌿', nick:'유산균왕', title:'프로바이오틱스 장인', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:88, scoreLabel:'점', change:0, items:[] },
-    { rank:8, emoji:'🏃', nick:'러닝건강러', title:'유산소 마니아', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:86, scoreLabel:'점', change:-1, items:[] },
-    { rank:9, emoji:'😴', nick:'수면건강러', title:'수면 마스터', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:85, scoreLabel:'점', change:2, items:[] },
-    { rank:10, emoji:'🫐', nick:'항산화왕', title:'베리 전도사', titleColor:'#52b788', titleBg:'rgba(82,183,136,0.1)', score:84, scoreLabel:'점', change:1, items:[] },
-  ],
-};
-
 const TAB_CONFIG: { key: TabKey; label: string; desc: string; icon: string }[] = [
   { key: 'total',  label: '전체 랭킹',    desc: '누적 인증 횟수 기준',          icon: '🏆' },
   { key: 'local',  label: '우리 동네 왕',  desc: '현재 위치 기반 지역 랭킹',     icon: '📍' },
   { key: 'health', label: '건강왕',        desc: 'AI 쾌변 점수 기준',            icon: '💚' },
 ];
-
-const MY_RANK = { rank: 128, nick: '나', emoji: '🙋', score: 47, change: 3, top: 10, needed: 15 };
 
 // ── 순위 변화 아이콘 ──────────────────────────────────────────────────
 function ChangeIcon({ change }: { change: number }) {
@@ -232,6 +187,14 @@ function ItemPopup({ user, onClose }: { user: RankUser; onClose: () => void }) {
 
 // ── 시상대 섹션 (Spotlight Glassmorphism) ──────────────────────────────
 function Podium({ users, onSelect }: { users: RankUser[]; onSelect: (u: RankUser) => void }) {
+  if (!users || users.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 bg-white/30 backdrop-blur-md rounded-[32px] border border-white/40">
+        <p className="text-sm font-bold text-gray-500">아직 랭킹 데이터가 존재하지 않습니다.</p>
+      </div>
+    );
+  }
+
   const [top1, top2, top3] = users;
 
   const GlassCard = ({ user, scale = 1, delay = 0, isFirst = false }: { user: RankUser; scale?: number; delay?: number; isFirst?: boolean }) => (
@@ -306,9 +269,9 @@ function Podium({ users, onSelect }: { users: RankUser[]; onSelect: (u: RankUser
         />
       </div>
 
-      <GlassCard user={top2} scale={1.0} delay={0.15} />
-      <GlassCard user={top1} scale={1.2} delay={0} isFirst />
-      <GlassCard user={top3} scale={0.95} delay={0.3} />
+      {top2 && <GlassCard user={top2} scale={1.0} delay={0.15} />}
+      {top1 && <GlassCard user={top1} scale={1.2} delay={0} isFirst />}
+      {top3 && <GlassCard user={top3} scale={0.95} delay={0.3} />}
     </div>
   );
 }
@@ -392,7 +355,7 @@ function RankItem({
 }
 
 // ── 내 순위 고정 바 ───────────────────────────────────────────────────
-function MyRankBar() {
+function MyRankBar({ data }: { data: any }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -410,15 +373,15 @@ function MyRankBar() {
         className="w-9 h-9 rounded-full flex items-center justify-center text-xl flex-shrink-0"
         style={{ background: 'rgba(255,255,255,0.1)', border: '2px solid #E8A838' }}
       >
-        {MY_RANK.emoji}
+        {data.emoji}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <p className="font-black text-white text-sm">나의 순위: {MY_RANK.rank}위</p>
-          <ChangeIcon change={MY_RANK.change} />
+          <p className="font-black text-white text-sm">나의 순위: {data.rank}위 ({data.nick})</p>
+          <ChangeIcon change={data.change} />
         </div>
         <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.6)' }}>
-          TOP {MY_RANK.top}%까지 인증 {MY_RANK.needed}번 더 필요해요!
+          TOP {data.top}%까지 인증 {data.needed}번 더 필요해요!
         </p>
       </div>
       <button
@@ -438,7 +401,38 @@ export function RankingPage({ openAuth }: { openAuth: (mode: 'login' | 'signup')
   const listRef = useRef<HTMLDivElement>(null);
   const inView = useInView(listRef, { once: true, margin: '-40px' });
 
-  const users = RANK_DATA[tab];
+  // 실시간 랭킹 데이터 가져오기
+  const { data, loading, error } = useRankings(tab);
+
+  // 백엔드 데이터를 프론트엔드 UI 포맷으로 변환
+  const isDataValid = data && typeof data === 'object' && !Array.isArray(data);
+  const users: RankUser[] = (isDataValid && Array.isArray((data as any).topRankers))
+    ? ((data as any).topRankers as any[])
+        .filter(r => r && typeof r === 'object')
+        .map((r) => ({
+          rank: Number(r.rank || 0),
+          emoji: Number(r.rank) === 1 ? '💎' : Number(r.rank) === 2 ? '🦊' : '🐸',
+          nick: r.nickname || '익명',
+          title: r.titleName || '새내기 쾌변러',
+          titleColor: Number(r.rank) === 1 ? '#E8A838' : '#52b788',
+          titleBg: Number(r.rank) === 1 ? 'rgba(232,168,56,0.12)' : 'rgba(82,183,136,0.1)',
+          score: Number(r.score || 0),
+          scoreLabel: tab === 'health' ? '점' : '인증',
+          change: 0,
+          items: [],
+        }))
+    : [];
+
+  const myRankData = (isDataValid && (data as any).myRank) ? {
+    rank: Number((data as any).myRank.rank || 0),
+    nick: (data as any).myRank.nickname || '나',
+    emoji: '🙋',
+    score: Number((data as any).myRank.score || 0),
+    change: 0,
+    top: 10,
+    needed: 15
+  } : null;
+
   const currentTab = TAB_CONFIG.find(t => t.key === tab)!;
 
   const handleSelect = useCallback((user: RankUser) => {
@@ -593,15 +587,39 @@ export function RankingPage({ openAuth }: { openAuth: (mode: 'login' | 'signup')
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.25 }}
+                className="min-h-[400px]"
               >
-                {inView && users.map((user, i) => (
-                  <RankItem
-                    key={`${tab}-${user.rank}`}
-                    user={user}
-                    index={i}
-                    onSelect={handleSelect}
-                  />
-                ))}
+                {loading ? (
+                  <div className="flex flex-col items-center justify-center py-20 gap-4">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      className="text-4xl"
+                    >
+                      💩
+                    </motion.div>
+                    <p className="text-sm font-bold text-gray-400">랭킹 데이터를 불러오는 중...</p>
+                  </div>
+                ) : error ? (
+                  <div className="flex flex-col items-center justify-center py-20 gap-4">
+                    <p className="text-sm font-bold text-red-400">데이터를 불러오지 못했습니다.</p>
+                    <button 
+                      onClick={() => window.location.reload()}
+                      className="px-4 py-2 bg-gray-100 rounded-xl text-xs font-bold text-gray-500"
+                    >
+                      다시 시도
+                    </button>
+                  </div>
+                ) : (
+                  inView && users.map((user, i) => (
+                    <RankItem
+                      key={`${tab}-${user.rank}`}
+                      user={user}
+                      index={i}
+                      onSelect={handleSelect}
+                    />
+                  ))
+                )}
               </motion.div>
             </AnimatePresence>
           </div>
@@ -609,7 +627,7 @@ export function RankingPage({ openAuth }: { openAuth: (mode: 'login' | 'signup')
 
         {/* 내 순위 고정 바 */}
         <div className="max-w-2xl mx-auto px-0 pb-16">
-          <MyRankBar />
+          {myRankData && <MyRankBar data={myRankData} />}
         </div>
       </div>
 

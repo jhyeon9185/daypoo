@@ -114,12 +114,20 @@ export function useToilets({ lat, lng, radius = 1000 }: UseToiletsOptions) {
           .filter((t): t is ToiletData => t !== null);
       } else {
         // 2. 백엔드 API 호출 (통합 이후)
-        // console.warn('[useToilets] API Key 없음 -> 백엔드 연동 필요');
-        // const res = await fetch(`/api/v1/toilets?latitude=${lat}&longitude=${lng}&radius=${radius}`);
-        // if (res.ok) data = await res.json();
-        
-        // 현재는 API가 연결되지 않았으므로 빈 배열 유지 (Mock 데이터 사용 중지)
-        data = [];
+        try {
+          const res = await fetch(`/api/v1/toilets?latitude=${lat}&longitude=${lng}&radius=${radius}`);
+          if (res.ok) {
+            const backendData = await res.json();
+            // 백엔드 응답을 ToiletData 형식으로 변환 (필요시)
+            data = backendData;
+          } else {
+            console.warn('[useToilets] 백엔드 API 호출 실패:', res.status);
+            data = [];
+          }
+        } catch (e) {
+          console.error('[useToilets] 백엔드 연동 오류:', e);
+          data = [];
+        }
       }
 
       // 위치 기반 필터링 (프론트엔드에서 수행)

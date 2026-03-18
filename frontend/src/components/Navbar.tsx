@@ -5,13 +5,24 @@ import { useState } from 'react';
 import { AnimatedUnderlink } from './AnimatedUnderlink';
 
 // 실제 프로젝트에서는 AuthContext 등으로 교체하세요
-const MOCK_IS_LOGGED_IN = false;
-
 export function Navbar({ openAuth }: { openAuth: (mode: 'login' | 'signup') => void }) {
   const { scrollY } = useScroll();
   const scale = useTransform(scrollY, [0, 100], [1, 0.97]);
   const [hasNotif] = useState(true); // 알림 뱃지 (실제론 API 연동)
-  const [isLoggedIn] = useState(MOCK_IS_LOGGED_IN);
+  
+  // 실제 로그인 상태 확인
+  // 실제 로그인 상태 확인 (undefined 문자열로 저장된 경우 방지)
+  const token = localStorage.getItem('accessToken');
+  const isLoggedIn = !!token && token !== 'undefined';
+  
+  if (token === 'undefined') {
+    localStorage.removeItem('accessToken');
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('accessToken');
+    window.location.href = '/poop-map/main';
+  };
 
   const handleLogoClick = (e: React.MouseEvent) => {
     // 메인 페이지이거나 홈 경로일 때만 스무스 스크롤
@@ -105,6 +116,7 @@ export function Navbar({ openAuth }: { openAuth: (mode: 'login' | 'signup') => v
                 마이페이지
               </Link>
               <button
+                onClick={handleLogout}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-semibold transition-all hover:bg-white/10"
                 style={{ color: 'rgba(255,255,255,0.4)' }}
               >

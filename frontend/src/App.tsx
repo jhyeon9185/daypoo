@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { SplashPage } from './pages/SplashPage';
 import { MainPage } from './pages/MainPage';
@@ -8,6 +8,9 @@ import { NotFoundPage } from './pages/NotFoundPage';
 import { TransitionProvider } from './context/TransitionContext';
 import { AuthModal } from './components/AuthModal';
 import { ForgotPage } from './pages/ForgotPage';
+import { TermsPage } from './pages/TermsPage';
+import { PrivacyPage } from './pages/PrivacyPage';
+import { MyPage } from './pages/MyPage';
 
 function LoginPage() {
   return (
@@ -21,10 +24,10 @@ function App() {
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
 
-  const openAuth = (mode: 'login' | 'signup') => {
+  const openAuth = useCallback((mode: 'login' | 'signup') => {
     setAuthMode(mode);
     setAuthOpen(true);
-  };
+  }, []);
 
   return (
     <BrowserRouter basename="/poop-map">
@@ -36,6 +39,9 @@ function App() {
           <Route path="/map" element={<MapPage openAuth={openAuth} />} />
           <Route path="/ranking" element={<RankingPage openAuth={openAuth} />} />
           <Route path="/forgot-password" element={<ForgotPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/mypage" element={<MyPage openAuth={openAuth} />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
         <AuthModal 
