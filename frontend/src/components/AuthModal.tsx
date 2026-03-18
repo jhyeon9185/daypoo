@@ -3,8 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
   Eye, EyeOff, X, ArrowRight, ArrowLeft,
-  Check, AlertCircle, CheckCircle2,
+  Check, AlertCircle, CheckCircle2, ChevronDown
 } from 'lucide-react';
+import { api } from '../services/apiClient';
 
 // ── 타입 ──────────────────────────────────────────────────────────────
 type AuthMode = 'login' | 'signup';
@@ -99,29 +100,67 @@ function InputField({
   );
 }
 
-// ── 생년월일 인풋 ─────────────────────────────────────────────────────
-function BirthInput({ value, onChange, placeholder, label, maxLen }:
-  { value: string; onChange: (v: string) => void; placeholder: string; label: string; maxLen: number }) {
-  const [focused, setFocused] = useState(false);
-  return (
-    <div className="relative">
-      <input
-        type="number" value={value}
+// ── 생년월일 드랍다운 ───────────────────────────────────────────────────
+function BirthDropdowns({ 
+  year, month, day, 
+  onYearChange, onMonthChange, onDayChange 
+}: { 
+  year: string; month: string; day: string; 
+  onYearChange: (v: string) => void; 
+  onMonthChange: (v: string) => void; 
+  onDayChange: (v: string) => void; 
+}) {
+  const currentYear = 2026;
+  const years = Array.from({ length: currentYear - 1920 + 1 }, (_, i) => currentYear - i);
+  const months = Array.from({ length: 12 }, (_, i) => i + 1);
+  
+  const getDaysInMonth = (y: number, m: number) => {
+    return new Date(y, m, 0).getDate();
+  };
+
+  const daysCount = year && month ? getDaysInMonth(parseInt(year), parseInt(month)) : 31;
+  const days = Array.from({ length: daysCount }, (_, i) => i + 1);
+
+  const SelectWrapper = ({ value, onChange, options, placeholder, suffix }: any) => (
+    <div className="relative group flex-1">
+      <select
+        value={value}
         onChange={(e) => onChange(e.target.value)}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        placeholder={placeholder}
-        maxLength={maxLen}
-        className="w-full bg-transparent outline-none text-sm font-medium px-3 py-3 rounded-xl text-center"
-        style={{
-          color: '#1A2B27', caretColor: '#E8A838',
-          background: focused ? '#fff' : '#f8faf9',
-          border: focused ? '1.5px solid rgba(232,168,56,0.6)' : '1.5px solid rgba(26,43,39,0.08)',
-          MozAppearance: 'textfield',
-        }}
+        className="w-full bg-[#f8faf9] outline-none text-sm font-medium px-4 py-3.5 rounded-xl appearance-none border border-transparent focus:border-[#E8A838]/60 focus:bg-white transition-all cursor-pointer"
+        style={{ color: '#1A2B27' }}
+      >
+        <option value="" disabled>{placeholder}</option>
+        {options.map((opt: any) => <option key={opt} value={opt}>{opt}{suffix}</option>)}
+      </select>
+      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-rgba(26,43,39,0.3) transition-colors group-hover:text-[#E8A838]">
+        <ChevronDown size={14} />
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="flex gap-2 mt-1.5">
+      <SelectWrapper 
+        value={year} 
+        onChange={onYearChange} 
+        options={years} 
+        placeholder="년" 
+        suffix="년" 
       />
-      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold pointer-events-none"
-        style={{ color: 'rgba(26,43,39,0.3)' }}>{label}</span>
+      <SelectWrapper 
+        value={month} 
+        onChange={onMonthChange} 
+        options={months} 
+        placeholder="월" 
+        suffix="월" 
+      />
+      <SelectWrapper 
+        value={day} 
+        onChange={onDayChange} 
+        options={days} 
+        placeholder="일" 
+        suffix="일" 
+      />
     </div>
   );
 }
@@ -210,6 +249,7 @@ function LoginForm({ onSwitch, onSuccess, onClose }: { onSwitch: () => void; onS
   const [showPw, setShowPw] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [shake, setShake] = useState(false);
 
   const validate = () => {
     const e: Record<string, string> = {};
@@ -222,11 +262,31 @@ function LoginForm({ onSwitch, onSuccess, onClose }: { onSwitch: () => void; onS
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (!validate()) {
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
+      return;
+    }
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 800)); // TODO: 실제 API
-    setLoading(false);
-    onSuccess?.();
+    try {
+      const res = await api.post('/auth/login', {
+        username: email,
+        password: password,
+      });
+      if (res && typeof res === 'object' && res.accessToken) {
+        localStorage.setItem('accessToken', res.accessToken);
+        if (res.refreshToken) localStorage.setItem('refreshToken', res.refreshToken);
+        onSuccess?.();
+      } else {
+        throw new Error('인증 정보가 올바르지 않습니다.');
+      }
+    } catch (err: any) {
+      setErrors({ email: '이메일 또는 비밀번호가 잘못되었습니다.' });
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -243,11 +303,13 @@ function LoginForm({ onSwitch, onSuccess, onClose }: { onSwitch: () => void; onS
       {/* 소셜 */}
       <div className="flex flex-col gap-2 mb-5">
         <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
+          onClick={() => window.location.href = '/poop-map/oauth2/authorization/kakao'}
           className="flex items-center justify-center gap-2.5 w-full py-3 rounded-xl text-sm font-bold shadow-sm"
           style={{ background: '#FEE500', color: '#1a1a1a', border: '1px solid rgba(254,229,0,0.2)' }}>
           <KakaoIcon />카카오로 로그인
         </motion.button>
         <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
+          onClick={() => window.location.href = '/poop-map/oauth2/authorization/google'}
           className="flex items-center justify-center gap-2.5 w-full py-3 rounded-xl text-sm font-bold shadow-sm"
           style={{ background: '#fff', color: '#555', border: '1.5px solid rgba(26,43,39,0.08)' }}>
           <GoogleIcon />Google로 로그인
@@ -261,11 +323,14 @@ function LoginForm({ onSwitch, onSuccess, onClose }: { onSwitch: () => void; onS
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        <InputField label="이메일" type="email" value={email} onChange={setEmail}
-          placeholder="hello@example.com" error={errors.email} autoComplete="email" />
-        <InputField label="비밀번호" type={showPw ? 'text' : 'password'}
-          value={password} onChange={setPassword}
-          placeholder="비밀번호 입력" error={errors.password} autoComplete="current-password"
+        <motion.div animate={shake && errors.email ? { x: [-10, 10, -10, 10, 0] } : {}} transition={{ duration: 0.3 }}>
+          <InputField label="이메일" type="email" value={email} onChange={setEmail}
+            placeholder="hello@example.com" error={errors.email} autoComplete="email" />
+        </motion.div>
+        <motion.div animate={shake && errors.password ? { x: [-10, 10, -10, 10, 0] } : {}} transition={{ duration: 0.3 }}>
+          <InputField label="비밀번호" type={showPw ? 'text' : 'password'}
+            value={password} onChange={setPassword}
+            placeholder="비밀번호 입력" error={errors.password} autoComplete="current-password"
           rightEl={
             <button type="button" onClick={() => setShowPw(!showPw)}
               style={{ color: 'rgba(26,43,39,0.25)', lineHeight: 0 }}>
@@ -273,6 +338,7 @@ function LoginForm({ onSwitch, onSuccess, onClose }: { onSwitch: () => void; onS
             </button>
           }
         />
+        </motion.div>
         <div className="flex justify-end -mt-1">
           <Link 
             to="/forgot-password" 
@@ -336,6 +402,7 @@ function SignupForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess?:
   const [agreeMarketing, setAgreeMarketing] = useState(false);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [shake, setShake] = useState(false);
 
   const handleAgreeAll = (v: boolean) => {
     setAgreeAll(v); setAgreeService(v); setAgreePrivacy(v); setAgreeMarketing(v);
@@ -352,13 +419,13 @@ function SignupForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess?:
       if (password !== pwConfirm) e.pwConfirm = '비밀번호가 일치하지 않아요';
     }
     if (s === 1) {
-      if (!nickname.trim() || nickname.trim().length < 2) e.nickname = '닉네임을 2자 이상 입력해주세요';
-      if (nickname.trim().length > 12) e.nickname = '닉네임은 12자 이하여야 해요';
-      const y = parseInt(birthYear), m = parseInt(birthMonth), d = parseInt(birthDay);
-      if (!birthYear || !birthMonth || !birthDay) e.birth = '생년월일을 모두 입력해주세요';
-      else if (y < 1900 || y > new Date().getFullYear()) e.birth = '올바른 연도를 입력해주세요';
-      else if (m < 1 || m > 12) e.birth = '올바른 월을 입력해주세요';
-      else if (d < 1 || d > 31) e.birth = '올바른 일을 입력해주세요';
+      if (!nickname.trim()) e.nickname = '닉네임을 입력해주세요';
+      else if (nickname.trim().length < 2) e.nickname = '닉네임을 2자 이상 입력해주세요';
+      else if (nickname.trim().length > 12) e.nickname = '닉네임은 12자 이하여야 해요';
+
+      if (!birthYear || !birthMonth || !birthDay) {
+        e.birth = '생년월일을 모두 선택해주세요';
+      }
     }
     if (s === 2) {
       if (!agreeService) e.terms = '서비스 이용약관에 동의해주세요';
@@ -370,12 +437,36 @@ function SignupForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess?:
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateStep(step)) return;
+    if (!validateStep(step)) {
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
+      return;
+    }
     if (step < 2) { setDir(1); setStep((s) => s + 1); return; }
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 900)); // TODO: 실제 API
-    setLoading(false);
-    onSuccess?.();
+    try {
+      await api.post('/auth/signup', {
+        username: email,
+        password: password,
+        nickname: nickname,
+        // birthDate: `${birthYear}-${birthMonth.padStart(2, '0')}-${birthDay.padStart(2, '0')}`, // 백엔드 준비 후 주석 해제
+      });
+      // 가입 성공 후 자동 로그인 시도
+      const res = await api.post('/auth/login', { username: email, password });
+      if (res && typeof res === 'object' && res.accessToken) {
+        localStorage.setItem('accessToken', res.accessToken);
+        if (res.refreshToken) localStorage.setItem('refreshToken', res.refreshToken);
+        onSuccess?.();
+      } else {
+        throw new Error('로그인 정보를 가져올 수 없습니다.');
+      }
+    } catch (err: any) {
+      setErrors({ terms: err.message || '회원가입에 실패했습니다.' });
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const goPrev = () => { setDir(-1); setErrors({}); setStep((s) => s - 1); };
@@ -406,11 +497,13 @@ function SignupForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess?:
       {step === 0 && (
         <div className="flex flex-col gap-2 mb-4">
           <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
+            onClick={() => window.location.href = '/poop-map/oauth2/authorization/kakao'}
             className="flex items-center justify-center gap-2.5 w-full py-3 rounded-xl text-sm font-bold shadow-sm"
             style={{ background: '#FEE500', color: '#1a1a1a', border: '1px solid rgba(254,229,0,0.2)' }}>
             <KakaoIcon />카카오로 시작하기
           </motion.button>
           <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
+            onClick={() => window.location.href = '/poop-map/oauth2/authorization/google'}
             className="flex items-center justify-center gap-2.5 w-full py-3 rounded-xl text-sm font-bold shadow-sm"
             style={{ background: '#fff', color: '#555', border: '1.5px solid rgba(26,43,39,0.08)' }}>
             <GoogleIcon />Google로 시작하기
@@ -432,9 +525,11 @@ function SignupForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess?:
             {/* ── STEP 0: 계정 정보 ── */}
             {step === 0 && (
               <div className="flex flex-col gap-3">
-                <InputField label="이메일" type="email" value={email} onChange={setEmail}
-                  placeholder="hello@example.com" error={errors.email} autoComplete="email" />
-                <div>
+                <motion.div animate={shake && errors.email ? { x: [-10, 10, -10, 10, 0] } : {}} transition={{ duration: 0.3 }}>
+                  <InputField label="이메일" type="email" value={email} onChange={setEmail}
+                    placeholder="hello@example.com" error={errors.email} autoComplete="email" />
+                </motion.div>
+                <motion.div animate={shake && errors.password ? { x: [-10, 10, -10, 10, 0] } : {}} transition={{ duration: 0.3 }}>
                   <InputField label="비밀번호" type={showPw ? 'text' : 'password'}
                     value={password} onChange={setPassword} placeholder="8자 이상" error={errors.password}
                     autoComplete="new-password"
@@ -446,8 +541,9 @@ function SignupForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess?:
                     }
                   />
                   <PasswordStrength password={password} />
-                </div>
-                <InputField label="비밀번호 확인" type={showPwC ? 'text' : 'password'}
+                </motion.div>
+                <motion.div animate={shake && errors.pwConfirm ? { x: [-10, 10, -10, 10, 0] } : {}} transition={{ duration: 0.3 }}>
+                  <InputField label="비밀번호 확인" type={showPwC ? 'text' : 'password'}
                   value={pwConfirm} onChange={setPwConfirm}
                   placeholder="비밀번호 재입력" error={errors.pwConfirm} autoComplete="new-password"
                   rightEl={
@@ -459,15 +555,17 @@ function SignupForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess?:
                         </button>
                   }
                 />
+                </motion.div>
               </div>
             )}
 
             {/* ── STEP 1: 닉네임 + 생년월일 ── */}
             {step === 1 && (
               <div className="flex flex-col gap-4">
-                <InputField label="닉네임" value={nickname} onChange={setNickname}
-                  placeholder="2~12자" error={errors.nickname} maxLength={12}
-                  hint="랭킹과 지도에서 사용돼요"
+                <motion.div animate={shake && errors.nickname ? { x: [-10, 10, -10, 10, 0] } : {}} transition={{ duration: 0.3 }}>
+                  <InputField label="닉네임" value={nickname} onChange={setNickname}
+                    placeholder="2~12자" error={errors.nickname} maxLength={12}
+                    hint="랭킹과 지도에서 사용돼요"
                   rightEl={
                     <span className="text-xs font-medium" style={{ color: 'rgba(26,43,39,0.3)' }}>
                       {nickname.length}/12
@@ -496,16 +594,23 @@ function SignupForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess?:
                   )}
                 </AnimatePresence>
 
+                </motion.div>
+
                 {/* 생년월일 */}
-                <div>
+                <motion.div animate={shake && errors.birth ? { x: [-10, 10, -10, 10, 0] } : {}} transition={{ duration: 0.3 }}>
                   <label className="text-xs font-bold block mb-1.5"
                     style={{ color: 'rgba(26,43,39,0.5)', letterSpacing: '0.06em' }}>
                     생년월일
                   </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    <BirthInput value={birthYear} onChange={setBirthYear} placeholder="1990" label="년" maxLen={4} />
-                    <BirthInput value={birthMonth} onChange={setBirthMonth} placeholder="01" label="월" maxLen={2} />
-                    <BirthInput value={birthDay} onChange={setBirthDay} placeholder="01" label="일" maxLen={2} />
+                  <div className="flex flex-col">
+                    <BirthDropdowns
+                      year={birthYear}
+                      month={birthMonth}
+                      day={birthDay}
+                      onYearChange={setBirthYear}
+                      onMonthChange={setBirthMonth}
+                      onDayChange={setBirthDay}
+                    />
                   </div>
                   <AnimatePresence>
                     {errors.birth && (
@@ -515,13 +620,13 @@ function SignupForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess?:
                       </motion.p>
                     )}
                   </AnimatePresence>
-                </div>
+                </motion.div>
               </div>
             )}
 
             {/* ── STEP 2: 약관 ── */}
             {step === 2 && (
-              <div className="flex flex-col gap-3">
+              <motion.div className="flex flex-col gap-3" animate={shake && errors.terms ? { x: [-10, 10, -10, 10, 0] } : {}} transition={{ duration: 0.3 }}>
                 <div className="p-3.5 rounded-xl transition-colors hover:bg-amber-50"
                   style={{ background: 'rgba(232,168,56,0.05)', border: '1.5px solid rgba(232,168,56,0.15)' }}>
                   <TermsCheck checked={agreeAll} onChange={handleAgreeAll}>
@@ -563,7 +668,7 @@ function SignupForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess?:
                     </motion.p>
                   )}
                 </AnimatePresence>
-              </div>
+              </motion.div>
             )}
           </motion.div>
         </AnimatePresence>

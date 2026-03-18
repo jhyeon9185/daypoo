@@ -60,10 +60,8 @@ export function AnimatedUnderlink({
   const textRef = useRef<HTMLSpanElement>(null);
 
   const handleClick = (e: React.MouseEvent) => {
-    if (to === '/ranking') {
-      e.preventDefault();
-      transitionTo(to);
-    }
+    // Custom logic for page transition if needed
+    // transitionTo(to);
   };
 
   useEffect(() => {
