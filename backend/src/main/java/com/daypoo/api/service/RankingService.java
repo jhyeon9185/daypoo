@@ -33,7 +33,9 @@ public class RankingService {
 
   public void updateGlobalRank(User user) {
     if (user != null && user.getId() != null) {
-      redisTemplate.opsForZSet().add(GLOBAL_RANK_KEY, user.getId().toString(), (double) user.getPoints());
+      redisTemplate
+          .opsForZSet()
+          .add(GLOBAL_RANK_KEY, user.getId().toString(), (double) user.getPoints());
     }
   }
 
@@ -78,11 +80,11 @@ public class RankingService {
     List<User> topUsers = userRepository.findAllByOrderByPointsDesc(PageRequest.of(0, 50));
     for (User user : topUsers) {
       if (key.contains("health")) {
-          updateHealthRank(user, 60 + Math.random() * 40);
+        updateHealthRank(user, 60 + Math.random() * 40);
       } else if (key.contains("region")) {
-          updateRegionRank(user, key.replace(REGION_RANK_KEY_PREFIX, ""), 10 + Math.random() * 90);
+        updateRegionRank(user, key.replace(REGION_RANK_KEY_PREFIX, ""), 10 + Math.random() * 90);
       } else {
-          updateGlobalRank(user);
+        updateGlobalRank(user);
       }
     }
   }
@@ -93,30 +95,32 @@ public class RankingService {
 
     List<UserRankResponse> topRankers = new ArrayList<>();
     if (topRankersRaw != null) {
-      topRankers = topRankersRaw.stream()
-          .map(tuple -> {
-            try {
-              Long userId = Long.valueOf(Objects.requireNonNull(tuple.getValue()));
-              User user = userRepository.findById(userId).orElse(null);
-              if (user == null) return null;
+      topRankers =
+          topRankersRaw.stream()
+              .map(
+                  tuple -> {
+                    try {
+                      Long userId = Long.valueOf(Objects.requireNonNull(tuple.getValue()));
+                      User user = userRepository.findById(userId).orElse(null);
+                      if (user == null) return null;
 
-              Long rank = redisTemplate.opsForZSet().reverseRank(key, userId.toString());
-              String titleName = getEquippedTitleName(user);
+                      Long rank = redisTemplate.opsForZSet().reverseRank(key, userId.toString());
+                      String titleName = getEquippedTitleName(user);
 
-              return UserRankResponse.builder()
-                  .userId(userId)
-                  .nickname(user.getNickname())
-                  .titleName(titleName)
-                  .level(user.getLevel())
-                  .score(tuple.getScore() != null ? tuple.getScore().longValue() : 0L)
-                  .rank((rank != null ? rank : 0L) + 1L)
-                  .build();
-            } catch (Exception e) {
-              return null;
-            }
-          })
-          .filter(Objects::nonNull)
-          .collect(Collectors.toList());
+                      return UserRankResponse.builder()
+                          .userId(userId)
+                          .nickname(user.getNickname())
+                          .titleName(titleName)
+                          .level(user.getLevel())
+                          .score(tuple.getScore() != null ? tuple.getScore().longValue() : 0L)
+                          .rank((rank != null ? rank : 0L) + 1L)
+                          .build();
+                    } catch (Exception e) {
+                      return null;
+                    }
+                  })
+              .filter(Objects::nonNull)
+              .collect(Collectors.toList());
     }
 
     UserRankResponse myRank = null;
@@ -124,14 +128,15 @@ public class RankingService {
       Long myRankRaw = redisTemplate.opsForZSet().reverseRank(key, myUser.getId().toString());
       Double myScoreRaw = redisTemplate.opsForZSet().score(key, myUser.getId().toString());
 
-      myRank = UserRankResponse.builder()
-          .userId(myUser.getId())
-          .nickname(myUser.getNickname())
-          .titleName(getEquippedTitleName(myUser))
-          .level(myUser.getLevel())
-          .score(myScoreRaw != null ? myScoreRaw.longValue() : 0L)
-          .rank((myRankRaw != null ? myRankRaw : 0L) + 1L)
-          .build();
+      myRank =
+          UserRankResponse.builder()
+              .userId(myUser.getId())
+              .nickname(myUser.getNickname())
+              .titleName(getEquippedTitleName(myUser))
+              .level(myUser.getLevel())
+              .score(myScoreRaw != null ? myScoreRaw.longValue() : 0L)
+              .rank((myRankRaw != null ? myRankRaw : 0L) + 1L)
+              .build();
     }
 
     return RankingResponse.builder().topRankers(topRankers).myRank(myRank).build();

@@ -57,32 +57,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
       email = username + "@daypoo.com";
     }
 
-    User user =
-        userRepository
-            .findByUsername(username)
-            .orElseGet(
-                () -> {
-                  // 신규 가입
-                  String finalNickname = nickname;
-                  if (finalNickname == null) {
-                    finalNickname = "user_" + UUID.randomUUID().toString().substring(0, 8);
-                  }
+    // 실제 로그인이 완료된 후 SuccessHandler에서 DB 존재 여부를 체크하여
+    // 기존 회원이 아니면 프론트엔드의 닉네임 설정 페이지로 리다이렉트합니다.
 
-                  // 닉네임 중복 체크 (신규 가입 시에만)
-                  if (userRepository.existsByNickname(finalNickname)) {
-                    throw new OAuth2AuthenticationException("이미 사용 중인 닉네임입니다.");
-                  }
-
-                  String dummyPassword = passwordEncoder.encode(UUID.randomUUID().toString());
-                  User newUser =
-                      User.builder()
-                          .username(username)
-                          .password(dummyPassword)
-                          .nickname(finalNickname)
-                          .role(User.Role.ROLE_USER)
-                          .build();
-                  return userRepository.save(newUser);
-                });
 
     return new DefaultOAuth2User(
         Collections.emptyList(), oAuth2User.getAttributes(), userNameAttributeName);

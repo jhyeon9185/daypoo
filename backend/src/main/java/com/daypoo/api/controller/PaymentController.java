@@ -25,27 +25,26 @@ public class PaymentController {
   public ResponseEntity<Map<String, Object>> confirmPayment(
       @AuthenticationPrincipal String username, @RequestBody PaymentRequest request) {
 
-    log.info("Payment Confirmation Request: orderId={}, amount={}, user={}",
-        request.getOrderId(), request.getAmount(), username);
+    log.info(
+        "Payment Confirmation Request: orderId={}, amount={}, user={}",
+        request.getOrderId(),
+        request.getAmount(),
+        username);
 
     try {
       paymentService.confirmPayment(
-          username, 
-          request.getPaymentKey(), 
-          request.getOrderId(), 
-          request.getAmount()
-      );
+          username, request.getPaymentKey(), request.getOrderId(), request.getAmount());
 
-      return ResponseEntity.ok(Map.of(
-          "success", true, 
-          "message", "결제 승인 및 포인트 지급이 완료되었습니다."
-      ));
+      return ResponseEntity.ok(Map.of("success", true, "message", "결제 승인 및 포인트 지급이 완료되었습니다."));
     } catch (Exception e) {
       log.error("Payment confirmation failed: {}", e.getMessage());
-      return ResponseEntity.badRequest().body(Map.of(
-          "success", false, 
-          "message", e.getMessage() != null ? e.getMessage() : "결제 승인 처리 중 오류가 발생했습니다."
-      ));
+      return ResponseEntity.badRequest()
+          .body(
+              Map.of(
+                  "success",
+                  false,
+                  "message",
+                  e.getMessage() != null ? e.getMessage() : "결제 승인 처리 중 오류가 발생했습니다."));
     }
   }
 

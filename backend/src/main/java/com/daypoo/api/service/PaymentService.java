@@ -49,19 +49,21 @@ public class PaymentService {
       params.put("amount", amount);
 
       HttpEntity<Map<String, Object>> entity = new HttpEntity<>(params, headers);
-      ResponseEntity<JsonNode> response = restTemplate.postForEntity(TOSS_CONFIRM_URL, entity, JsonNode.class);
+      ResponseEntity<JsonNode> response =
+          restTemplate.postForEntity(TOSS_CONFIRM_URL, entity, JsonNode.class);
 
       if (response.getStatusCode() != HttpStatus.OK) {
         throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
       }
 
       // 결제 내역 저장
-      paymentRepository.save(Payment.builder()
-          .username(username)
-          .orderId(orderId)
-          .amount(amount)
-          .paymentKey(paymentKey)
-          .build());
+      paymentRepository.save(
+          Payment.builder()
+              .username(username)
+              .orderId(orderId)
+              .amount(amount)
+              .paymentKey(paymentKey)
+              .build());
 
       addPointsToUser(username, amount);
       log.info("✅ Payment confirmed, recorded, and points awarded for user: {}", username);
@@ -83,7 +85,8 @@ public class PaymentService {
 
   private HttpHeaders createHeaders() {
     String authValue = secretKey + ":";
-    String basicToken = Base64.getEncoder().encodeToString(authValue.getBytes(StandardCharsets.UTF_8));
+    String basicToken =
+        Base64.getEncoder().encodeToString(authValue.getBytes(StandardCharsets.UTF_8));
 
     HttpHeaders headers = new HttpHeaders();
     headers.set("Authorization", "Basic " + basicToken);
@@ -101,15 +104,15 @@ public class PaymentService {
       String errorMessage = errorNode.path("message").asText("토스 결제 승인 중 오류가 발생했습니다.");
 
       // 테스트 모드 예외 처리 (이미 처리된 요청 등)
-      if ("ALREADY_PROCESSING_REQUEST".equals(errorCode) || 
-          "ALREADY_COMPLETED_PAYMENT".equals(errorCode)) {
+      if ("ALREADY_PROCESSING_REQUEST".equals(errorCode)
+          || "ALREADY_COMPLETED_PAYMENT".equals(errorCode)) {
         log.info("Payment already processed (Test Mode Bypass): {}", errorCode);
-        return; 
+        return;
       }
 
       log.error("Toss Payment Failed: code={}, message={}", errorCode, errorMessage);
       // 구체적인 에러 메시지를 포함하여 예외 발생 (프론트에서 이 메시지를 사용하게 됨)
-      throw new RuntimeException(errorMessage); 
+      throw new RuntimeException(errorMessage);
 
     } catch (Exception parseException) {
       log.error("Failed to parse Toss error response", parseException);
@@ -120,12 +123,16 @@ public class PaymentService {
   private void addPointsToUser(String username, Long amount) {
     if (username == null || "anonymousUser".equals(username)) return;
 
-    userRepository.findByUsername(username).ifPresentOrElse(user -> {
-      user.addExpAndPoints(0, amount);
-      userRepository.save(user);
-    }, () -> {
-      log.warn("User not found for point award: username={}", username);
-      throw new BusinessException(ErrorCode.USER_NOT_FOUND);
-    });
+    userRepository
+        .findByUsername(username)
+        .ifPresentOrElse(
+            user -> {
+              user.addExpAndPoints(0, amount);
+              userRepository.save(user);
+            },
+            () -> {
+              log.warn("User not found for point award: username={}", username);
+              throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+            });
   }
 }

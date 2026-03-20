@@ -2,6 +2,7 @@ package com.daypoo.api.service;
 
 import com.daypoo.api.dto.LoginRequest;
 import com.daypoo.api.dto.SignUpRequest;
+import com.daypoo.api.dto.SocialSignUpRequest;
 import com.daypoo.api.dto.TokenResponse;
 import com.daypoo.api.dto.UserResponse;
 import com.daypoo.api.entity.User;
@@ -9,6 +10,7 @@ import com.daypoo.api.global.exception.BusinessException;
 import com.daypoo.api.global.exception.ErrorCode;
 import com.daypoo.api.repository.UserRepository;
 import com.daypoo.api.security.JwtProvider;
+import io.jsonwebtoken.Claims;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,6 +27,46 @@ public class AuthService {
   private final JwtProvider jwtProvider;
   private final EmailService emailService;
 
+  @Transactional
+  public TokenResponse socialSignUp(SocialSignUpRequest request) {
+    if (!jwtProvider.validateToken(request.registrationToken())) {
+      throw new BusinessException(ErrorCode.INVALID_TOKEN);
+    }
+
+    Claims claims = jwtProvider.getClaims(request.registrationToken());
+    String type = claims.get("type", String.class);
+    if (!"registration".equals(type)) {
+      throw new BusinessException(ErrorCode.INVALID_TOKEN);
+    }
+
+    String username = claims.getSubject();
+    String email = claims.get("email", String.class);
+    String roleClaim = claims.get("role", String.class);
+
+    checkNicknameDuplicate(request.nickname());
+
+    // 중복 가입 방지 (혹시 그 사이에 가입했을 수도 있으니)
+    if (userRepository.existsByUsername(username)) {
+      throw new BusinessException(ErrorCode.USERNAME_ALREADY_EXISTS);
+    }
+
+    User user =
+        User.builder()
+            .username(username)
+            .password(passwordEncoder.encode(UUID.randomUUID().toString()))
+            .email(email)
+            .nickname(request.nickname())
+            .role(User.Role.valueOf(roleClaim))
+            .build();
+
+    userRepository.save(user);
+
+    String accessToken = jwtProvider.createAccessToken(user.getUsername(), user.getRole().name());
+    String refreshToken = jwtProvider.createRefreshToken(user.getUsername());
+
+    return TokenResponse.builder().accessToken(accessToken).refreshToken(refreshToken).build();
+  }
+
   @Transactional(readOnly = true)
   public UserResponse getCurrentUserInfo() {
     String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -40,16 +82,35 @@ public class AuthService {
   public void signUp(SignUpRequest request) {
     checkUsernameDuplicate(request.username());
     checkNicknameDuplicate(request.nickname());
+    
+    if (userRepository.existsByEmail(request.email())) {
+      throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
+    }
 
     User user =
         User.builder()
             .username(request.username())
             .password(passwordEncoder.encode(request.password()))
+            .email(request.email())
             .nickname(request.nickname())
             .role(User.Role.ROLE_USER)
             .build();
 
     userRepository.save(user);
+  }
+
+  public String findIdByNickname(String nickname) {
+    User user =
+        userRepository
+            .findByNickname(nickname)
+            .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+    // 이메일 마스킹 (he***@example.com 형태)
+    String email = user.getEmail();
+    int atIndex = email.indexOf("@");
+    if (atIndex <= 2) return email;
+    
+    return email.substring(0, 2) + "***" + email.substring(atIndex);
   }
 
   public void checkUsernameDuplicate(String username) {
@@ -82,10 +143,10 @@ public class AuthService {
   }
 
   @Transactional
-  public void resetPassword(String username) {
+  public void resetPassword(String email) {
     User user =
         userRepository
-            .findByUsername(username)
+            .findByEmail(email)
             .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
     // 1. 임시 비밀번호 생성 (8자리)
@@ -104,6 +165,6 @@ public class AuthService {
                 + "로그인 후 반드시 비밀번호를 변경해 주세요.",
             tempPassword);
 
-    emailService.sendEmail(user.getUsername(), subject, text);
+    emailService.sendEmail(user.getEmail(), subject, text);
   }
 }

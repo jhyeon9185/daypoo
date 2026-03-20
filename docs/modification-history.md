@@ -1,5 +1,32 @@
 # Modification History
 
+## [2026-03-20 14:15:00] 아이디/비밀번호 찾기 기능 구현 및 이메일 시스템 연동
+
+### 작업 내용
+- **User 엔티티 구조 변경**: 사용자의 실제 이메일 정보를 저장하기 위한 `email` 필드를 `User` 엔티티에 추가했습니다. 이를 통해 소셜 로그인 사용자도 비밀번호 재설정 및 아이디 찾기 기능을 정상적으로 이용할 수 있게 되었습니다.
+- **아이디 찾기 기능 구현**: 사용자의 닉네임을 입력받아 가입된 이메일 주소를 마스킹 처리하여 반환하는 API(`GET /api/v1/auth/find-id`)를 신규 개발했습니다.
+- **비밀번호 재설정 로직 고도화**: 기존에 `username`을 기반으로 하던 비밀번호 재설정 로직을 `email` 기반으로 변경했습니다. 사용자가 입력한 이메일로 임시 비밀번호를 생성하여 실제 메일을 발송하도록 수정했습니다.
+- **소셜 로그인 및 회원가입 연동**:
+    - 일반 회원가입 시 이메일 정보를 필수로 받도록 `SignUpRequest`를 수정했습니다.
+    - 소셜 로그인(카카오, 구글) 시 제공되는 이메일 정보를 추출하여 가입 토큰(`registrationToken`)에 포함시키고, 최종 가입 시 DB에 저장하도록 프로세스를 개선했습니다.
+- **유닛 테스트 업데이트**: `AuthServiceTest`를 변경된 DTO 및 엔티티 구조에 맞춰 업데이트하여 비즈니스 로직의 안정성을 확인했습니다.
+
+### 상세 변경 내역
+- `backend/src/main/java/com/daypoo/api/entity/User.java`: `email` 필드 추가 및 생성자 수정.
+- `backend/src/main/java/com/daypoo/api/repository/UserRepository.java`: `findByEmail`, `findByNickname`, `existsByEmail` 메서드 추가.
+- `backend/src/main/java/com/daypoo/api/dto/SignUpRequest.java`: `email` 필드 추가 및 `@Email` 유효성 검사 적용.
+- `backend/src/main/java/com/daypoo/api/security/JwtProvider.java`: `createRegistrationToken`에 `email` 클레임 추가.
+- `backend/src/main/java/com/daypoo/api/security/OAuth2SuccessHandler.java`: 소셜 사용자 정보에서 이메일 추출 로직 추가.
+- `backend/src/main/java/com/daypoo/api/service/AuthService.java`: `signUp`, `socialSignUp`, `resetPassword` 로직 수정 및 `findIdByNickname` 메서드 구현.
+- `backend/src/main/java/com/daypoo/api/controller/AuthController.java`: `find-id` 엔드포인트 추가 및 `resetPassword` 파라미터 변경.
+- `backend/src/test/java/com/daypoo/api/service/AuthServiceTest.java`: 변경된 로직 반영 및 테스트 케이스 수정.
+- `backend/src/main/java/com/daypoo/api/global/exception/ErrorCode.java`: `EMAIL_ALREADY_EXISTS` 에러 코드 추가.
+
+### 결과/영향
+- "아이디 찾기" 기능을 통해 사용자가 본인의 가입 이메일을 확인할 수 있습니다 (마스킹 처리됨).
+- "비밀번호 찾기" 기능을 통해 실제 가입한 이메일로 임시 비밀번호를 수신할 수 있습니다.
+- 소셜 로그인 사용자의 이메일 정보가 정확히 수집되어 계정 복구 기능이 정상 작동합니다.
+
 ## [2026-03-20 12:45:00] 닉네임 중복 방지 로직 개선 및 소셜 로그인 가입 제한
 
 ### 작업 내용

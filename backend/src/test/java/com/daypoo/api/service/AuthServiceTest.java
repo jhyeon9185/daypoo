@@ -43,12 +43,13 @@ class AuthServiceTest {
 
   @BeforeEach
   void setUp() {
-    signUpRequest = new SignUpRequest("testUser", "password123", "PoopKing");
+    signUpRequest = new SignUpRequest("testUser", "password123", "test@example.com", "PoopKing");
     loginRequest = new LoginRequest("testUser", "password123");
     testUser =
         User.builder()
             .username("testUser")
             .password("encodedPassword")
+            .email("test@example.com")
             .nickname("PoopKing")
             .role(User.Role.ROLE_USER)
             .build();

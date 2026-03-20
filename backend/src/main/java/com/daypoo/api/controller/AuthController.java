@@ -2,6 +2,7 @@ package com.daypoo.api.controller;
 
 import com.daypoo.api.dto.LoginRequest;
 import com.daypoo.api.dto.SignUpRequest;
+import com.daypoo.api.dto.SocialSignUpRequest;
 import com.daypoo.api.dto.TokenResponse;
 import com.daypoo.api.dto.UserResponse;
 import com.daypoo.api.service.AuthService;
@@ -66,12 +67,31 @@ public class AuthController {
     return ResponseEntity.ok(response);
   }
 
-  @Operation(summary = "비밀번호 재설정", description = "아이디(이메일)를 입력받아 해당 이메일로 임시 비밀번호를 발송합니다.")
+  @Operation(summary = "소셜 회원가입 완료", description = "소셜 인증 후 닉네임을 설정하여 가입을 완료합니다.")
+  @ApiResponse(responseCode = "200", description = "가입 성공 및 토큰 발급")
+  @ApiResponse(responseCode = "400", description = "중복된 닉네임 또는 유효하지 않은 토큰")
+  @PostMapping("/social/signup")
+  public ResponseEntity<TokenResponse> socialSignUp(
+      @Valid @RequestBody SocialSignUpRequest request) {
+    TokenResponse response = authService.socialSignUp(request);
+    return ResponseEntity.ok(response);
+  }
+
+  @Operation(summary = "아이디 찾기", description = "닉네임을 입력받아 마스킹된 아이디(이메일)를 반환합니다.")
+  @ApiResponse(responseCode = "200", description = "아이디 조회 성공")
+  @ApiResponse(responseCode = "404", description = "존재하지 않는 사용자")
+  @GetMapping("/find-id")
+  public ResponseEntity<String> findId(@RequestParam String nickname) {
+    String foundEmail = authService.findIdByNickname(nickname);
+    return ResponseEntity.ok(foundEmail);
+  }
+
+  @Operation(summary = "비밀번호 재설정", description = "이메일을 입력받아 해당 이메일로 임시 비밀번호를 발송합니다.")
   @ApiResponse(responseCode = "200", description = "임시 비밀번호 발송 성공")
   @ApiResponse(responseCode = "404", description = "존재하지 않는 사용자")
   @PostMapping("/password/reset")
-  public ResponseEntity<String> resetPassword(@RequestParam String username) {
-    authService.resetPassword(username);
+  public ResponseEntity<String> resetPassword(@RequestParam String email) {
+    authService.resetPassword(email);
     return ResponseEntity.ok("임시 비밀번호가 이메일로 발송되었습니다.");
   }
 }
