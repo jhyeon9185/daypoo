@@ -1,5 +1,45 @@
 # Modification History
 
+## [2026-03-20 12:45:00] 닉네임 중복 방지 로직 개선 및 소셜 로그인 가입 제한
+
+### 작업 내용
+- **소셜 로그인 로직 개선**: 신규 사용자가 소셜 로그인(카카오, 구글)을 시도할 때, 제공받은 닉네임이 이미 서비스 내에 존재하면 자동으로 랜덤 숫자를 붙여 생성하던 기존 방식을 제거했습니다. 대신, 중복된 닉네임이 있을 경우 `OAuth2AuthenticationException`을 발생시켜 가입을 차단하도록 변경했습니다.
+- **예외 처리 및 리다이렉트 보완**: `SecurityConfig`의 `failureHandler`에서 발생한 예외 메시지를 URL 인코딩하여 프론트엔드로 전달하도록 수정했습니다. 이를 통해 한글 에러 메시지가 깨지지 않고 안전하게 전달됩니다.
+
+### 상세 변경 내역
+- `backend/src/main/java/com/daypoo/api/service/CustomOAuth2UserService.java`: 닉네임 자동 생성 루프 제거 및 중복 시 예외 발생 로직 추가.
+- `backend/src/main/java/com/daypoo/api/security/SecurityConfig.java`: 인증 실패 시 에러 메시지 URL 인코딩(`URLEncoder`) 처리 추가.
+
+### 결과/영향
+- 중복된 닉네임으로 소셜 가입을 시도할 경우 "이미 사용 중인 닉네임입니다."라는 메시지와 함께 가입이 차단됩니다.
+- 서비스 내 닉네임 유일성이 더욱 엄격하게 보장됩니다.
+
+## [2026-03-20 11:45:00] OAuth2 로그인 후 리다이렉트 포트 불일치 수정 및 로깅 강화
+
+### 작업 내용
+- **환경 변수 수정**: `.env` 파일의 `FRONTEND_URL`을 잘못된 설정(`:3000`)에서 실제 Vite 개발 서버 포트인 `http://localhost:5173`으로 수정했습니다.
+- **로깅 시스템 강화**: `OAuth2SuccessHandler`에 `@Slf4j`를 적용하여 로그인 성공 시 리다이렉트되는 최종 URL을 서버 로그로 출력하도록 개선했습니다.
+
+### 상세 변경 내역
+- `.env`: `FRONTEND_URL=http://localhost:5173`으로 변경.
+- `backend/src/main/java/com/daypoo/api/security/OAuth2SuccessHandler.java`: 로그인 성공 로그 추가.
+
+### 결과/영향
+- 카카오 로그인 성공 후 프론트엔드의 콜백 페이지(`/auth/callback`)로 정상적으로 이동하며, 토큰 정보가 올바르게 전달됩니다.
+
+## [2026-03-20 11:35:00] OAuth2 403 Forbidden 에러 수정 및 설정 최적화
+
+### 작업 내용
+- **SecurityConfig 설정 보완**: `SecurityFilterChain`에 `oauth2Login` 설정을 추가하여 카카오 로그인 요청이 정상적으로 처리되도록 개선했습니다. `customOAuth2UserService`와 `oAuth2SuccessHandler`를 연동 완료했습니다.
+- **애플리케이션 설정 수정**: `application.yml`에서 잘못된 위치(`spring.mail`)에 있던 `oauth2` 설정을 올바른 위치(`spring.security`)로 이동하고 인덴트를 수정하여 환경 변수가 정상적으로 로드되도록 했습니다.
+
+### 상세 변경 내역
+- `backend/src/main/java/com/daypoo/api/security/SecurityConfig.java`: `.oauth2Login()` 설정 및 `/oauth2/**`, `/login/oauth2/**` 경로 허용 추가.
+- `backend/src/main/resources/application.yml`: `oauth2` 블록의 계층 구조를 `spring.security.oauth2`로 변경.
+
+### 결과/영향
+- 사용자가 카카오 로그인 버튼을 눌렀을 때 403 에러 없이 카카오 인증 페이지로 정상적으로 연결됩니다.
+
 ## [2026-03-20 10:45:00] 백엔드 빌드 오류 수정 및 서버 구동
 
 ### 작업 내용
