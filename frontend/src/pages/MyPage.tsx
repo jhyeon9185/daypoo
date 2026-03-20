@@ -9,6 +9,8 @@ import {
 } from 'lucide-react';
 import { loadTossPayments } from '@tosspayments/payment-sdk';
 import { api } from '../services/apiClient';
+import { useAuth } from '../context/AuthContext';
+import { MyPageSkeleton } from '../components/LoadingSkeleton';
 
 // ── 타입 ──────────────────────────────────────────────────────────────
 type TabKey = 'home' | 'collection' | 'report' | 'settings';
@@ -918,9 +920,20 @@ function CollectionTab() {
 }
 
 // ── 리포트 탭 ─────────────────────────────────────────────────────────
-function ReportTab() {
+function ReportTab({ records = [] }: { records?: any[] }) {
   const [reportOpen, setReportOpen] = useState(false);
-  const completedDays = 5;
+  
+  // 실제 기록이 있으면 그 중 최근 7일을 추출하거나, 없으면 Mock 사용
+  const displayData = records.length > 0 
+    ? records.slice(-7).map((r, i) => ({
+        day: ['월','화','수','목','금','토','일'][new Date(r.createdAt).getDay()],
+        type: r.bristolType,
+        emoji: ['🍫','🌽','🍌','🍌','🫘','🌊','🔥'][r.bristolType - 1] || '💩',
+        color: r.bristolType >= 3 && r.bristolType <= 5 ? '#52b788' : '#E8A838'
+      }))
+    : BRISTOL_DATA;
+
+  const completedDays = records.length > 0 ? records.length : 5;
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-40px' });
 
@@ -929,11 +942,11 @@ function ReportTab() {
       className="flex flex-col gap-4">
 
       <motion.div variants={fadeUp(0)} className="rounded-[24px] p-5 mb-1"
-        style={{ background: 'transparent', border: '1px solid rgba(26,43,39,0.08)' }}>
+        style={{ background: '#ffffff', border: '1px solid rgba(26,43,39,0.08)' }}>
         <div className="flex items-center justify-between mb-4">
           <div>
             <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(26,43,39,0.3)' }}>
-              7일 정밀 분석
+              {records.length > 0 ? '전체 기록 분석' : '7일 정밀 분석'}
             </p>
             <p className="text-sm font-black text-[#1A2B27]" style={{ letterSpacing: '-0.02em' }}>
               닥터 푸의 주간 진단서
@@ -941,26 +954,29 @@ function ReportTab() {
           </div>
           <span className="text-xs font-bold px-2.5 py-1 rounded-full"
             style={{ background: 'rgba(82,183,136,0.1)', color: '#52b788', border: '1px solid rgba(82,183,136,0.2)' }}>
-            {completedDays}/7일
+            {completedDays}회 기록됨
           </span>
         </div>
         <div className="flex gap-1.5 mb-4">
-          {['월','화','수','목','금','토','일'].map((d, i) => (
-            <motion.div key={d}
-              initial={{ scaleY: 0 }} animate={{ scaleY: 1 }}
-              transition={{ delay: 0.1 + i * 0.06, type: 'spring', stiffness: 300, damping: 24 }}
-              style={{ transformOrigin: 'bottom', flex: 1 }}>
-              <div className="flex flex-col items-center gap-1 py-2 rounded-xl text-[10px] font-bold"
-                style={{
-                  background: i < completedDays ? 'rgba(82,183,136,0.12)' : 'rgba(26,43,39,0.04)',
-                  border: `1px solid ${i < completedDays ? 'rgba(82,183,136,0.25)' : 'rgba(26,43,39,0.06)'}`,
-                  color: i < completedDays ? '#52b788' : 'rgba(26,43,39,0.2)',
-                }}>
-                {i < completedDays ? '✓' : '·'}
-                <span>{d}</span>
-              </div>
-            </motion.div>
-          ))}
+          {['월','화','수','목','금','토','일'].map((d, i) => {
+            const hasRecord = displayData.some(rd => rd.day === d);
+            return (
+              <motion.div key={d}
+                initial={{ scaleY: 0 }} animate={{ scaleY: 1 }}
+                transition={{ delay: 0.1 + i * 0.06, type: 'spring', stiffness: 300, damping: 24 }}
+                style={{ transformOrigin: 'bottom', flex: 1 }}>
+                <div className="flex flex-col items-center gap-1 py-2 rounded-xl text-[10px] font-bold"
+                  style={{
+                    background: hasRecord ? 'rgba(82,183,136,0.12)' : 'rgba(26,43,39,0.04)',
+                    border: `1px solid ${hasRecord ? 'rgba(82,183,136,0.25)' : 'rgba(26,43,39,0.06)'}`,
+                    color: hasRecord ? '#52b788' : 'rgba(26,43,39,0.2)',
+                  }}>
+                  {hasRecord ? '✓' : '·'}
+                  <span>{d}</span>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
           onClick={() => setReportOpen(true)}
@@ -971,13 +987,13 @@ function ReportTab() {
       </motion.div>
 
       <motion.div variants={fadeUp(0.1)} className="rounded-[24px] p-5"
-        style={{ background: 'transparent', border: '1px solid rgba(26,43,39,0.08)' }}>
+        style={{ background: '#ffffff', border: '1px solid rgba(26,43,39,0.08)' }}>
         <p className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: 'rgba(26,43,39,0.3)' }}>
-          이번 주 브리스톨 기록
+          기록 통계
         </p>
         <div className="flex gap-2">
-          {BRISTOL_DATA.map((d, i) => (
-            <motion.div key={d.day}
+          {displayData.map((d, i) => (
+            <motion.div key={i}
               initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 + i * 0.07, type: 'spring', stiffness: 260, damping: 22 }}
               className="flex-1 flex flex-col items-center gap-1.5 py-3 rounded-2xl"
@@ -1102,14 +1118,46 @@ function ReportTab() {
 }
 
 // ── 설정 탭 ───────────────────────────────────────────────────────────
-function SettingsTab({ user }: { user: UserProfile | null }) {
+function SettingsTab({ user, refreshUser, logout }: { user: UserProfile | null; refreshUser: () => void, logout: () => void }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-40px' });
+  const [modalType, setModalType] = useState<'nickname' | 'password' | null>(null);
+  const [inputValue, setInputValue] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleNicknameChange = async () => {
+    if (!inputValue.trim()) return;
+    setIsSubmitting(true);
+    try {
+      await api.patch('/auth/profile', { nickname: inputValue });
+      alert('닉네임이 변경되었습니다.');
+      refreshUser();
+      setModalType(null);
+    } catch (err: any) {
+      alert(err.message || '변경에 실패했습니다.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    if (!inputValue.trim()) return;
+    setIsSubmitting(true);
+    try {
+      await api.patch('/auth/password', { password: inputValue });
+      alert('비밀번호가 변경되었습니다.');
+      setModalType(null);
+    } catch (err: any) {
+      alert(err.message || '변경에 실패했습니다.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const rows = [
-    { label: '이메일',   value: user?.username || '데이터 없음', action: '변경' },
-    { label: '닉네임',   value: user?.nickname  || '데이터 없음', action: '변경' },
-    { label: '생년월일', value: user?.birthDate  || '미등록', action: null },
+    { label: '이메일',   value: user?.username || '데이터 없음', action: null },
+    { label: '닉네임',   value: user?.nickname  || '데이터 없음', action: '변경', onClick: () => { setInputValue(user?.nickname || ''); setModalType('nickname'); } },
+    { label: '비밀번호', value: '********', action: '변경', onClick: () => { setInputValue(''); setModalType('password'); } },
     { label: '가입일',   value: user?.createdAt ? (user.createdAt as string).split('T')[0] : '-', action: null },
   ];
 
@@ -1117,7 +1165,7 @@ function SettingsTab({ user }: { user: UserProfile | null }) {
     <motion.div ref={ref} variants={stagger} initial="hidden" animate={inView ? 'show' : 'hidden'}
       className="flex flex-col gap-4">
       <motion.div variants={fadeUp(0)} className="rounded-[24px] p-5 mb-1"
-        style={{ background: 'transparent', border: '1px solid rgba(26,43,39,0.08)' }}>
+        style={{ background: '#ffffff', border: '1px solid rgba(26,43,39,0.08)' }}>
         <p className="text-xs font-bold uppercase tracking-widest px-5 pt-5 pb-3"
           style={{ color: 'rgba(26,43,39,0.3)' }}>회원 정보</p>
         <div className="px-5 pb-2">
@@ -1132,6 +1180,7 @@ function SettingsTab({ user }: { user: UserProfile | null }) {
                 <span className="text-sm font-semibold text-[#1A2B27]">{r.value}</span>
                 {r.action && (
                   <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                    onClick={r.onClick}
                     className="text-xs font-bold px-2.5 py-1 rounded-lg"
                     style={{ background: 'rgba(82,183,136,0.1)', color: '#52b788', border: '1px solid rgba(82,183,136,0.2)' }}>
                     {r.action}
@@ -1143,41 +1192,47 @@ function SettingsTab({ user }: { user: UserProfile | null }) {
         </div>
       </motion.div>
 
-      <motion.div variants={fadeUp(0.1)} className="rounded-[24px] overflow-hidden"
-        style={{ background: '#ffffff', border: '1px solid rgba(26,43,39,0.08)' }}>
-        <p className="text-xs font-bold uppercase tracking-widest px-5 pt-5 pb-3"
-          style={{ color: 'rgba(26,43,39,0.3)' }}>더 보기</p>
-        {[
-          { icon: <Settings size={14} />, label: '알림 설정', color: '#52b788' },
-          { icon: <TrendingUp size={14} />, label: '데이터 내보내기', color: '#52b788' },
-        ].map((item, i) => (
-          <motion.button key={item.label}
-            initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.15 + i * 0.07 }}
-            whileHover={{ x: 4 }}
-            className="w-full flex items-center justify-between px-5 py-3.5"
-            style={{ borderBottom: '1px solid rgba(26,43,39,0.05)' }}>
-            <div className="flex items-center gap-3">
-              <span style={{ color: item.color }}>{item.icon}</span>
-              <span className="text-sm font-medium text-[#1A2B27]">{item.label}</span>
-            </div>
-            <ChevronRight size={14} style={{ color: 'rgba(26,43,39,0.2)' }} />
-          </motion.button>
-        ))}
-      </motion.div>
-
       <motion.div variants={fadeUp(0.18)} className="flex gap-2.5">
         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+          onClick={logout}
           className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold text-sm"
           style={{ background: 'rgba(232,93,93,0.08)', border: '1px solid rgba(232,93,93,0.2)', color: '#E85D5D' }}>
           <LogOut size={15} /> 로그아웃
         </motion.button>
-        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-          className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl font-semibold text-sm"
-          style={{ background: 'rgba(26,43,39,0.03)', border: '1px solid rgba(26,43,39,0.08)', color: 'rgba(26,43,39,0.3)' }}>
-          <Trash2 size={15} /> 회원탈퇴
-        </motion.button>
       </motion.div>
+
+      {/* 단순 모달 구현 (실제론 더 예쁘게 가능하지만 핵심 로직 위주) */}
+      <AnimatePresence>
+        {modalType && (
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setModalType(null)} className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+              className="relative w-full max-w-sm bg-white rounded-[32px] p-8 shadow-2xl border border-gray-100">
+              <h3 className="text-xl font-black text-[#1A2B27] mb-6">
+                {modalType === 'nickname' ? '닉네임 변경' : '비밀번호 변경'}
+              </h3>
+              <input 
+                type={modalType === 'nickname' ? 'text' : 'password'}
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder={modalType === 'nickname' ? '새 닉네임 입력' : '새 비밀번호 입력'}
+                className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl mb-6 outline-none focus:border-emerald-500/30 font-semibold"
+              />
+              <div className="flex gap-3">
+                <button onClick={() => setModalType(null)} className="flex-1 py-3 text-gray-400 font-bold">취소</button>
+                <button 
+                  onClick={modalType === 'nickname' ? handleNicknameChange : handlePasswordChange}
+                  disabled={isSubmitting}
+                  className="flex-1 py-3 bg-[#1B4332] text-white font-black rounded-xl shadow-lg shadow-emerald-900/20"
+                >
+                  {isSubmitting ? '처리 중...' : '변경하기'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
@@ -1185,32 +1240,31 @@ function SettingsTab({ user }: { user: UserProfile | null }) {
 // ── MyPage ────────────────────────────────────────────────────────────
 export function MyPage({ openAuth }: { openAuth: (mode: 'login' | 'signup') => void }) {
   const navigate = useNavigate();
-  const [user, setUser] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, loading, refreshUser, isAuthenticated, logout } = useAuth();
+  const [records, setRecords] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<TabKey>('home');
   const [prevTab, setPrevTab] = useState<TabKey>('home');
   const [equipped, setEquipped] = useState<AvatarItem>(AVATAR_ITEMS[0]);
 
-  const fetchUser = useCallback(async () => {
+  const fetchRecords = useCallback(async () => {
     try {
-      const data = await api.get('/auth/me');
-      setUser(data);
+      const data = await api.get('/records');
+      setRecords(data);
     } catch (err) {
-      console.error('Failed to fetch user info', err);
-    } finally {
-      setLoading(false);
+      console.error('Failed to fetch records', err);
     }
   }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    if (!token || token === 'undefined') {
-      navigate('/');
-      openAuth('login');
-      return;
+    if (!loading) {
+      if (!isAuthenticated) {
+        navigate('/');
+        openAuth('login');
+      } else {
+        fetchRecords();
+      }
     }
-    fetchUser();
-  }, [navigate, openAuth, fetchUser]);
+  }, [loading, isAuthenticated, navigate, openAuth, fetchRecords]);
 
   const tabOrder: TabKey[] = ['home', 'collection', 'report', 'settings'];
   const tabDir = tabOrder.indexOf(activeTab) >= tabOrder.indexOf(prevTab) ? 1 : -1;
@@ -1224,12 +1278,7 @@ export function MyPage({ openAuth }: { openAuth: (mode: 'login' | 'signup') => v
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#f8faf9' }}>
-        <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-          className="text-3xl">💩</motion.span>
-      </div>
-    );
+    return <MyPageSkeleton />;
   }
 
   return (
@@ -1244,8 +1293,8 @@ export function MyPage({ openAuth }: { openAuth: (mode: 'login' | 'signup') => v
             transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}>
             {activeTab === 'home'       && <HomeTab equipped={equipped} setEquipped={setEquipped} user={user} />}
             {activeTab === 'collection' && <CollectionTab />}
-            {activeTab === 'report'     && <ReportTab />}
-            {activeTab === 'settings'   && <SettingsTab user={user} />}
+            {activeTab === 'report'     && <ReportTab records={records} />}
+            {activeTab === 'settings'   && <SettingsTab user={user} refreshUser={refreshUser} logout={logout} />}
           </motion.div>
         </AnimatePresence>
       </div>
