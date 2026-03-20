@@ -617,9 +617,8 @@ function HomeTab({ equipped, setEquipped, user }: { equipped: AvatarItem | null;
         amount: 5000, // 테스트 기본 금액
         orderId: `POOPMAP_${Math.random().toString(36).substring(2, 11)}`,
         orderName: '포인트 5,000P 충전',
-        successUrl: window.location.origin + '/poop-map/payment/success', 
-        failUrl: window.location.origin + '/poop-map/mypage',
-      });
+        successUrl: window.location.origin + '/payment/success',
+        failUrl: window.location.origin + '/mypage',      });
     } catch (err) {
       console.error('결제 요청 실패:', err);
       alert('결제창을 띄우는 중 오류가 발생했습니다.');

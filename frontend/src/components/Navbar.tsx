@@ -1,4 +1,4 @@
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, useScroll, useTransform, useMotionValueEvent } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Bell, User, LogOut } from 'lucide-react';
 import { useState } from 'react';
@@ -8,6 +8,18 @@ import { AnimatedUnderlink } from './AnimatedUnderlink';
 export function Navbar({ openAuth }: { openAuth: (mode: 'login' | 'signup') => void }) {
   const { scrollY } = useScroll();
   const scale = useTransform(scrollY, [0, 100], [1, 0.97]);
+  const [hidden, setHidden] = useState(false);
+
+  useMotionValueEvent(scrollY, 'change', (latest) => {
+    const previous = scrollY.getPrevious() ?? 0;
+    // 150px 이상 스크롤했고, 아래로 내려가는 중이면 숨김
+    if (latest > previous && latest > 150) {
+      setHidden(true);
+    } else {
+      setHidden(false);
+    }
+  });
+
   const [hasNotif] = useState(true); // 알림 뱃지 (실제론 API 연동)
   
   // 실제 로그인 상태 확인 (undefined/null 문자열로 저장된 경우 방지)
@@ -20,7 +32,7 @@ export function Navbar({ openAuth }: { openAuth: (mode: 'login' | 'signup') => v
 
   const handleLogout = () => {
     localStorage.removeItem('accessToken');
-    window.location.href = '/poop-map/main';
+    window.location.href = '/main';
   };
 
   const handleLogoClick = (e: React.MouseEvent) => {
@@ -46,6 +58,12 @@ export function Navbar({ openAuth }: { openAuth: (mode: 'login' | 'signup') => v
       }}
     >
       <motion.nav
+        variants={{
+          visible: { y: 0, opacity: 1 },
+          hidden: { y: -110, opacity: 0 },
+        }}
+        animate={hidden ? 'hidden' : 'visible'}
+        transition={{ duration: 0.35, ease: 'easeInOut' }}
         style={{
           scale,
           pointerEvents: 'auto',
@@ -57,9 +75,6 @@ export function Navbar({ openAuth }: { openAuth: (mode: 'login' | 'signup') => v
           boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
           gap: '20px',
         }}
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
       >
         {/* 로고 */}
         <Link

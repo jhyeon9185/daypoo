@@ -303,13 +303,13 @@ function LoginForm({ onSwitch, onSuccess, onClose }: { onSwitch: () => void; onS
       {/* 소셜 */}
       <div className="flex flex-col gap-2 mb-5">
         <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
-          onClick={() => window.location.href = '/poop-map/oauth2/authorization/kakao'}
+          onClick={() => window.location.href = '/oauth2/authorization/kakao'}
           className="flex items-center justify-center gap-2.5 w-full py-3 rounded-xl text-sm font-bold shadow-sm"
           style={{ background: '#FEE500', color: '#1a1a1a', border: '1px solid rgba(254,229,0,0.2)' }}>
           <KakaoIcon />카카오로 로그인
         </motion.button>
         <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
-          onClick={() => window.location.href = '/poop-map/oauth2/authorization/google'}
+          onClick={() => window.location.href = '/oauth2/authorization/google'}
           className="flex items-center justify-center gap-2.5 w-full py-3 rounded-xl text-sm font-bold shadow-sm"
           style={{ background: '#fff', color: '#555', border: '1.5px solid rgba(26,43,39,0.08)' }}>
           <GoogleIcon />Google로 로그인
@@ -525,13 +525,13 @@ function SignupForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess?:
       {step === 0 && (
         <div className="flex flex-col gap-2 mb-4">
           <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
-            onClick={() => window.location.href = '/poop-map/oauth2/authorization/kakao'}
+            onClick={() => window.location.href = '/oauth2/authorization/kakao'}
             className="flex items-center justify-center gap-2.5 w-full py-3 rounded-xl text-sm font-bold shadow-sm"
             style={{ background: '#FEE500', color: '#1a1a1a', border: '1px solid rgba(254,229,0,0.2)' }}>
             <KakaoIcon />카카오로 시작하기
           </motion.button>
           <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
-            onClick={() => window.location.href = '/poop-map/oauth2/authorization/google'}
+            onClick={() => window.location.href = '/oauth2/authorization/google'}
             className="flex items-center justify-center gap-2.5 w-full py-3 rounded-xl text-sm font-bold shadow-sm"
             style={{ background: '#fff', color: '#555', border: '1.5px solid rgba(26,43,39,0.08)' }}>
             <GoogleIcon />Google로 시작하기
