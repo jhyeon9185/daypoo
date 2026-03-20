@@ -18,6 +18,8 @@ public enum ErrorCode {
   USERNAME_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "U002", "이미 존재하는 아이디입니다."),
   NICKNAME_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "U003", "이미 존재하는 닉네임입니다."),
   INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "U004", "비밀번호가 일치하지 않습니다."),
+  INVALID_TOKEN(HttpStatus.BAD_REQUEST, "U005", "유효하지 않거나 만료된 토큰입니다."),
+  EMAIL_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "U006", "이미 존재하는 이메일입니다."),
 
   // Shop
   INSUFFICIENT_POINTS(HttpStatus.BAD_REQUEST, "S001", "포인트가 부족합니다."),

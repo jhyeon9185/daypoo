@@ -2,7 +2,6 @@ package com.daypoo.api.controller;
 
 import com.daypoo.api.dto.FaqResponse;
 import com.daypoo.api.dto.InquiryRequest;
-import com.daypoo.api.dto.InquiryResponse;
 import com.daypoo.api.entity.User;
 import com.daypoo.api.repository.UserRepository;
 import com.daypoo.api.service.SupportService;
@@ -36,7 +35,8 @@ public class SupportController {
       return ResponseEntity.ok().build();
     } catch (Exception e) {
       e.printStackTrace();
-      return ResponseEntity.internalServerError().body(Map.of("message", "문의 등록 중 오류 발생: " + e.getMessage()));
+      return ResponseEntity.internalServerError()
+          .body(Map.of("message", "문의 등록 중 오류 발생: " + e.getMessage()));
     }
   }
 
@@ -52,7 +52,8 @@ public class SupportController {
       return ResponseEntity.ok(supportService.getMyInquiries(user));
     } catch (Exception e) {
       e.printStackTrace();
-      return ResponseEntity.internalServerError().body(Map.of("message", "문의 내역 로드 중 오류 발생: " + e.getMessage()));
+      return ResponseEntity.internalServerError()
+          .body(Map.of("message", "문의 내역 로드 중 오류 발생: " + e.getMessage()));
     }
   }
 

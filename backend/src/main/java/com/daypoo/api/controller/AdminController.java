@@ -17,18 +17,20 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AdminController {
 
-    private final AdminService adminService;
+  private final AdminService adminService;
 
-    @Operation(summary = "관리자 대시보드 통계 조회", description = "유저 추이, 매출, 문의 현황 등 관리자 대시보드에 필요한 통계 정보를 반환합니다.")
-    @GetMapping("/stats")
-    public ResponseEntity<AdminStatsResponse> getAdminStats() {
-        return ResponseEntity.ok(adminService.getAdminStats());
-    }
+  @Operation(
+      summary = "관리자 대시보드 통계 조회",
+      description = "유저 추이, 매출, 문의 현황 등 관리자 대시보드에 필요한 통계 정보를 반환합니다.")
+  @GetMapping("/stats")
+  public ResponseEntity<AdminStatsResponse> getAdminStats() {
+    return ResponseEntity.ok(adminService.getAdminStats());
+  }
 
-    @Operation(summary = "테스트 데이터 생성", description = "통계 그래프 확인을 위해 과거 14일치 결제 테스트 데이터를 생성합니다.")
-    @PostMapping("/generate-test-data")
-    public ResponseEntity<String> generateTestData() {
-        adminService.generateTestData();
-        return ResponseEntity.ok("테스트 데이터가 생성되었습니다.");
-    }
+  @Operation(summary = "테스트 데이터 생성", description = "통계 그래프 확인을 위해 과거 14일치 결제 테스트 데이터를 생성합니다.")
+  @PostMapping("/generate-test-data")
+  public ResponseEntity<String> generateTestData() {
+    adminService.generateTestData();
+    return ResponseEntity.ok("테스트 데이터가 생성되었습니다.");
+  }
 }

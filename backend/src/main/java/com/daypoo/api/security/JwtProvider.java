@@ -39,6 +39,21 @@ public class JwtProvider {
         .compact();
   }
 
+  public String createRegistrationToken(String username, String email, String role) {
+    long now = (new Date()).getTime();
+    long FIVE_MINUTES = 5 * 60 * 1000;
+    Date validity = new Date(now + FIVE_MINUTES);
+
+    return Jwts.builder()
+        .subject(username)
+        .claim("email", email)
+        .claim("role", role)
+        .claim("type", "registration")
+        .signWith(key)
+        .expiration(validity)
+        .compact();
+  }
+
   public String createRefreshToken(String username) {
     long now = (new Date()).getTime();
     Date validity = new Date(now + this.refreshTokenValidity);

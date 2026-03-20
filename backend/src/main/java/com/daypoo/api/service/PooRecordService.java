@@ -75,20 +75,29 @@ public class PooRecordService {
         locationVerificationService.isWithinAllowedDistance(
             request.toiletId(), request.latitude(), request.longitude());
     if (!isNear) {
-      log.warn("User {} is outside radius for toilet {}. Proceeding anyway (dev mode).", username, request.toiletId());
+      log.warn(
+          "User {} is outside radius for toilet {}. Proceeding anyway (dev mode).",
+          username,
+          request.toiletId());
     }
 
     // 2.2 체류 시간 검증 (개발 환경에서는 경고만 출력)
     boolean stayedEnough =
         locationVerificationService.hasStayedLongEnough(user.getId(), toilet.getId());
     if (!stayedEnough) {
-      log.warn("User {} has not stayed long enough at toilet {}. Proceeding anyway (dev mode).", username, request.toiletId());
+      log.warn(
+          "User {} has not stayed long enough at toilet {}. Proceeding anyway (dev mode).",
+          username,
+          request.toiletId());
     }
 
     // 3. 레디스 Rate Limiter(어뷰징 체크 - 개발 환경에서는 경고만)
     boolean allowed = locationVerificationService.checkAndSetCooldown(user.getId(), toilet.getId());
     if (!allowed) {
-      log.warn("User {} hit cooldown for toilet {}. Proceeding anyway (dev mode).", username, request.toiletId());
+      log.warn(
+          "User {} hit cooldown for toilet {}. Proceeding anyway (dev mode).",
+          username,
+          request.toiletId());
     }
 
     // 4. AI 분석 (이미지가 있을 경우)
@@ -106,8 +115,10 @@ public class PooRecordService {
     String regionName = geocodingService.reverseGeocode(request.latitude(), request.longitude());
 
     // 6. 기록 생성 (null-safe 처리)
-    List<String> safeConditionTags = request.conditionTags() != null ? request.conditionTags() : Collections.emptyList();
-    List<String> safeDietTags = request.dietTags() != null ? request.dietTags() : Collections.emptyList();
+    List<String> safeConditionTags =
+        request.conditionTags() != null ? request.conditionTags() : Collections.emptyList();
+    List<String> safeDietTags =
+        request.dietTags() != null ? request.dietTags() : Collections.emptyList();
 
     PooRecord record =
         PooRecord.builder()
