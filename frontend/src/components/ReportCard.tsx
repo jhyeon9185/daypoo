@@ -55,10 +55,10 @@ export function ReportCard({ openAuth }: { openAuth: (mode: 'login' | 'signup') 
   return (
     <section className="pt-40 pb-64 px-6" style={{ backgroundColor: '#eef5f0' }}>
       <motion.div 
-        initial={{ opacity: 0, scale: 0.9, filter: 'brightness(3) saturate(0) blur(10px)' }}
+        initial={{ opacity: 0, scale: 0.92, filter: 'brightness(2) saturate(0) blur(12px)' }}
         whileInView={{ opacity: 1, scale: 1, filter: 'brightness(1) saturate(1) blur(0px)' }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 1.8, ease: [0.16, 1, 0.3, 1] }}
+        viewport={{ once: true, amount: 0.4, margin: "-120px" }}
+        transition={{ duration: 2.4, ease: [0.16, 1, 0.3, 1] }}
         className="max-w-5xl mx-auto relative"
       >
         {/* Burn Effect Glow Overlay */}
@@ -102,10 +102,10 @@ export function ReportCard({ openAuth }: { openAuth: (mode: 'login' | 'signup') 
 
           {/* ── 좌측: 차트 카드 (3/5) ──────────────────── */}
           <motion.div
-            initial={{ opacity: 0, x: -32 }}
+            initial={{ opacity: 0, x: -40 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 1.2, delay: 0.3, ease: "easeOut" }}
             className="lg:col-span-3 p-8 rounded-[32px] shadow-xl overflow-hidden"
             style={{
               backgroundColor: 'var(--surface)',
@@ -221,10 +221,10 @@ export function ReportCard({ openAuth }: { openAuth: (mode: 'login' | 'signup') 
 
           {/* ── 우측: 잠긴 AI 인사이트 (2/5) ──────────── */}
           <motion.div
-            initial={{ opacity: 0, x: 32 }}
+            initial={{ opacity: 0, x: 40 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.15 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 1.2, delay: 0.6, ease: "easeOut" }}
             className="lg:col-span-2 flex flex-col gap-4"
           >
             {/* 안내 배너 */}
