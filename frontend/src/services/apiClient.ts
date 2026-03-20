@@ -1,4 +1,4 @@
-const BASE_URL = '/poop-map/api/v1';
+const BASE_URL = '/api/v1';
 
 const getHeaders = () => {
   const token = localStorage.getItem('accessToken');

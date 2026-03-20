@@ -61,7 +61,7 @@ export function useToilets({ lat, lng, radius = 1000, bounds }: UseToiletsOption
       setLoading(true);
       setError(null);
 
-      let url = `/poop-map/api/v1/toilets?latitude=${lat}&longitude=${lng}&radius=${radius}`;
+      let url = `/api/v1/toilets?latitude=${lat}&longitude=${lng}&radius=${radius}`;
 
       if (bounds) {
         const centerLat = (bounds.swLat + bounds.neLat) / 2;
@@ -72,7 +72,7 @@ export function useToilets({ lat, lng, radius = 1000, bounds }: UseToiletsOption
         const a = Math.sin(dLat / 2) ** 2 +
           Math.cos((centerLat * Math.PI) / 180) * Math.cos((bounds.neLat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
         const dynamicRadius = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        url = `/poop-map/api/v1/toilets?latitude=${centerLat}&longitude=${centerLng}&radius=${Math.min(dynamicRadius, 10000)}`;
+        url = `/api/v1/toilets?latitude=${centerLat}&longitude=${centerLng}&radius=${Math.min(dynamicRadius, 10000)}`;
       }
 
       try {

@@ -1,7 +1,9 @@
 package com.daypoo.api.service;
 
+import com.daypoo.api.entity.Payment;
 import com.daypoo.api.global.exception.BusinessException;
 import com.daypoo.api.global.exception.ErrorCode;
+import com.daypoo.api.repository.PaymentRepository;
 import com.daypoo.api.repository.UserRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

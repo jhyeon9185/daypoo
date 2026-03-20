@@ -34,7 +34,7 @@ function App() {
   }, []);
 
   return (
-    <BrowserRouter basename="/poop-map">
+    <BrowserRouter>
       <TransitionProvider>
         <Routes>
           <Route path="/" element={<SplashPage />} />
