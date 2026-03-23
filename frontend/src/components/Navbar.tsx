@@ -154,25 +154,27 @@ export function Navbar({ openAuth }: { openAuth: (mode: 'login' | 'signup') => v
               </>
             )}
 
-            {/* 알림 벨 (우측 끝으로 이동) */}
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setNotifOpen(!notifOpen)}
-              className="relative p-2 rounded-full transition-colors hover:bg-white/10"
-              style={{ color: 'rgba(255,255,255,0.6)', marginLeft: '4px', background: 'none', border: 'none' }}
-              title="알림"
-            >
-              <Bell size={18} />
-              {hasNotif && (
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full"
-                  style={{ backgroundColor: '#E85D5D', border: '1.5px solid #1A2B27' }}
-                />
-              )}
-            </motion.button>
+            {/* 알림 벨 (우측 끝으로 이동 - 로그인 상태에서만 표시) */}
+            {isAuthenticated && (
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setNotifOpen(!notifOpen)}
+                className="relative p-2 rounded-full transition-colors hover:bg-white/10"
+                style={{ color: 'rgba(255,255,255,0.6)', marginLeft: '4px', background: 'none', border: 'none' }}
+                title="알림"
+              >
+                <Bell size={18} />
+                {hasNotif && (
+                  <motion.span
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full"
+                    style={{ backgroundColor: '#E85D5D', border: '1.5px solid #1A2B27' }}
+                  />
+                )}
+              </motion.button>
+            )}
           </div>
         </motion.nav>
       </div>

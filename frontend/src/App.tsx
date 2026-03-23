@@ -18,6 +18,8 @@ import { AdminPage } from './pages/AdminPage';
 import { SocialSignupPage } from './pages/SocialSignupPage';
 import { PremiumPage } from './pages/PremiumPage';
 import { AuthProvider } from './context/AuthContext';
+import { NotificationProvider } from './context/NotificationContext';
+import { NotificationSubscriber } from './components/NotificationSubscriber';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 function LoginPage() {
@@ -44,33 +46,36 @@ function App() {
       <ErrorBoundary>
         <AuthProvider>
           <TransitionProvider>
-            <Routes>
-              <Route path="/" element={<SplashPage />} />
-              <Route path="/main" element={<MainPage openAuth={openAuth} />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/map" element={<MapPage openAuth={openAuth} />} />
-              <Route path="/ranking" element={<RankingPage openAuth={openAuth} />} />
-              <Route path="/forgot-password" element={<ForgotPage />} />
-              <Route path="/terms" element={<TermsPage />} />
-              <Route path="/privacy" element={<PrivacyPage />} />
-              <Route path="/mypage" element={<MyPage openAuth={openAuth} />} />
-              <Route path="/support" element={<SupportPage openAuth={openAuth} />} />
-              <Route path="/auth/callback" element={<AuthCallback />} />
-              <Route path="/signup/social" element={<SocialSignupPage />} />
-              <Route path="/payment/success" element={<PaymentSuccessPage />} />
-              <Route path="/premium" element={<PremiumPage />} />
-              <Route path="/admin" element={<AdminPage />} />
-              <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-            <AuthModal 
-              isOpen={authOpen} 
-              onClose={() => setAuthOpen(false)} 
-              defaultMode={authMode}
-              onSuccess={() => {
-                if (onAuthSuccess) onAuthSuccess();
-                setOnAuthSuccess(null);
-              }}
-            />
+            <NotificationProvider>
+              <NotificationSubscriber />
+              <Routes>
+                <Route path="/" element={<SplashPage />} />
+                <Route path="/main" element={<MainPage openAuth={openAuth} />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/map" element={<MapPage openAuth={openAuth} />} />
+                <Route path="/ranking" element={<RankingPage openAuth={openAuth} />} />
+                <Route path="/forgot-password" element={<ForgotPage />} />
+                <Route path="/terms" element={<TermsPage />} />
+                <Route path="/privacy" element={<PrivacyPage />} />
+                <Route path="/mypage" element={<MyPage openAuth={openAuth} />} />
+                <Route path="/support" element={<SupportPage openAuth={openAuth} />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
+                <Route path="/signup/social" element={<SocialSignupPage />} />
+                <Route path="/payment/success" element={<PaymentSuccessPage />} />
+                <Route path="/premium" element={<PremiumPage />} />
+                <Route path="/admin" element={<AdminPage />} />
+                <Route path="*" element={<NotFoundPage />} />
+              </Routes>
+              <AuthModal 
+                isOpen={authOpen} 
+                onClose={() => setAuthOpen(false)} 
+                defaultMode={authMode}
+                onSuccess={() => {
+                  if (onAuthSuccess) onAuthSuccess();
+                  setOnAuthSuccess(null);
+                }}
+              />
+            </NotificationProvider>
           </TransitionProvider>
         </AuthProvider>
       </ErrorBoundary>
