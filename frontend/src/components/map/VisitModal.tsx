@@ -14,7 +14,7 @@ interface VisitModalProps {
   checkInTime: number | null;
 }
 
-const STEPS = ['AI 분석 (권장)', '브리스톨 척도', '색상 선택', '컨디션 태그', '먹은 음식'];
+const STEPS = ['AI 분석', '모양 선택', '색상 선택', '추가 정보'];
 
 export function VisitModal({ toilet, onClose, onComplete, checkInTime }: VisitModalProps) {
   const [step, setStep] = useState(0);
@@ -105,7 +105,7 @@ export function VisitModal({ toilet, onClose, onComplete, checkInTime }: VisitMo
   };
 
   const handleNext = () => {
-    if (step < 4) setStep(step + 1);
+    if (step < 3) setStep(step + 1);
     else {
       if (!canComplete) {
         alert(`⌛ 최소 ${remainingSeconds}초 더 체류가 필요합니다.`);
@@ -289,7 +289,7 @@ export function VisitModal({ toilet, onClose, onComplete, checkInTime }: VisitMo
                 </div>
               )}
 
-              {step === 1 && (
+              {step === 2 && (
                 <div className="space-y-6">
                   <div>
                     <p className="font-black text-lg text-[#1a2b22]">색상을 골라주세요</p>
@@ -312,44 +312,40 @@ export function VisitModal({ toilet, onClose, onComplete, checkInTime }: VisitMo
                 </div>
               )}
 
-              {step === 2 && (
-                <div className="space-y-6">
-                  <div>
-                    <p className="font-black text-lg text-[#1a2b22]">상태는 어떠셨나요?</p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {CONDITION_TAGS.map((tag) => (
-                      <button
-                        key={tag}
-                        onClick={() => setConditions(prev => prev.includes(tag) ? prev.filter(t=>t!==tag) : [...prev, tag])}
-                        className={`px-5 py-2.5 rounded-full text-sm font-bold border-2 transition-all ${
-                          conditions.includes(tag) ? 'bg-[#1B4332] border-[#1B4332] text-white' : 'bg-white border-[#eef5f0] text-[#1B4332]'
-                        }`}
-                      >
-                        #{tag}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {step === 3 && (
-                <div className="space-y-6">
-                  <div>
-                    <p className="font-black text-lg text-[#1a2b22]">최근 드신 음식은?</p>
+                <div className="space-y-8">
+                  <div className="space-y-4">
+                    <p className="font-black text-lg text-[#1a2b22]">상태는 어떠셨나요?</p>
+                    <div className="flex flex-wrap gap-2">
+                      {CONDITION_TAGS.map((tag) => (
+                        <button
+                          key={tag}
+                          onClick={() => setConditions(prev => prev.includes(tag) ? prev.filter(t=>t!==tag) : [...prev, tag])}
+                          className={`px-5 py-2.5 rounded-full text-sm font-bold border-2 transition-all ${
+                            conditions.includes(tag) ? 'bg-[#1B4332] border-[#1B4332] text-white' : 'bg-white border-[#eef5f0] text-[#1B4332]'
+                          }`}
+                        >
+                          #{tag}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {FOOD_TAGS.map((tag) => (
-                      <button
-                        key={tag}
-                        onClick={() => setFoods(prev => prev.includes(tag) ? prev.filter(t=>t!==tag) : [...prev, tag])}
-                        className={`px-5 py-2.5 rounded-full text-sm font-bold border-2 transition-all ${
-                          foods.includes(tag) ? 'bg-[#E8A838] border-[#E8A838] text-white' : 'bg-white border-[#eef5f0] text-[#b5810f]'
-                        }`}
-                      >
-                        #{tag}
-                      </button>
-                    ))}
+
+                  <div className="space-y-4">
+                    <p className="font-black text-lg text-[#1a2b22]">최근 드신 음식은?</p>
+                    <div className="flex flex-wrap gap-2">
+                      {FOOD_TAGS.map((tag) => (
+                        <button
+                          key={tag}
+                          onClick={() => setFoods(prev => prev.includes(tag) ? prev.filter(t=>t!==tag) : [...prev, tag])}
+                          className={`px-5 py-2.5 rounded-full text-sm font-bold border-2 transition-all ${
+                            foods.includes(tag) ? 'bg-[#E8A838] border-[#E8A838] text-white' : 'bg-white border-[#eef5f0] text-[#b5810f]'
+                          }`}
+                        >
+                          #{tag}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
@@ -369,7 +365,7 @@ export function VisitModal({ toilet, onClose, onComplete, checkInTime }: VisitMo
           )}
           <button
             onClick={handleNext}
-            disabled={step === 0 ? !bristolType : step === 1 ? !color : false}
+            disabled={step === 1 ? !bristolType : step === 2 ? !color : false}
             className="flex-1 py-4 rounded-2xl font-black text-lg text-white shadow-lg transition-all active:scale-95 disabled:opacity-30 disabled:grayscale"
             style={{ background: 'linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%)' }}
           >

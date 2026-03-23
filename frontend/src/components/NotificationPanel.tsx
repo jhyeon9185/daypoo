@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, X, Check, Trash2, Info, Trophy, MessageSquare } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { api } from '../services/apiClient';
+import { useNotification } from '../context/NotificationContext';
 
 interface Notification {
   id: number;
@@ -15,6 +16,7 @@ interface Notification {
 export function NotificationPanel({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
+  const { showToast } = useNotification();
 
   useEffect(() => {
     if (isOpen) {
@@ -155,14 +157,72 @@ export function NotificationPanel({ isOpen, onClose }: { isOpen: boolean; onClos
               )}
             </div>
             
-            <div className="p-4 bg-gray-50 text-center">
-              <button 
-                className="text-xs font-bold text-[#1B4332]/40 hover:text-[#1B4332] transition-colors"
-                onClick={() => setNotifications(prev => prev.map(n => ({ ...n, isRead: true })))}
-              >
-                모두 읽음으로 표시
-              </button>
-            </div>
+              <div className="p-4 bg-gray-50 flex flex-col gap-3">
+                <button 
+                  className="text-xs font-bold text-[#1B4332]/40 hover:text-[#1B4332] transition-colors text-center"
+                  onClick={() => setNotifications(prev => prev.map(n => ({ ...n, isRead: true })))}
+                >
+                  모두 읽음으로 표시
+                </button>
+                
+                {/* 알림 테스트 도구 (팀원 간 git merge 후 테스트 용도) */}
+                <div className="mt-2 pt-3 border-t border-gray-100">
+                  <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-2 px-1">Debug: Notification Test</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button 
+                      onClick={() => {
+                        showToast('레벨업!', '축하합니다! 새로운 등급을 획득하셨습니다.', 'achievement');
+                        setNotifications(prev => [{
+                          id: Date.now(),
+                          type: 'ACHIEVEMENT',
+                          title: '레벨업!',
+                          content: '축하합니다! 새로운 등급을 획득하셨습니다.',
+                          isRead: false,
+                          createdAt: new Date().toISOString()
+                        }, ...prev]);
+                      }}
+                      className="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-white border border-gray-100 hover:border-amber-200 transition-all group"
+                    >
+                      <Trophy size={14} className="text-amber-400 group-hover:scale-110 transition-transform" />
+                      <span className="text-[10px] font-bold text-gray-500">성취</span>
+                    </button>
+                    <button 
+                      onClick={() => {
+                        showToast('문의 답변', '문의하신 내용에 대해 답변이 도착했습니다.', 'message');
+                        setNotifications(prev => [{
+                          id: Date.now(),
+                          type: 'INQUIRY_REPLY',
+                          title: '문의 답변',
+                          content: '문의하신 내용에 대해 답변이 도착했습니다.',
+                          isRead: false,
+                          createdAt: new Date().toISOString()
+                        }, ...prev]);
+                      }}
+                      className="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-white border border-gray-100 hover:border-blue-200 transition-all group"
+                    >
+                      <MessageSquare size={14} className="text-blue-400 group-hover:scale-110 transition-transform" />
+                      <span className="text-[10px] font-bold text-gray-500">메시지</span>
+                    </button>
+                    <button 
+                      onClick={() => {
+                        showToast('근처 화장실', '현재 위치 150m 이내에 화장실이 있습니다.', 'info');
+                        setNotifications(prev => [{
+                          id: Date.now(),
+                          type: 'INFO',
+                          title: '근처 화장실',
+                          content: '현재 위치 150m 이내에 화장실이 있습니다.',
+                          isRead: false,
+                          createdAt: new Date().toISOString()
+                        }, ...prev]);
+                      }}
+                      className="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-white border border-gray-100 hover:border-emerald-200 transition-all group"
+                    >
+                      <Bell size={14} className="text-emerald-500 group-hover:scale-110 transition-transform" />
+                      <span className="text-[10px] font-bold text-gray-500">시스템</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
           </motion.div>
         </>
       )}

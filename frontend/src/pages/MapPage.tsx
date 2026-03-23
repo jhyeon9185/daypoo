@@ -4,6 +4,7 @@ import { Search as SearchIcon, LocateFixed } from 'lucide-react';
 import { Navbar } from '../components/Navbar';
 import { ToiletPopup } from '../components/map/ToiletPopup';
 import { useToilets } from '../hooks/useToilets';
+import { useGeoTracking } from '../hooks/useGeoTracking';
 import { ToiletData } from '../types/toilet';
 import { VisitModal } from '../components/map/VisitModal';
 import { api } from '../services/apiClient';
@@ -15,24 +16,6 @@ declare global {
   }
 }
 
-// ── 현재 위치 훅 ──────────────────────────────────────────────────────
-function useCurrentPosition() {
-  const [pos, setPos] = useState<{ lat: number; lng: number } | null>(null);
-  const [granted, setGranted] = useState(false);
-
-  useEffect(() => {
-    navigator.geolocation.getCurrentPosition(
-      (p) => { setPos({ lat: p.coords.latitude, lng: p.coords.longitude }); setGranted(true); },
-      () => {
-        setPos({ lat: 37.5172, lng: 127.0473 }); // fallback: 강남구청
-        setGranted(false);
-      },
-      { timeout: 6000, enableHighAccuracy: true }
-    );
-  }, []);
-
-  return { pos, granted };
-}
 
 // ── 카카오맵 마커 생성 헬퍼 ─────────────────────────────────────────
 function createToiletMarker(kakao: any, toilet: ToiletData) {
@@ -102,15 +85,16 @@ export function MapPage({ openAuth }: { openAuth: (mode: 'login' | 'signup') => 
   const [searchQuery, setSearchQuery] = useState('');
   const [mapLoaded, setMapLoaded] = useState(false);
 
-  const { pos } = useCurrentPosition();
   const [bounds, setBounds] = useState<any>(null);
   const [mapLevel, setMapLevel] = useState(4);
   const { toilets, loading, toggleFavorite, markVisited } = useToilets({ 
-    lat: pos?.lat ?? 37.5172, 
-    lng: pos?.lng ?? 127.0473, 
+    lat: 37.5172, 
+    lng: 127.0473, 
     bounds,
     level: mapLevel
   });
+
+  const { position: pos } = useGeoTracking(toilets);
 
   // ── 로그인 후 화장실 정보 복원 ──────────────────────────────────
   useEffect(() => {
@@ -160,16 +144,22 @@ export function MapPage({ openAuth }: { openAuth: (mode: 'login' | 'signup') => 
     if (!selectedToilet || !pos) return;
 
     try {
-      // 백엔드 체크인 호출 (1분 타이머 시작 기준점)
-      await api.post('/records/check-in', {
+      // 3. 백엔드 체크인 호출 (1분 타이머 시작 기준점)
+      const res = await api.post('/api/v1/records/check-in', {
         toiletId: Number(selectedToilet.id),
         latitude: pos.lat,
         longitude: pos.lng
       });
-      setCheckInTime(Date.now());
+      
+      // 서버에서 남은 시간 정보를 주면 해당 시간에 맞춰 동기화
+      if (res && typeof res.remainedSeconds === 'number') {
+        const startTime = Date.now() - (60 - res.remainedSeconds) * 1000;
+        setCheckInTime(startTime);
+      } else {
+        setCheckInTime(Date.now());
+      }
     } catch (e: any) {
-      console.warn('체크인 사전 호출 실패:', e.message);
-      // 이미 체크인 되어있을 수도 있으므로 현재 시간을 기준으로 타이머 시작
+      console.warn('체크인 호출 오류:', e.message);
       setCheckInTime(Date.now());
     }
 
