@@ -166,7 +166,9 @@ public class PooRecordService {
             .findByUsername(username)
             .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-    return recordRepository.findByUserOrderByCreatedAtDesc(user, pageable).map(recordMapper::toResponse);
+    return recordRepository
+        .findByUserOrderByCreatedAtDesc(user, pageable)
+        .map(recordMapper::toResponse);
   }
 
   @Transactional(readOnly = true)

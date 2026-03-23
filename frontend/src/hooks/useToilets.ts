@@ -48,20 +48,25 @@ interface UseToiletsOptions {
     neLat: number;
     neLng: number;
   } | null;
+  level?: number;
 }
 
-export function useToilets({ lat, lng, radius = 1000, bounds }: UseToiletsOptions) {
+export function useToilets({ lat, lng, radius = 1000, bounds, level }: UseToiletsOptions) {
   const [toilets, setToilets] = useState<ToiletData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const initialLoadDone = useRef(false);
 
   const fetchToilets = useCallback(async () => {
+    if (!lat || !lng) return;
+    
     try {
       setLoading(true);
       setError(null);
 
-      let url = `/api/v1/toilets?latitude=${lat}&longitude=${lng}&radius=${radius}`;
+      let fetchRadius = radius;
+      let finalLat = lat;
+      let finalLng = lng;
 
       if (bounds) {
         const centerLat = (bounds.swLat + bounds.neLat) / 2;
@@ -72,14 +77,25 @@ export function useToilets({ lat, lng, radius = 1000, bounds }: UseToiletsOption
         const a = Math.sin(dLat / 2) ** 2 +
           Math.cos((centerLat * Math.PI) / 180) * Math.cos((bounds.neLat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
         const dynamicRadius = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        url = `/api/v1/toilets?latitude=${centerLat}&longitude=${centerLng}&radius=${Math.min(dynamicRadius, 10000)}`;
+        
+        finalLat = centerLat;
+        finalLng = centerLng;
+        // ★ 성능 최적화: 줌 레벨이 높을수록(축척이 클수록) 반경을 적절히 제한하여 데이터 폭주 방지
+        // level 5: ~1km, level 6: ~2km, level 7: ~4km ... 최대 5km로 제한
+        const maxRadiusByLevel = level && level >= 7 ? 5000 : 3000;
+        fetchRadius = Math.min(dynamicRadius, maxRadiusByLevel);
       }
+
+      const url = `/api/v1/toilets?latitude=${finalLat}&longitude=${finalLng}&radius=${fetchRadius}`;
 
       try {
         const res = await fetch(url);
         if (res.ok) {
           const backendData = await res.json();
-          const data: ToiletData[] = backendData.map((item: any) => ({
+          // ★ 성능 최적화: 데이터 개수가 너무 많으면 상위 1000개만 사용
+          const rawData = Array.isArray(backendData) ? backendData.slice(0, 1000) : [];
+          
+          const data: ToiletData[] = rawData.map((item: any) => ({
             id: String(item.id),
             name: item.name || '이름없음',
             roadAddress: item.address || '',
@@ -89,17 +105,16 @@ export function useToilets({ lat, lng, radius = 1000, bounds }: UseToiletsOption
             isOpen24h: item.is24h,
             isVisited: false,
             isFavorite: false,
+            isMixedGender: item.isMixedGender || false,
+            hasDiaperTable: item.hasDiaperTable || false,
+            hasEmergencyBell: item.hasEmergencyBell || false,
+            hasCCTV: item.hasCCTV || false,
           }));
 
-          // ★ 핵심 수정: 기존 마커 데이터를 지우지 않고, 새 데이터와 병합 (merge)
-          // 기존 즐겨찾기 / 방문 상태를 유지하면서 새 데이터를 추가
           setToilets(prev => {
             if (prev.length === 0) return data;
-            
             const prevMap = new Map(prev.map(t => [t.id, t]));
-            const newMap = new Map(data.map(t => [t.id, t]));
             
-            // 새 데이터에 있는 항목 — 기존 상태 유지
             const merged = data.map(t => {
               const existing = prevMap.get(t.id);
               if (existing) {
@@ -107,31 +122,28 @@ export function useToilets({ lat, lng, radius = 1000, bounds }: UseToiletsOption
               }
               return t;
             });
-
             return merged;
           });
 
           initialLoadDone.current = true;
-        } else {
-          console.warn('[useToilets] 백엔드 API 호출 실패:', res.status);
-          // 실패 시 기존 데이터를 유지 (빈 배열로 밀지 않음)
         }
       } catch (e) {
-        console.error('[useToilets] 연동 오류:', e);
-        // 네트워크 오류 시에도 기존 데이터를 유지
+        console.error('[useToilets] API 호출 오류:', e);
       }
     } catch (e) {
       console.error('[useToilets] fetch 실패:', e);
-      setError('화장실 데이터를 불러오지 못했습니다.');
-      // ★ 오류 시에도 기존 데이터를 절대 지우지 않음
+      setError('데이터를 불러오지 못했습니다.');
     } finally {
       setLoading(false);
     }
-  }, [lat, lng, radius, JSON.stringify(bounds)]);
+  }, [lat, lng, radius, JSON.stringify(bounds), level]);
 
-
+  // ★ 성능 최적화: 디바운스 적용 (300ms 동안Bounds 변화가 없을 때만 호출)
   useEffect(() => {
-    fetchToilets();
+    const timer = setTimeout(() => {
+      fetchToilets();
+    }, 300);
+    return () => clearTimeout(timer);
   }, [fetchToilets]);
 
   const toggleFavorite = useCallback((id: string) => {

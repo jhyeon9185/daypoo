@@ -85,9 +85,7 @@ public class AdminService {
 
     // 2. 과거 14일치 결제 데이터 생성
     com.daypoo.api.entity.User user =
-        userRepository
-            .findAll()
-            .stream()
+        userRepository.findAll().stream()
             .findFirst()
             .orElseThrow(() -> new RuntimeException("테스트 데이터를 생성할 유저가 없습니다."));
 

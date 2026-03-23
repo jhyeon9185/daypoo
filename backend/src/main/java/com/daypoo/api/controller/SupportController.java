@@ -10,8 +10,7 @@ import com.daypoo.api.service.SupportService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -25,16 +24,16 @@ public class SupportController {
   /** 1:1 문의 등록 */
   @PostMapping("/inquiries")
   public ResponseEntity<Void> createInquiry(
-      @AuthenticationPrincipal UserDetails userDetails, @RequestBody InquiryRequest request) {
-    User user = getUserByUsername(userDetails.getUsername());
+      Authentication authentication, @RequestBody InquiryRequest request) {
+    User user = getUserByUsername(authentication.getName());
     supportService.createInquiry(user, request);
     return ResponseEntity.ok().build();
   }
 
   /** 내 문의 내역 조회 */
   @GetMapping("/inquiries")
-  public ResponseEntity<List<?>> getMyInquiries(@AuthenticationPrincipal UserDetails userDetails) {
-    User user = getUserByUsername(userDetails.getUsername());
+  public ResponseEntity<List<?>> getMyInquiries(Authentication authentication) {
+    User user = getUserByUsername(authentication.getName());
     return ResponseEntity.ok(supportService.getMyInquiries(user));
   }
 

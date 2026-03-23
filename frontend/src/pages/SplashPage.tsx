@@ -83,7 +83,7 @@ export function SplashPage() {
                   >
                     <span>Day</span>
                     <motion.span
-                      className="mx-0.5 inline-block text-[#52b788]"
+                      className="mx-0.5 inline-block text-[#E8A838]"
                       initial={{ scale: 0, rotate: -45 }}
                       animate={{ scale: 1, rotate: 0 }}
                       transition={{
