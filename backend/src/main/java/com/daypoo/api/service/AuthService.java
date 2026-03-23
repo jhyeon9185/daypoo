@@ -84,7 +84,7 @@ public class AuthService {
   public void signUp(SignUpRequest request) {
     checkUsernameDuplicate(request.username());
     checkNicknameDuplicate(request.nickname());
-    
+
     if (userRepository.existsByEmail(request.email())) {
       throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
     }
@@ -111,7 +111,7 @@ public class AuthService {
     String email = user.getEmail();
     int atIndex = email.indexOf("@");
     if (atIndex <= 2) return email;
-    
+
     return email.substring(0, 2) + "***" + email.substring(atIndex);
   }
 
@@ -212,7 +212,8 @@ public class AuthService {
             .findByUsername(username)
             .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-    String newAccessToken = jwtProvider.createAccessToken(user.getUsername(), user.getRole().name());
+    String newAccessToken =
+        jwtProvider.createAccessToken(user.getUsername(), user.getRole().name());
 
     return TokenResponse.builder().accessToken(newAccessToken).refreshToken(refreshToken).build();
   }

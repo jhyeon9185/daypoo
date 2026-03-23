@@ -104,10 +104,12 @@ export function MapPage({ openAuth }: { openAuth: (mode: 'login' | 'signup') => 
 
   const { pos } = useCurrentPosition();
   const [bounds, setBounds] = useState<any>(null);
+  const [mapLevel, setMapLevel] = useState(4);
   const { toilets, loading, toggleFavorite, markVisited } = useToilets({ 
     lat: pos?.lat ?? 37.5172, 
     lng: pos?.lng ?? 127.0473, 
-    bounds 
+    bounds,
+    level: mapLevel
   });
 
   // ── 로그인 후 화장실 정보 복원 ──────────────────────────────────
@@ -212,14 +214,22 @@ export function MapPage({ openAuth }: { openAuth: (mode: 'login' | 'signup') => 
     const b = mapRef.current.getBounds();
     const sw = b.getSouthWest();
     const ne = b.getNorthEast();
-    setBounds({ swLat: sw.getLat(), swLng: sw.getLng(), neLat: ne.getLat(), neLng: ne.getLng() });
+    const level = mapRef.current.getLevel();
+    
+    setMapLevel(level);
+    setBounds({ 
+      swLat: sw.getLat(), swLng: sw.getLng(), 
+      neLat: ne.getLat(), neLng: ne.getLng(),
+      timestamp: Date.now() // Trigger update even if bounds are similar
+    });
   }, []);
 
   const updateMarkersVisibility = useCallback(() => {
     if (!mapRef.current) return;
     const level = mapRef.current.getLevel();
+    // 클러스터링 기준 레벨(5) 이상에서는 커스텀 오버레이(HTML)를 숨겨 성능을 보장
     markersRef.current.forEach((item) => {
-      if (level >= 6) item.overlay.setMap(null);
+      if (level >= 5) item.overlay.setMap(null);
       else item.overlay.setMap(mapRef.current);
     });
   }, []);
@@ -242,13 +252,16 @@ export function MapPage({ openAuth }: { openAuth: (mode: 'login' | 'signup') => 
       const clusterer = new window.kakao.maps.MarkerClusterer({
         map,
         averageCenter: true,
-        minLevel: 6,
+        minLevel: 5, // 클러스터링 시작 레벨을 낮춰 다량의 데이터를 빠르게 그룹화
+        gridSize: 70,
         styles: [{
-          width: '50px', height: '50px',
-          background: 'rgba(27, 67, 50, 0.85)',
+          width: '60px', height: '60px',
+          background: 'rgba(27, 67, 50, 0.9)',
           borderRadius: '50%', color: '#fff',
-          textAlign: 'center', fontWeight: 'bold', lineHeight: '50px',
-          border: '2px solid #fff', boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+          textAlign: 'center', fontWeight: 'bold', lineHeight: '60px',
+          border: '3px solid rgba(255,255,255,0.8)', 
+          boxShadow: '0 8px 16px rgba(0,0,0,0.3)',
+          fontSize: '16px'
         }]
       });
       clustererRef.current = clusterer;
@@ -295,32 +308,39 @@ export function MapPage({ openAuth }: { openAuth: (mode: 'login' | 'signup') => 
   useEffect(() => {
     if (!mapRef.current || !mapLoaded || !clustererRef.current) return;
     
-    const currentToiletsIds = new Set(filteredToilets.map(t => t.id));
+    // ★ 성능 최적화: 렌더링할 마커 개수 제한 (브라우저 프리징 방지)
+    // 줌을 많이 뺀 상태(level >= 7)에서는 샘플링하여 상위 500개만 표시
+    const level = mapRef.current.getLevel();
+    const maxRenderCount = level >= 7 ? 500 : 1000;
+    const toiletsToRender = filteredToilets.slice(0, maxRenderCount);
+    const currentToiletsIds = new Set(toiletsToRender.map(t => t.id));
     
-    // 화면에 없는 마커만 제거
+    // 화면에 없는 마커만 제거 (Batch)
+    const toRemove: any[] = [];
     markersRef.current.forEach((item, id) => {
       if (!currentToiletsIds.has(id)) {
         item.overlay.setMap(null);
-        clustererRef.current.removeMarker(item.marker);
+        toRemove.push(item.marker);
         markersRef.current.delete(id);
       }
     });
+    if (toRemove.length > 0) clustererRef.current.removeMarkers(toRemove);
 
-    // 없는 마커만 추가
+    // 없는 마커만 추가 (Batch)
     const newMarkers: any[] = [];
-    const level = mapRef.current.getLevel();
-    filteredToilets.forEach((toilet) => {
+    toiletsToRender.forEach((toilet) => {
       if (!markersRef.current.has(toilet.id)) {
         const { marker, overlay } = createToiletMarker(window.kakao, toilet);
-        if (level < 6) overlay.setMap(mapRef.current);
+        if (level < 5) overlay.setMap(mapRef.current);
         markersRef.current.set(toilet.id, { marker, overlay });
         newMarkers.push(marker);
       }
     });
+
     if (newMarkers.length > 0) {
       clustererRef.current.addMarkers(newMarkers);
-      clustererRef.current.redraw();
     }
+    clustererRef.current.redraw();
   }, [filteredToilets, mapLoaded]);
 
   const moveToMyLocation = useCallback(() => {

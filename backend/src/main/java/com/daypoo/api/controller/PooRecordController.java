@@ -57,7 +57,9 @@ public class PooRecordController {
     return ResponseEntity.ok(response);
   }
 
-  @Operation(summary = "내 배변 기록 목록 조회", description = "현재 로그인한 사용자의 모든 배변 기록을 최신순으로 조회합니다. (페이징 지원)")
+  @Operation(
+      summary = "내 배변 기록 목록 조회",
+      description = "현재 로그인한 사용자의 모든 배변 기록을 최신순으로 조회합니다. (페이징 지원)")
   @ApiResponse(responseCode = "200", description = "조회 성공")
   @GetMapping
   public ResponseEntity<Page<PooRecordResponse>> getMyRecords(
