@@ -1,14 +1,47 @@
 # 변경 이력 (Modification History)
 
-## 2026-03-24 13:00:00
+## 2026-03-24 15:00:00
 
-- **작업 내용:** 결제 UX 개선 및 시스템 동기화 작업
+- **작업 내용:** 관리자/랭킹/푸터 UI 및 UX 고도화
 - **상세 변경 내역:**
-  - **랭킹 상위 UI 시각 효과 강화 (`RankingPage.tsx`):** 순위 리스트와 시상대의 1, 2, 3위 보더라인(ConicGlow) 및 순위 배지 색상을 각각 금(#E8A838), 은(#B0B8B4), 동(#CD7C4A)의 금속 질감에 맞춘 전용 색상으로 차별화하여 상위권 유저의 보상감을 높였습니다.
-  - **랭킹 페이지 UI 레이아웃 최적화 (`RankingPage.tsx`):** 하단에 고정되어 시야를 방해하던 '나의 순위' 바를 상단 통계 카드 바로 아래로 이동시키고, 카드 패딩과 텍스트 사이즈를 대폭 키워 시인성을 강화했습니다. 또한 시상대, 통계 칩, 나의 순위 카드 사이의 상하 여백을 세밀하게 재배치(14~16단위 간격)하여 리듬감 있고 전문적인 레이아웃을 완성했습니다.
-  - **시스템 동기화:** `upstream/main`으로부터 최신 변경 사항(관리자 기능 마이그레이션 등)을 병합하고 `origin/main`으로 푸시 완료.
-  - **백엔드 안정화:** 데이터베이스 마이그레이션 반영을 위해 백엔드 서버를 재가동하고 포트 점검 완료.
-- **결과/영향:** 결제 과정에서의 불필요한 에러 노출을 방지하고 최신 시스템 상태를 유지함.
+  - **관리자 페이지 개선 (`AdminPage.tsx`):** 알림(Bell) 아이콘 제거, 로그아웃 기능 활성화, 통합 검색바 클릭 및 상태 연동, 로고 클릭 대시보드 이동, 메인 페이지 바로가기 버튼 추가.
+  - **랭킹 페이지 최적화 (`RankingPage.tsx`):** '나의 순위' 카드 위치를 상단 통계 칩 하단으로 이동 및 크기/폰트 확대. 상위 3인 금/은/동 보더라인 시각 효과 차별화.
+  - **푸터 링크 연동 (`Footer.tsx`):** AI 분석, FAQ, 1:1 문의 등 미정의 링크를 실제 페이지와 섹션으로 연결 및 부드러운 스크롤 핸들러 추가.
+- **결과/영향:** 관리자 도구의 사용성을 높이고 순위 및 지원 섹션의 정보 접근성을 크게 개선함.
+
+## 2026-03-24 14:57:00
+
+- **작업 내용:** 루트 디렉토리 추가 파일 정리 (sql, scripts, tmp)
+- **상세 변경 내역:**
+  - **SQL 파일 정리 (docs/sql/):** `query.sql` 파일 이동.
+  - **스크립트 파일 정리 (docs/scripts/):** `test_ai_features.js`, `start_backend.bat` 파일 이동.
+  - **임시 디렉토리 정리 (docs/tmp/):** `tmp_bcrypt/`를 해당 위치로 이동하여 루트 정리.
+- **결과/영향:** 프로젝트 루트 구성을 핵심 설정 파일 위주로 정제하여 관리 편의성 증대.
+
+## 2026-03-24 14:55:00
+
+- **작업 내용:** 루트 디렉토리 파일 정리 (txt, log, md)
+- **상세 변경 내역:**
+  - **로그 파일 정리 (docs/logs/):** `*.log`, `*.txt` 파일들을 해당 디렉토리로 이동.
+  - **문서 파일 정리 (docs/):** `BACKEND_ISSUES_REPORT.md`, `DB_SYNC_GUIDE.md`, `TOILET_MARKER_DIAGNOSIS.md`, `plan.md`, `plan_project_improvement.md` 이동.
+- **결과/영향:** 루트 디렉토리를 프로젝트 핵심 파일 위주로 구성하여 가독성 향상 및 구조 체계화.
+
+## 2026-03-24 14:26:00
+
+- **작업 내용:** Git 버전 관리 제외 설정 추가 (.claude)
+- **상세 변경 내역:**
+  - **.gitignore:** 에이전트 작업 디렉토리인 `.claude/`를 Git 추적 대상에서 제외하도록 추가.
+- **결과/영향:** 에이전트의 로컬 작업 파일이 저장소에 커밋되는 것을 방지하여 저장소 청결 유지.
+
+## 2026-03-24 12:43:00
+
+- **작업 내용:** 프론트엔드, 백엔드, AI 서버 통합 가동
+- **상세 변경 내역:**
+  - **백엔드 (Backend):** `./gradlew bootRun`을 통해 8080 포트에서 가동 확인.
+  - **프론트엔드 (Frontend):** `npm run dev`를 통해 5173 포트에서 Vite 서버 가동 확인.
+  - **AI 서비스 (AI Service):** FastAPI 기반 `main.py`를 8000 포트에서 가동 확인 (포트 충돌 해결).
+  - **상태 점검:** `lsof` 및 `curl`을 통해 모든 서버의 정상 작동 및 헬스체크 확인 완료.
+- **결과/영향:** 전체 서비스(프론트-백-AI) 연동 테스트가 가능한 통합 개발 환경 활성화.
 
 ## 2026-03-24 19:45:00
 
@@ -38,7 +71,7 @@
 
 - **작업 내용:** 백엔드 구조 개선 및 안정성 고도화 (Phase 2: 중기 개선 완료)
 - **상세 변경 내역:**
-  - **외부 API 추상화:** `ExternalApiConfig.java`를 통해 타임아웃(연결 5s, 읽기 30s)이 설정된 전용 `RestTemplate` 빈을 등록. `spring-retry`를 도입하여 `AiClient`, `GeocodingService` 등 외부 연동 시 일시적 장애에 대한 자동 재시도 로직 적용.
+  - **外部 API 추상화:** `ExternalApiConfig.java`를 통해 타임아웃(연결 5s, 읽기 30s)이 설정된 전용 `RestTemplate` 빈을 등록. `spring-retry`를 도입하여 `AiClient`, `GeocodingService` 등 외부 연동 시 일시적 장애에 대한 자동 재시도 로직 적용.
   - **토큰 무효화 (Logout):** Redis 기반의 블랙리스트 메커니즘 구현. `AuthService.logout` 시 Access Token을 Redis에 등록하고, `JwtAuthenticationFilter`에서 모든 요청마다 블랙리스트 여부를 검증하여 로그아웃된 토큰의 재사용을 원천 차단.
   - **성능 최적화 (DB & Query):**
     - `schema.sql`: `users(email, nickname)`, `poo_records(user_id, created_at)`, `notifications(user_id, is_read)` 등 주요 조회 경로에 인덱스를 추가하여 검색 속도 개선.
@@ -54,12 +87,12 @@
   - **계층 분리 (Service 도입):** `UserService.java`를 신규 생성하여 Controller에서 `UserRepository`에 직접 접근하던 레이어 위반 문제를 해결. 공통 사용자 조회 로직을 Service 계층으로 캡슐화.
     - 적용 대상: `NotificationController`, `ShopController`, `SupportController`, `ReportController`, `HealthReportController`.
   - **예외 처리 표준화:** `NotificationService.java` 등에서 발생하던 `IllegalArgumentException`을 `BusinessException` 체계로 전환하여 전역 에러 응답 규격을 통일함.
-  - **전역 예외 핸들러 보강:** `GlobalExceptionHandler.java`에 `DataIntegrityViolationException`(중복 키), `HttpMessageNotReadableException`(형식이 잘못된 요청) 처리 로직을 추가하고 `ErrorCode.DUPLICATE_KEY` 정의.
+  - **전역 예외 핸들러 보강:** `GlobalExceptionHandler.java`에 `DataIntegrityViolationException`(중복 키), `HttpMessageNotReadableException`(형식에 맞지 않는 요청) 처리 로직을 추가하고 `ErrorCode.DUPLICATE_KEY` 정의.
 - **결과/영향:** Controller-Service-Repository 간의 명확한 역할 분담을 통해 아키텍처를 정립하고, 보안 취약점 해결 및 일관된 에러 처리로 시스템 안정성을 대폭 향상함.
 
-## [2026-03-24 12:00:00] 프론트엔드 리팩토링 잔여 작업 완료 및 시스템 고도화
+## 2026-03-24 12:00:00
 
-- **작업 내용**: `goofy-seeking-meteor.md` 기반 프론트엔드 리팩토링 잔여 작업 완료
+- **작업 내용**: 프론트엔드 리팩토링 잔여 작업 완료 및 시스템 고도화
 - **상세 변경 내역**:
   - `VisitModal.tsx`: 카메라 중지 및 정리 로직을 `streamRef`를 통해 더 견고하게 보강.
   - `apiClient.ts`: 전역 `ApiResponse` 및 도메인 타입(`AiAnalysisResponse` 등)을 적용하여 제네릭 기반의 타입 안전성 확보.
@@ -67,74 +100,3 @@
   - `vite.config.js`: `manualChunks` 설정을 도입하여 벤더 라이브러리와 UI 컴포넌트를 분리 빌드하도록 최적화.
   - 의존성 제거: 미사용 라이브러리인 `axios` 및 `zustand`를 `package.json`에서 삭제.
 - **결과/영향**: 런타임 안정성(카메라 이슈) 개선, 개발 생산성(타입 자동 완성) 향상 및 빌드 결과물 최적화.
-
-## 2026-03-24 11:26:00
-
-- **작업 내용**: 랭킹 페이지 UI 정렬 수정 및 알림 컨텍스트 최적화
-- **상세 변경 내역**:
-  - `RankingPage.tsx`: 탭 버튼 레이아웃을 `flex-row`로 변경하고 수직 정렬 보정.
-  - `NotificationContext.tsx`: 주요 함수에 `useCallback` 적용하여 불필요한 리렌더링 및 데이터 덮어쓰기 방지.
-  - `MainPage.tsx`: AI 건강 리포트 카드를 Glassmorphism 스타일로 최종 확정.
-- **결과/영향**: UI 일관성 강화 및 알림 시스템 데이터 정합성 해결.
-
-## 2026-03-24 11:24:00
-
-- **작업 내용**: 리포트 카드 Carousel 디자인 테스트
-- **상세 변경 내역**:
-  - `MainPage.tsx`: Bento/Glass 대신 Carousel 스타일(`ReportCard_Carousel.tsx`) 적용 테스트.
-- **결과/영향**: 다양한 디자인 레이아웃 검토.
-
-## 2026-03-24 11:15:00
-
-- **작업 내용**: 리포트 카드 Glassmorphism 디자인 적용
-- **상세 변경 내역**:
-  - `MainPage.tsx`: Bento Grid 대신 Glassmorphism 스타일(`ReportCard_Glass.tsx`) 적용.
-- **결과/영향**: 프리미엄 UI 디자인 확립.
-
-## 2026-03-24 11:10:00
-
-- **작업 내용**: 메인 페이지 건강 리포트 섹션 Bento Grid 디자인 적용
-- **상세 변경 내역**:
-  - `MainPage.tsx`: `ReportCard_Bento.tsx` 컴포넌트 임포트 및 레이아웃 반영.
-- **결과/영향**: 정보 집약적인 Bento 스타일 UI 구현.
-
-## 2026-03-24 11:00:00
-
-- **작업 내용**: 랭킹 페이지 탭 레이아웃 및 이모지 정렬 수정
-- **상세 변경 내역**:
-  - 탭 버튼 내 아이콘과 텍스트의 정렬이 맞지 않는 문제 해결.
-  - 전체 랭킹, 동네 왕, 건강 왕 각 섹션의 시각적 균형 보정.
-- **결과/영향**: 사용자 경험 개선 및 시각적 완성도 향상.
-
-## 2026-03-23 18:00:00
-
-- **작업 내용**: 회원가입 폼 생년월일 입력 및 유효성 검사 강화
-- **상세 변경 내역**:
-  - `AuthModal.tsx` 내 회원가입 스텝에 `BirthDropdowns` 적용.
-  - 생년월일 미선택 시 에러 메시지 표시 로직 추가.
-  - 닉네임 중복 체크 API 연동.
-- **결과/영향**: 가입 데이터의 정확성 및 서비스 신뢰도 확보.
-
-## 2026-03-23 15:30:00
-
-- **작업 내용**: 실시간 알림 센터 UI 및 테스트 기능 추가
-- **상세 변경 내역**:
-  - `NotificationPanel.tsx`에 성취, 메시지, 시스템 알림 테스트 버튼 추가.
-  - 알림 없을 시 빈 화면 처리 최적화.
-- **결과/영향**: 개발 피드백 속도 향상 및 알림 가독성 개선.
-
-## 2026-03-23 12:00:00
-
-- **작업 내용**: 관리자 대시보드 위젯 클릭 네비게이션 구현
-- **상세 변경 내역**:
-  - 방문자 수, 리뷰 수 등 요약 위젯 클릭 시 관련 상세 라우트로 이동 기능 추가.
-  - 시스템 로그 및 상점 관리 페이지 기본 골격 생성.
-- **결과/영향**: 관리자 페이지 인터랙션 강화 및 운영 효율 증대.
-
-## 2026-03-22 22:00:00
-
-- **작업 내용**: 로그인 후 이전 페이지 리다이렉트 로직 구현
-- **상세 변경 내역**:
-  - `AuthContext.tsx`에 `returnUrl` 저장 로직 추가.
-  - `AuthModal` 성공 콜백 시 `sessionStorage`에 저장된 이전 경로로 자동 이동.
-- **결과/영향**: 끊김 없는 사용자 전환 경험 제공.
