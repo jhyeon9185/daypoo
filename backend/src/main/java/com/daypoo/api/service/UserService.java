@@ -21,4 +21,11 @@ public class UserService {
         .findByEmail(email)
         .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
   }
+
+  @Transactional
+  public void updateUser(User user) {
+    if (user != null) {
+      userRepository.save(user);
+    }
+  }
 }

@@ -2,6 +2,9 @@ package com.daypoo.api.service;
 
 import com.daypoo.api.entity.Payment;
 import com.daypoo.api.entity.User;
+import com.daypoo.api.entity.enums.BillingCycle;
+import com.daypoo.api.entity.enums.Role;
+import com.daypoo.api.entity.enums.SubscriptionPlan;
 import com.daypoo.api.global.exception.BusinessException;
 import com.daypoo.api.global.exception.ErrorCode;
 import com.daypoo.api.repository.PaymentRepository;
@@ -14,7 +17,9 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
@@ -25,16 +30,19 @@ import org.springframework.web.client.RestTemplate;
 public class PaymentService {
   private final UserService userService;
   private final PaymentRepository paymentRepository;
+  private final SubscriptionService subscriptionService;
   private final ObjectMapper objectMapper;
   private final RestTemplate restTemplate;
 
   public PaymentService(
       UserService userService,
       PaymentRepository paymentRepository,
+      SubscriptionService subscriptionService,
       ObjectMapper objectMapper,
       @Qualifier("externalRestTemplate") RestTemplate restTemplate) {
     this.userService = userService;
     this.paymentRepository = paymentRepository;
+    this.subscriptionService = subscriptionService;
     this.objectMapper = objectMapper;
     this.restTemplate = restTemplate;
   }
@@ -48,29 +56,27 @@ public class PaymentService {
   public void confirmPayment(String email, String paymentKey, String orderId, Long amount) {
     log.info("Processing Payment: orderId={}, amount={}, user={}", orderId, amount, email);
 
-    validateSecretKey();
+    User user = userService.getByEmail(email);
 
     try {
-      HttpHeaders headers = createHeaders();
-      Map<String, Object> params = new HashMap<>();
-      params.put("paymentKey", paymentKey);
-      params.put("orderId", orderId);
-      params.put("amount", amount);
+      HttpHeaders headers = new HttpHeaders();
+      String encodedKey =
+          Base64.getEncoder()
+              .encodeToString((secretKey + ":").getBytes(StandardCharsets.UTF_8));
+      headers.set("Authorization", "Basic " + encodedKey);
+      headers.setContentType(MediaType.APPLICATION_JSON);
 
-      HttpEntity<Map<String, Object>> entity = new HttpEntity<>(params, headers);
-      ResponseEntity<JsonNode> response =
-          restTemplate.postForEntity(TOSS_CONFIRM_URL, entity, JsonNode.class);
+      Map<String, Object> payload = new HashMap<>();
+      payload.put("paymentKey", paymentKey);
+      payload.put("orderId", orderId);
+      payload.put("amount", amount);
 
-      if (response.getStatusCode() != HttpStatus.OK) {
-        throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
-      }
+      HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
 
-      // 결제 유저 조회
-      User user = userService.getByEmail(email);
+      restTemplate.postForEntity(TOSS_CONFIRM_URL, request, JsonNode.class);
 
       // 결제 내역 저장
-
-      paymentRepository.save(
+      Payment savedPayment = paymentRepository.save(
           Payment.builder()
               .email(email)
               .user(user)
@@ -79,63 +85,75 @@ public class PaymentService {
               .paymentKey(paymentKey)
               .build());
 
-      addPointsToUser(user, amount);
-      log.info("✅ Payment confirmed, recorded, and points awarded for user: {}", email);
+      handleMembershipOrPoints(user, savedPayment);
+      log.info("✅ Payment confirmed, recorded, and membership/points updated for user: {}", email);
 
     } catch (HttpClientErrorException e) {
       handleTossError(e);
     } catch (Exception e) {
-      log.error("Unexpected error during payment confirmation", e);
+      log.error("❌ Unexpected Payment Error: {}", e.getMessage());
       throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
     }
-  }
-
-  private void validateSecretKey() {
-    if (secretKey == null || secretKey.isBlank()) {
-      log.error("❌ TOSS_SECRET_KEY is missing in environment variables!");
-      throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
-    }
-  }
-
-  private HttpHeaders createHeaders() {
-    String authValue = secretKey + ":";
-    String basicToken =
-        Base64.getEncoder().encodeToString(authValue.getBytes(StandardCharsets.UTF_8));
-
-    HttpHeaders headers = new HttpHeaders();
-    headers.set("Authorization", "Basic " + basicToken);
-    headers.setContentType(MediaType.APPLICATION_JSON);
-    return headers;
   }
 
   private void handleTossError(HttpClientErrorException e) {
-    String responseBody = e.getResponseBodyAsString();
-    log.warn("Toss API Error: status={}, body={}", e.getStatusCode(), responseBody);
-
     try {
-      JsonNode errorNode = objectMapper.readTree(responseBody);
-      String errorCode = errorNode.path("code").asText("");
-      String errorMessage = errorNode.path("message").asText("토스 결제 승인 중 오류가 발생했습니다.");
-
-      // 테스트 모드 예외 처리 (이미 처리된 요청 등)
-      if ("ALREADY_PROCESSING_REQUEST".equals(errorCode)
-          || "ALREADY_COMPLETED_PAYMENT".equals(errorCode)) {
-        log.info("Payment already processed (Test Mode Bypass): {}", errorCode);
-        return;
-      }
-
-      log.error("Toss Payment Failed: code={}, message={}", errorCode, errorMessage);
-      // 구체적인 에러 메시지를 포함하여 예외 발생 (프론트에서 이 메시지를 사용하게 됨)
-      throw new RuntimeException(errorMessage);
-
-    } catch (Exception parseException) {
-      log.error("Failed to parse Toss error response", parseException);
+      JsonNode errorNode = objectMapper.readTree(e.getResponseBodyAsString());
+      String code = errorNode.get("code").asText();
+      String message = errorNode.get("message").asText();
+      log.error("❌ Toss Payment Error: {} - {}", code, message);
+      throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
+    } catch (Exception ex) {
+      log.error("❌ Failed to parse Toss error response: {}", e.getResponseBodyAsString());
       throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
     }
+  }
+
+  private void handleMembershipOrPoints(User user, Payment payment) {
+    String orderId = payment.getOrderId();
+    Long amount = payment.getAmount();
+    
+    // orderId 또는 amount로 구독 플랜 판단
+    SubscriptionPlan plan = determinePlanFromOrderId(orderId, amount);
+
+    // 구독 생성 (PRO, PREMIUM만)
+    if (plan != SubscriptionPlan.BASIC) {
+      subscriptionService.createSubscription(
+          user,
+          plan,
+          BillingCycle.MONTHLY, // 기본 월간 구독
+          payment);
+
+      // Role 업데이트
+      if (plan == SubscriptionPlan.PRO) {
+        user.updateRole(Role.ROLE_PRO);
+      } else if (plan == SubscriptionPlan.PREMIUM) {
+        user.updateRole(Role.ROLE_PREMIUM);
+      }
+      userService.updateUser(user);
+      log.info("✅ Subscription created: userId={}, plan={}", user.getId(), plan);
+    } else {
+      addPointsToUser(user, amount);
+    }
+  }
+
+  /**
+   * orderId 또는 amount로 구독 플랜 판단
+   */
+  private SubscriptionPlan determinePlanFromOrderId(String orderId, Long amount) {
+    if (orderId != null) {
+      if (orderId.toUpperCase().contains("PRO")) {
+        return SubscriptionPlan.PRO;
+      } else if (orderId.toUpperCase().contains("PREMIUM")) {
+        return SubscriptionPlan.PREMIUM;
+      }
+    }
+    return SubscriptionPlan.fromAmount(amount);
   }
 
   private void addPointsToUser(User user, Long amount) {
     if (user == null) return;
     user.addExpAndPoints(0, amount);
+    userService.updateUser(user);
   }
 }

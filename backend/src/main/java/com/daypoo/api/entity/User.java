@@ -61,10 +61,10 @@ public class User extends BaseTimeEntity {
   private List<Payment> payments = new ArrayList<>();
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
-  private List<Inquiry> inquiries = new ArrayList<>();
+  private List<ToiletReview> reviews = new ArrayList<>();
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
-  private List<ToiletReview> reviews = new ArrayList<>();
+  private List<Subscription> subscriptions = new ArrayList<>();
 
   @Builder
   public User(String password, String email, String nickname, Role role) {
@@ -109,5 +109,29 @@ public class User extends BaseTimeEntity {
 
   public void updateRole(Role role) {
     this.role = role;
+  }
+
+  /** 현재 활성 구독 조회 */
+  public Subscription getActiveSubscription() {
+    return subscriptions.stream()
+        .filter(Subscription::isActive)
+        .findFirst()
+        .orElse(null);
+  }
+
+  /** PRO 멤버십 여부 확인 */
+  public boolean isPro() {
+    Subscription active = getActiveSubscription();
+    if (active == null) return false;
+
+    com.daypoo.api.entity.enums.SubscriptionPlan plan = active.getPlan();
+    return plan == com.daypoo.api.entity.enums.SubscriptionPlan.PRO
+        || plan == com.daypoo.api.entity.enums.SubscriptionPlan.PREMIUM;
+  }
+
+  /** 특정 플랜 확인 */
+  public boolean hasPlan(com.daypoo.api.entity.enums.SubscriptionPlan plan) {
+    Subscription active = getActiveSubscription();
+    return active != null && active.getPlan() == plan;
   }
 }
