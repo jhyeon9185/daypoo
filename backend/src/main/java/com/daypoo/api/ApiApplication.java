@@ -27,10 +27,13 @@ public class ApiApplication {
       @org.springframework.beans.factory.annotation.Value("${spring.mail.username:NOT_FOUND}")
           String mailUser,
       @org.springframework.beans.factory.annotation.Value("${spring.mail.password:NOT_FOUND}")
-          String mailPass) {
+          String mailPass,
+      @org.springframework.beans.factory.annotation.Value("${toss.secret-key:NOT_FOUND}")
+          String tossKey) {
     return args -> {
       log.info("🔍 [Env-Check] MAIL_USERNAME: {}", mask(mailUser));
       log.info("🔍 [Env-Check] MAIL_PASSWORD: {}", mask(mailPass));
+      log.info("🔍 [Env-Check] TOSS_SECRET_KEY: {}", mask(tossKey));
 
       if ("NOT_FOUND".equals(mailUser) || mailUser.isEmpty()) {
         log.warn("⚠️ Warning: .env variables [MAIL_USERNAME] are NOT loaded. Skipping mail test.");

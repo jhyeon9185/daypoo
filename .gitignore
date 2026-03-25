@@ -124,6 +124,7 @@ htmlcov/
 # 🤖 Agent / Skills
 # ================================================
 .agent/
+.agents/
 .claude/
 **/venv/
 **/.venv/

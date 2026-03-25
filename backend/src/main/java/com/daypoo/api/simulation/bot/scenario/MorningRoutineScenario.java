@@ -22,44 +22,45 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class MorningRoutineScenario implements BotScenario {
 
-    private final UserRepository userRepository;
-    private final ToiletRepository toiletRepository;
-    private final PooRecordRepository recordRepository;
-    private final RankingService rankingService;
-    private final TitleAchievementService titleAchievementService;
-    private final BotUserPool userPool;
+  private final UserRepository userRepository;
+  private final ToiletRepository toiletRepository;
+  private final PooRecordRepository recordRepository;
+  private final RankingService rankingService;
+  private final TitleAchievementService titleAchievementService;
+  private final BotUserPool userPool;
 
-    @Override
-    @Transactional
-    public void execute(Long userId) {
-        User user = userRepository.findById(userId).orElse(null);
-        if (user == null) return;
+  @Override
+  @Transactional
+  public void execute(Long userId) {
+    User user = userRepository.findById(userId).orElse(null);
+    if (user == null) return;
 
-        Long toiletId = userPool.getRandomToiletId();
-        if (toiletId == null) return;
-        
-        Toilet toilet = toiletRepository.findById(toiletId).orElse(null);
-        if (toilet == null) return;
+    Long toiletId = userPool.getRandomToiletId();
+    if (toiletId == null) return;
 
-        String region = SeedDataGenerator.generateRandomRegion();
+    Toilet toilet = toiletRepository.findById(toiletId).orElse(null);
+    if (toilet == null) return;
 
-        PooRecord record = PooRecord.builder()
-                .user(user)
-                .toilet(toilet)
-                .bristolScale(SeedDataGenerator.generateRandomBristolScale())
-                .color(SeedDataGenerator.generateRandomColor())
-                .conditionTags(SeedDataGenerator.generateRandomConditionTags())
-                .dietTags(SeedDataGenerator.generateRandomDietTags())
-                .regionName(region)
-                .build();
+    String region = SeedDataGenerator.generateRandomRegion();
 
-        recordRepository.save(record);
-        
-        user.addExpAndPoints(10, 5);
-        rankingService.updateGlobalRank(user);
-        rankingService.updateRegionRank(user, region, 5.0);
-        titleAchievementService.checkAndGrantTitles(user);
+    PooRecord record =
+        PooRecord.builder()
+            .user(user)
+            .toilet(toilet)
+            .bristolScale(SeedDataGenerator.generateRandomBristolScale())
+            .color(SeedDataGenerator.generateRandomColor())
+            .conditionTags(SeedDataGenerator.generateRandomConditionTags())
+            .dietTags(SeedDataGenerator.generateRandomDietTags())
+            .regionName(region)
+            .build();
 
-        log.debug("Bot {} executed MorningRoutine at toilet {}", user.getEmail(), toiletId);
-    }
+    recordRepository.save(record);
+
+    user.addExpAndPoints(10, 5);
+    rankingService.updateGlobalRank(user);
+    rankingService.updateRegionRank(user, region, 5.0);
+    titleAchievementService.checkAndGrantTitles(user);
+
+    log.debug("Bot {} executed MorningRoutine at toilet {}", user.getEmail(), toiletId);
+  }
 }
