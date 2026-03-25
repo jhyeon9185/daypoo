@@ -90,6 +90,10 @@ public class ReportService {
           .periodStart(s.getPeriodStart())
           .periodEnd(s.getPeriodEnd())
           .analyzedAt(s.getCreatedAt().toString())
+          .mostFrequentBristol(null)
+          .mostFrequentCondition(null)
+          .mostFrequentDiet(null)
+          .healthyRatio(null)
           .build();
     }
 
@@ -162,6 +166,45 @@ public class ReportService {
     Integer healthyRatio = records.isEmpty() ? null : (int) (healthyCount * 100 / records.size());
 
     // AI 응답 확장 정보 채우기
+    // Stats 계산
+    Integer mostFrequentBristol =
+        computeMostFrequent(
+            records.stream()
+                .map(PooRecord::getBristolScale)
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toList()));
+
+    String mostFrequentCondition =
+        computeMostFrequentTag(
+            records.stream()
+                .flatMap(
+                    r ->
+                        r.getConditionTags() != null && !r.getConditionTags().isEmpty()
+                            ? java.util.Arrays.stream(r.getConditionTags().split(","))
+                            : java.util.stream.Stream.empty())
+                .collect(Collectors.toList()));
+
+    String mostFrequentDiet =
+        computeMostFrequentTag(
+            records.stream()
+                .flatMap(
+                    r ->
+                        r.getDietTags() != null && !r.getDietTags().isEmpty()
+                            ? java.util.Arrays.stream(r.getDietTags().split(","))
+                            : java.util.stream.Stream.empty())
+                .collect(Collectors.toList()));
+
+    long healthyCount =
+        records.stream()
+            .filter(
+                r ->
+                    r.getBristolScale() != null
+                        && r.getBristolScale() >= 3
+                        && r.getBristolScale() <= 4)
+            .count();
+
+    Integer healthyRatio = records.isEmpty() ? null : (int) (healthyCount * 100 / records.size());
+
     response =
         HealthReportResponse.builder()
             .reportType(response.reportType())
