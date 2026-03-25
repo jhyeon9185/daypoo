@@ -19,27 +19,27 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class SocialScenario implements BotScenario {
 
-    private final UserRepository userRepository;
-    private final NotificationRepository notificationRepository;
-    private final ToiletReviewRepository reviewRepository;
-    private final RankingService rankingService;
-    private final BotUserPool userPool;
+  private final UserRepository userRepository;
+  private final NotificationRepository notificationRepository;
+  private final ToiletReviewRepository reviewRepository;
+  private final RankingService rankingService;
+  private final BotUserPool userPool;
 
-    @Override
-    @Transactional(readOnly = true)
-    public void execute(Long userId) {
-        User user = userRepository.findById(userId).orElse(null);
-        if (user == null) return;
+  @Override
+  @Transactional(readOnly = true)
+  public void execute(Long userId) {
+    User user = userRepository.findById(userId).orElse(null);
+    if (user == null) return;
 
-        rankingService.getGlobalRanking();
-        
-        Long toiletId = userPool.getRandomToiletId();
-        if (toiletId != null) {
-            reviewRepository.findByToiletIdOrderByCreatedAtDesc(toiletId, PageRequest.of(0, 10));
-        }
+    rankingService.getGlobalRanking();
 
-        notificationRepository.findAllByUserOrderByCreatedAtDesc(user);
-
-        log.debug("Bot {} executed Social scenario (Read only)", user.getEmail());
+    Long toiletId = userPool.getRandomToiletId();
+    if (toiletId != null) {
+      reviewRepository.findByToiletIdOrderByCreatedAtDesc(toiletId, PageRequest.of(0, 10));
     }
+
+    notificationRepository.findAllByUserOrderByCreatedAtDesc(user);
+
+    log.debug("Bot {} executed Social scenario (Read only)", user.getEmail());
+  }
 }

@@ -75,7 +75,9 @@ public class RankingService {
   private void checkAndInitialize(String key) {
     Long size = redisTemplate.opsForZSet().size(key);
     if (size == null || size == 0) {
-      if (key.equals(GLOBAL_RANK_KEY) || key.equals(HEALTH_RANK_KEY) || key.startsWith(REGION_RANK_KEY_PREFIX)) {
+      if (key.equals(GLOBAL_RANK_KEY)
+          || key.equals(HEALTH_RANK_KEY)
+          || key.startsWith(REGION_RANK_KEY_PREFIX)) {
         initializeRankingsFromDb(key);
       }
     }
@@ -105,44 +107,49 @@ public class RankingService {
     }
 
     // N+1 Optimization: Batch fetch users and titles
-    List<Long> userIds = topRankersRaw.stream()
+    List<Long> userIds =
+        topRankersRaw.stream()
             .map(tuple -> Long.valueOf(Objects.requireNonNull(tuple.getValue())))
             .collect(Collectors.toList());
 
     List<User> users = userRepository.findAllById(userIds);
-    java.util.Map<Long, User> userMap = users.stream()
-            .collect(Collectors.toMap(User::getId, u -> u));
+    java.util.Map<Long, User> userMap =
+        users.stream().collect(Collectors.toMap(User::getId, u -> u));
 
-    java.util.Set<Long> titleIds = users.stream()
+    java.util.Set<Long> titleIds =
+        users.stream()
             .map(User::getEquippedTitleId)
             .filter(Objects::nonNull)
             .collect(Collectors.toSet());
-    
+
     if (myUser != null && myUser.getEquippedTitleId() != null) {
-        titleIds.add(myUser.getEquippedTitleId());
+      titleIds.add(myUser.getEquippedTitleId());
     }
 
-    java.util.Map<Long, String> titleMap = titleRepository.findAllById(titleIds).stream()
+    java.util.Map<Long, String> titleMap =
+        titleRepository.findAllById(titleIds).stream()
             .collect(Collectors.toMap(Title::getId, Title::getName));
 
-    List<UserRankResponse> topRankers = topRankersRaw.stream()
-            .map(tuple -> {
-                Long userId = Long.valueOf(tuple.getValue());
-                User user = userMap.get(userId);
-                if (user == null) return null;
+    List<UserRankResponse> topRankers =
+        topRankersRaw.stream()
+            .map(
+                tuple -> {
+                  Long userId = Long.valueOf(tuple.getValue());
+                  User user = userMap.get(userId);
+                  if (user == null) return null;
 
-                Long rank = redisTemplate.opsForZSet().reverseRank(key, userId.toString());
-                String titleName = titleMap.getOrDefault(user.getEquippedTitleId(), "새내기 쾌변러");
+                  Long rank = redisTemplate.opsForZSet().reverseRank(key, userId.toString());
+                  String titleName = titleMap.getOrDefault(user.getEquippedTitleId(), "새내기 쾌변러");
 
-                return UserRankResponse.builder()
-                        .userId(userId)
-                        .nickname(user.getNickname())
-                        .titleName(titleName)
-                        .level(user.getLevel())
-                        .score(tuple.getScore() != null ? tuple.getScore().longValue() : 0L)
-                        .rank((rank != null ? rank : 0L) + 1L)
-                        .build();
-            })
+                  return UserRankResponse.builder()
+                      .userId(userId)
+                      .nickname(user.getNickname())
+                      .titleName(titleName)
+                      .level(user.getLevel())
+                      .score(tuple.getScore() != null ? tuple.getScore().longValue() : 0L)
+                      .rank((rank != null ? rank : 0L) + 1L)
+                      .build();
+                })
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
 

@@ -7,5 +7,4 @@ import org.springframework.context.annotation.Profile;
 @Configuration
 @Profile("simulation")
 @EnableConfigurationProperties(SimulationProperties.class)
-public class SimulationConfig {
-}
+public class SimulationConfig {}

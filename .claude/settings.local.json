@@ -15,7 +15,15 @@
       "Bash(grep -r \"class.*Service\\\\|@Service\\\\|@Component\" /Users/changjun/Desktop/project/daypoo/backend/src/main/java/com/daypoo/api/service/*.java)",
       "Bash(ls /Users/changjun/Desktop/project/daypoo/backend/build.gradle*)",
       "Bash(git diff:*)",
-      "WebFetch(domain:framer.com)"
+      "WebFetch(domain:framer.com)",
+      "Bash(find /Users/changjun/Desktop/project/daypoo -maxdepth 2 -type f \\\\\\(-name startup* -o -name start* -o -name *startup* \\\\\\))",
+      "Bash(grep -r \"VITE\\\\|FRONTEND\" /Users/changjun/Desktop/project/daypoo/.env*)",
+      "Bash(grep -E \"\\\\.\\(sh|ps1|yml|yaml\\)$\")",
+      "Bash(docker volume:*)",
+      "Bash(python3 -m json.tool)",
+      "Bash(docker exec:*)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/actuator/health)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/api/v1/admin/stats)"
     ]
   }
 }

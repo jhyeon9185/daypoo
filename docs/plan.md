@@ -1,43 +1,29 @@
-# DayPoo 대규모 트래픽 시뮬레이션 봇 시스템 구현 계획
+# Git 작업 및 동기화 계획
 
-## 1. 개요
-현재의 개발 초기 단계에서 실제 서비스 운영 시 발생할 대규모 트래픽을 시뮬레이션하고 성능 병목을 확인하기 위해 가상 유저(Bot) 시스템을 구축합니다. 이 과정에서 성능 최적화를 위한 인덱스 추가와 N+1 문제 해결도 함께 진행합니다.
+## 목적
+원격 저장소의 최신 코드를 반영(pull)하고, 현재 진행 중인 백엔드 시뮬레이션 관련 변경 사항 및 최적화 내역을 새로운 브랜치에 담아 원격 저장소에 푸시(push)합니다.
 
-## 2. 세부 구현 단계
+## 작업 단계
 
-### Phase 1: 기반 인프라 및 환경 설정
-- **Flyway 마이그레이션 (`V5__simulation_indices.sql`)**: 시뮬레이션 및 데이터 집계를 위한 성능 최적화 인덱스 생성.
-- **`application.yml` 수정**: `simulation` 프로파일 설정 추가 및 `reWriteBatchedInserts=true` 확인.
-- **`ApiApplication.java` 수정**: `@EnableScheduling` 어노테이션 추가.
-- **설정 클래스 구현**: `SimulationConfig.java`, `SimulationProperties.java` 작성.
+### Step 1: 현재 변경 사항 관리
+- [x] 현재 `task/server-startup` 브랜치에 있는 미커밋 변경 사항들을 확인합니다.
+- [x] 변경 사항들을 임시 저장(stash)합니다.
 
-### Phase 2: 데이터 시딩(Seeding) 시스템 구축
-- **`SeedDataGenerator.java`**: 한국어 기반의 랜덤 유저/기록 데이터 생성 유틸리티.
-- **`BulkInsertHelper.java`**: `JdbcTemplate`을 활용한 고속 배치 INSERT 로직 구현.
-- **`BulkDataSeeder.java`**: 서버 기동 시 비동기로 벌크 데이터를 적재하는 오케스트레이터.
+### Step 2: 최신 코드 반영 (Pull)
+- [x] `main` 브랜치로 이동하여 원격 저장소의 최신 코드를 `git pull` 받습니다. (팀원 머지 사항 반영 완료)
 
-### Phase 3: 시뮬레이션 봇 및 시나리오 구현
-- **`BotUserPool.java`**: 봇 활동에 필요한 ID 풀(유저, 화장실, 아이템 등) 캐싱.
-- **시나리오 인터페이스 및 클래스**:
-    - `BotScenario.java` (인터페이스)
-    - `MorningRoutineScenario.java`
-    - `ExplorerScenario.java`
-    - `ShopperScenario.java`
-    - `SupportScenario.java`
-    - `SocialScenario.java`
-- **`BotOrchestrator.java`**: 스케줄러를 통한 시나리오별 봇 활동 디스패치.
+### Step 3: 새 브랜치 생성 및 작업 반영
+- [x] 최신 `main` 브랜치를 기준으로 새로운 작업 브랜치(`feature/simulation-updates`)를 생성합니다.
+- [x] 임시 저장했던 변경 사항을 새 브랜치에 적용(stash pop)하고 충돌을 해결합니다.
 
-### Phase 4: 기존 기능 최적화 및 모니터링
-- **`RankingService.java`**: N+1 쿼리 최적화 및 로컬 캐시 적용.
-- **`SimulationMetrics.java`**: 성공/실패 횟수 등 활동 지표 추적.
-- **테스트**: `simulation` 프로파일 활성화 시 정상 동작 여부 및 멱등성 검증.
+### Step 4: 변경 사항 커밋 및 푸시 (Push)
+- [ ] 변경된 파일들을 스테이징하고 커밋 메시지를 작성합니다.
+- [ ] 새로운 브랜치를 원격 저장소에 푸시합니다.
 
-## 3. 완료 조건
-- `simulation` 프로파일로 구동 시 10,000명의 봇 유저와 관련 데이터가 정상적으로 시딩됨.
-- 정의된 스케줄에 따라 봇들이 API 서비스를 호출하며 로그를 생성함.
-- `EXPLAIN ANALYZE` 등을 통해 추가된 인덱스가 정상적으로 작동함을 확인.
-- 프로덕션(Main/Dev) 프로파일에서는 봇 시스템이 전혀 가동되지 않음.
-- `docs/backend-modification-history.md`에 모든 변경 사항이 기록됨.
+## 검증 항목
+- [x] `git pull` 성공 여부
+- [x] 새 브랜치 생성 및 변경 사항 적용 여부
+- [ ] 원격 저장소 브랜치 푸시 성공 여부
 
 ---
 [✅ 규칙을 잘 수행했습니다.]
