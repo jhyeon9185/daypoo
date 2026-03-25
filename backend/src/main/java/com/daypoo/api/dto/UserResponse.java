@@ -1,6 +1,7 @@
 package com.daypoo.api.dto;
 
 import com.daypoo.api.entity.User;
+import com.daypoo.api.entity.Subscription;
 import java.time.LocalDateTime;
 import lombok.Builder;
 
@@ -13,14 +14,24 @@ public record UserResponse(
     int level,
     long exp,
     long points,
+    String birthDate,
+    String createdAt,
     Long equippedTitleId,
     String equippedTitleName,
-    LocalDateTime createdAt) {
+    Boolean isPro,
+    SubscriptionResponse subscription) {
+
   public static UserResponse from(User user) {
-    return UserResponse.from(user, null);
+    return UserResponse.from(user, null, user.getActiveSubscription());
   }
 
   public static UserResponse from(User user, String equippedTitleName) {
+    return UserResponse.from(user, equippedTitleName, user.getActiveSubscription());
+  }
+
+  public static UserResponse from(
+      User user, String equippedTitleName, Subscription subscription) {
+
     return UserResponse.builder()
         .id(user.getId())
         .email(user.getEmail())
@@ -29,9 +40,12 @@ public record UserResponse(
         .level(user.getLevel())
         .exp(user.getExp())
         .points(user.getPoints())
+        .birthDate(user.getBirthDate() != null ? user.getBirthDate().toString() : null)
+        .createdAt(user.getCreatedAt() != null ? user.getCreatedAt().toString() : null)
         .equippedTitleId(user.getEquippedTitleId())
         .equippedTitleName(equippedTitleName)
-        .createdAt(user.getCreatedAt())
+        .isPro(user.isPro())
+        .subscription(SubscriptionResponse.from(subscription))
         .build();
   }
 }

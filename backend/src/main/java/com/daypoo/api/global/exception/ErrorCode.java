@@ -47,7 +47,10 @@ public enum ErrorCode {
   ADMIN_ITEM_IN_USE(HttpStatus.CONFLICT, "A007", "유저가 보유 중인 아이템은 삭제할 수 없습니다."),
 
   // Toilet
-  TOILET_NOT_FOUND(HttpStatus.NOT_FOUND, "T001", "화장실을 찾을 수 없습니다.");
+  TOILET_NOT_FOUND(HttpStatus.NOT_FOUND, "T001", "화장실을 찾을 수 없습니다."),
+
+  // Subscription
+  SUBSCRIPTION_NOT_FOUND(HttpStatus.NOT_FOUND, "B001", "구독 정보를 찾을 수 없습니다.");
 
   private final HttpStatus status;
   private final String code;
