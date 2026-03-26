@@ -1,5 +1,17 @@
 # 프론트엔드 변경 이력 (Frontend Modification History)
 
+## 2026-03-26 19:35:00
+
+- **작업 내용:** GitHub 저장소 `daypoo` 배포 및 AWS 배포 인프라 파일 생성
+- **상세 변경 내역:**
+  - **Git 리모트 전환:** `origin` URL을 기존 `jhyeon9185/poop-map`에서 `jhyeon9185/daypoo`로 변경하고, `main` 브랜치에 전체 프로젝트를 성공적으로 푸시했습니다.
+  - **Dockerfile 생성:** 백엔드(`backend/Dockerfile`) 및 AI 서비스(`ai-service/Dockerfile`)를 위한 프로덕션 Docker 이미지 빌드 설정을 작성했습니다.
+  - **프로덕션 설정 분리:** `application-prod.yml`을 생성하여 HikariCP 풀 크기(40→5), 로깅 레벨 최적화 등 t2.micro 환경에 적합한 설정을 반영했습니다.
+  - **GitHub Actions 워크플로우:** `.github/workflows/deploy-aws.yml`을 작성하여 main 푸시 시 자동으로 Docker 이미지 빌드, S3 프론트엔드 업로드, EC2 배포가 수행되도록 CI/CD 파이프라인을 구축했습니다.
+  - **Terraform 인프라 코드:** `terraform/` 디렉토리에 VPC, EC2, 네트워크, 보안그룹 등 AWS 프리티어 기반의 인프라 코드를 작성했습니다.
+  - **운영용 Docker Compose:** `docker-compose.prod.yml`을 생성하여 EC2에서 백엔드, AI, Redis 컨테이너를 통합 관리할 수 있도록 구성했습니다.
+- **결과/영향:** 새로운 `daypoo` 저장소에 전체 코드가 배포되었으며, AWS 인프라 자동 구축 및 CI/CD 파이프라인의 기초가 마련되었습니다.
+
 ## 2026-03-26 19:05:00
 
 - **작업 내용:** 마이페이지(`MyPage.tsx`) 인벤토리 및 상점 레이아웃 최적화
