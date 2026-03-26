@@ -460,9 +460,9 @@ export function RankingPage({ openAuth }: { openAuth: (mode: 'login' | 'signup')
 
   const { data, loading, error } = useRankings(tab, regionName);
 
-  const isDataValid = data && typeof data === 'object' && !Array.isArray(data);
-  const users: RankUser[] = (isDataValid && Array.isArray((data as any).topRankers))
-    ? ((data as any).topRankers as any[])
+  const isDataValid = !!data;
+  const users: RankUser[] = (isDataValid && Array.isArray(data.topRankers))
+    ? data.topRankers
         .filter(r => r && typeof r === 'object')
         .map((r) => ({
           rank: Number(r.rank || 0),
@@ -475,7 +475,7 @@ export function RankingPage({ openAuth }: { openAuth: (mode: 'login' | 'signup')
           score: Number(r.score || 0),
           scoreLabel: '점',
           change: 0,
-          items: (r.equippedItems || []).map((item: any) => ({
+          items: (r.equippedItems || []).map((item) => ({
             icon: item.icon || '🎁',
             name: item.name || '아이템',
             type: item.type || '장식'
@@ -484,8 +484,8 @@ export function RankingPage({ openAuth }: { openAuth: (mode: 'login' | 'signup')
     : [];
 
   const myRankData = useMemo(() => {
-    if (!isDataValid) return null;
-    const rawMyRank = (data as any).myRank;
+    if (!data) return null;
+    const rawMyRank = data.myRank;
     
     if (!rawMyRank) {
       if (!user) return null;
@@ -620,8 +620,8 @@ export function RankingPage({ openAuth }: { openAuth: (mode: 'login' | 'signup')
                 {[
                   {
                     label: '활성 사용자',
-                    value: (isDataValid && (data as any).activeUserCount)
-                      ? (data as any).activeUserCount.toLocaleString()
+                    value: (data && typeof data.activeUserCount === 'number')
+                      ? data.activeUserCount.toLocaleString()
                       : '0',
                     unit: '+'
                   },

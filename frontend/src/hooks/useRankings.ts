@@ -1,6 +1,12 @@
 import { useState, useCallback, useEffect } from 'react';
 import { api } from '../services/apiClient';
 
+interface EquippedItemResponse {
+  icon: string | null;  // item.imageUrl (null일 수 있음)
+  name: string;
+  type: 'AVATAR' | 'EFFECT';
+}
+
 interface UserRankResponse {
   userId: number;
   nickname: string;
@@ -8,11 +14,13 @@ interface UserRankResponse {
   level: number;
   score: number;
   rank: number;
+  equippedItems: EquippedItemResponse[]; // 신규 추가
 }
 
 interface RankingResponse {
   topRankers: UserRankResponse[];
   myRank: UserRankResponse;
+  activeUserCount: number; // 신규 추가
 }
 
 export function useRankings(tab: 'total' | 'local' | 'health', regionName?: string) {
@@ -30,7 +38,7 @@ export function useRankings(tab: 'total' | 'local' | 'health', regionName?: stri
       else endpoint = `/rankings/region?regionName=${encodeURIComponent(regionName || '서울')}`;
 
       const res = await api.get(endpoint);
-      setData(res);
+      setData(res as RankingResponse);
     } catch (e: any) {
       console.error('[useRankings] Error:', e);
       setError(e.message);
