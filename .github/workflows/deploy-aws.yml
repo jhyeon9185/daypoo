@@ -73,16 +73,37 @@ jobs:
     needs: [build-and-push-images]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy docker-compose to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          source: "docker-compose.prod.yml"
+          target: "/opt/daypoo/"
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          envs: DB_PASSWORD,DB_USERNAME,DOCKERHUB_USERNAME
           script: |
-            # 새 이미지 가져오기 및 컨테이너 재가동
-            docker-compose -f /opt/daypoo/docker-compose.prod.yml pull
-            docker-compose -f /opt/daypoo/docker-compose.prod.yml up -d
+            # 디렉토리 권한 확인 및 설정
+            sudo mkdir -p /opt/daypoo
+            sudo chown -R ec2-user:ec2-user /opt/daypoo
+
+            # 새 이미지 가져오기 및 컨테이너 가동 (환경 변수 적용)
+            cd /opt/daypoo
+            export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
+            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            export DB_USERNAME=${{ secrets.DB_USERNAME }}
+            
+            docker-compose -f docker-compose.prod.yml pull
+            docker-compose -f docker-compose.prod.yml up -d
             
             # 미사용 이미지 정리 (용량 확보)
             docker image prune -f
