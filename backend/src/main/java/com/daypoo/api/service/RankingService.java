@@ -1,11 +1,13 @@
 package com.daypoo.api.service;
 
+import com.daypoo.api.dto.EquippedItemResponse;
 import com.daypoo.api.dto.RankingResponse;
 import com.daypoo.api.dto.UserRankResponse;
 import com.daypoo.api.entity.HealthReportSnapshot;
 import com.daypoo.api.entity.Title;
 import com.daypoo.api.entity.User;
 import com.daypoo.api.repository.HealthReportSnapshotRepository;
+import com.daypoo.api.repository.InventoryRepository;
 import com.daypoo.api.repository.PooRecordRepository;
 import com.daypoo.api.repository.TitleRepository;
 import com.daypoo.api.repository.UserRepository;
@@ -33,6 +35,7 @@ public class RankingService {
   private final TitleRepository titleRepository;
   private final PooRecordRepository recordRepository;
   private final HealthReportSnapshotRepository snapshotRepository;
+  private final InventoryRepository inventoryRepository;
 
   private static final String GLOBAL_RANK_KEY = "daypoo:rankings:global";
   private static final String HEALTH_RANK_KEY = "daypoo:rankings:health";
@@ -159,6 +162,20 @@ public class RankingService {
         titleRepository.findAllById(titleIds).stream()
             .collect(Collectors.toMap(Title::getId, Title::getName));
 
+    // Batch-fetch equipped items for all top rankers
+    java.util.Map<Long, List<EquippedItemResponse>> equippedItemsMap =
+        inventoryRepository.findEquippedByUserIn(users).stream()
+            .collect(
+                Collectors.groupingBy(
+                    inv -> inv.getUser().getId(),
+                    Collectors.mapping(
+                        inv ->
+                            new EquippedItemResponse(
+                                inv.getItem().getImageUrl(),
+                                inv.getItem().getName(),
+                                inv.getItem().getType().name()),
+                        Collectors.toList())));
+
     List<UserRankResponse> topRankers =
         topRankersRaw.stream()
             .map(
@@ -177,6 +194,7 @@ public class RankingService {
                       .level(user.getLevel())
                       .score(tuple.getScore() != null ? tuple.getScore().longValue() : 0L)
                       .rank((rank != null ? rank : 0L) + 1L)
+                      .equippedItems(equippedItemsMap.getOrDefault(userId, List.of()))
                       .build();
                 })
             .filter(Objects::nonNull)
@@ -196,6 +214,7 @@ public class RankingService {
               .level(myUser.getLevel())
               .score(myScoreRaw != null ? myScoreRaw.longValue() : 0L)
               .rank((myRankRaw != null ? myRankRaw : 0L) + 1L)
+              .equippedItems(List.of())
               .build();
     }
 
