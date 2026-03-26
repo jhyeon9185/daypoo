@@ -9,6 +9,22 @@
 
 ---
 
+## 현재 상태 점검 (2026-03-26 업데이트)
+
+### 이미 완료된 항목
+
+| 항목 | 상태 | 비고 |
+|------|------|------|
+| .gitignore에 .env 제외 | ✅ 완료 | root, frontend 모두 `.env`, `.env.*` 패턴 적용됨 |
+| AI 서비스 CORS 설정 | ✅ 완료 | `settings.CORS_ORIGINS`로 특정 도메인만 허용 (`*` 아님) |
+| Java 21 설정 | ✅ 완료 | `build.gradle`에 `languageVersion.of(21)` |
+| BotOrchestrator @Profile | ✅ 완료 | `@Profile("simulation")` 정상 설정됨 |
+| docker-compose.yml | ✅ 존재 | PostGIS 16-3.4, Redis 7-alpine |
+| Backend CI workflow | ✅ 존재 | `.github/workflows/backend-ci.yml` |
+| Frontend deploy workflow | ✅ 존재 | `.github/workflows/deploy.yml` (GitHub Pages) |
+
+---
+
 ## 1. AWS 프리티어 한계 vs 프로젝트 요구사항 (비용 문제)
 
 ### 1.1 프리티어로 가능한 것 (12개월 무료)
@@ -68,54 +84,18 @@
 
 ---
 
-## 2. 심각한 보안 문제 (배포 전 필수 해결)
+## 2. 보안 관련 (배포 전 확인 필요)
 
-### 2.1 .env 파일에 실제 시크릿 노출 (CRITICAL)
+### 2.1 .env 시크릿 관리
 
-**문제 파일들**:
-- `/.env` - DB 비밀번호, JWT 키, OAuth 시크릿, 결제 키 전부 포함
-- `/backend/.env` - 백엔드 시크릿
-- `/frontend/.env` - 카카오맵 키, 토스 클라이언트 키
-- `/ai-service/.env` - OpenAI API 키 (`sk-proj-...`)
+> ✅ .gitignore 설정은 이미 완료됨 (`.env`, `.env.*` 패턴 적용)
 
-**노출된 시크릿 목록**:
-| 항목 | 위험도 |
-|------|--------|
-| PostgreSQL Password (`daypoo1234`) | CRITICAL |
-| JWT Secret Key (Base64) | CRITICAL |
-| Toss Payment Secret (`test_sk_...`) | CRITICAL |
-| Kakao OAuth Secret | CRITICAL |
-| Google OAuth Secret | CRITICAL |
-| OpenAI API Key (`sk-proj-...`) → 과금 발생 | CRITICAL |
-| Gmail App Password | CRITICAL |
+**배포 시 추가 작업:**
+- 프로덕션 시크릿 재발급 권장 (JWT Secret Key, DB Password 등)
+- AWS SSM Parameter Store로 시크릿 관리 (무료)
+- GitHub Actions Secrets에 등록 (아래 섹션 참고)
 
-**해결 방법**:
-```bash
-# 1. Git에서 .env 파일 추적 제거
-git rm --cached .env backend/.env frontend/.env ai-service/.env
-git commit -m "chore: remove .env files from tracking"
-
-# 2. 모든 시크릿 재발급 (필수)
-# - JWT Secret Key 재생성
-# - OAuth 클라이언트 재발급
-# - OpenAI API 키 순환
-# - Gmail 앱 비밀번호 변경
-
-# 3. AWS 배포 시 SSM Parameter Store 사용 (무료)
-```
-
-### 2.2 AI 서비스 CORS 전체 개방
-
-**파일**: `ai-service/main.py`
-```python
-# 현재 (위험)
-allow_origins=["*"]
-
-# 수정 필요
-allow_origins=[os.getenv("ALLOWED_ORIGINS", "http://localhost:8080")]
-```
-
-### 2.3 OAuth2 토큰이 URL에 노출
+### 2.2 OAuth2 토큰이 URL에 노출
 
 **파일**: `backend/.../security/OAuth2SuccessHandler.java`
 ```java
@@ -127,94 +107,63 @@ String targetUrl = frontendUrl
 
 ---
 
-## 3. 코드 레벨 배포 문제
+## 3. 코드 레벨 배포 문제 (미완료)
 
 ### 3.1 HikariCP Connection Pool 과다 설정
 
 **파일**: `backend/src/main/resources/application.yml`
 ```yaml
-# 현재 (t2.micro에서 불가능)
+# 현재 (t2.micro에서 과다)
 maximum-pool-size: 40
 minimum-idle: 10
 
-# 수정 필요 (프리티어용)
+# application-prod.yml에서 오버라이드 필요
 maximum-pool-size: 5
 minimum-idle: 2
 ```
-
-RDS db.t3.micro는 최대 약 60개 연결 → 40개 풀은 단독으로는 가능하나 다른 서비스와 공유 시 문제
 
 ### 3.2 JVM 메모리 설정 필요
 
 EC2 t2.micro (1GB RAM)에서 Spring Boot + FastAPI + Redis가 공존해야 합니다.
 
 ```bash
-# 런타임 JVM 옵션 필요
+# Dockerfile 또는 런타임에서 설정
 JAVA_OPTS="-Xmx384m -Xms256m -XX:+UseG1GC"
 ```
 
-### 3.3 Virtual Threads (Java 21) 호환성
-
-**파일**: `backend/build.gradle` → Java 21 필수
-- Amazon Linux 2023 기본 AMI에 Java 21 없음
-- **Amazon Corretto 21** 별도 설치 필요
-
-### 3.4 PostGIS 확장 필요
+### 3.3 PostGIS 확장 필요
 
 **파일**: `docker-compose.yml` → `postgis/postgis:16-3.4` 이미지 사용 중
 - RDS PostgreSQL에서 PostGIS를 수동 활성화 필요
-- Flyway 마이그레이션(V1)에서 PostGIS 함수 사용 (`ST_GeomFromText` 등)
 - **배포 전 RDS에서 `CREATE EXTENSION postgis;` 실행 필수**
 
-### 3.5 프론트엔드 API 프록시 미작동
+### 3.4 프론트엔드 API 프록시 미작동
 
 **파일**: `frontend/vite.config.js`
-```javascript
-server: {
-  proxy: {
-    '/api': 'http://localhost:8080'  // dev 서버에서만 동작
-  }
-}
-```
 - `vite build`로 빌드된 정적 파일에는 프록시 적용 안 됨
-- S3 + CloudFront 배포 시 별도 API 라우팅 필요
-
-**해결**: CloudFront Behavior로 라우팅
+- **해결**: CloudFront Behavior로 라우팅
 ```
 /api/*     → EC2 Origin (백엔드)
 /oauth2/*  → EC2 Origin
 /*         → S3 Origin (프론트엔드)
 ```
 
-### 3.6 프론트엔드 envDir 설정
+### 3.5 프론트엔드 envDir 설정
 
 **파일**: `frontend/vite.config.js`
 ```javascript
 envDir: '../'  // 상위 디렉토리에서 .env 로드
 ```
 - CI/CD 빌드 시 상위 경로에 .env가 없으면 `VITE_*` 변수 미주입
-- 빌드 환경에서 환경변수를 직접 설정해야 함
+- **GitHub Actions에서 환경변수를 직접 설정해야 함**
 
-### 3.7 스케줄러 메모리 문제
+### 3.6 스케줄러 메모리 문제
 
 **파일**: `backend/.../service/PublicDataSyncService.java`
-- 매일 새벽 3시 공공데이터 동기화
-- Virtual Thread + Semaphore(10개 동시 요청) → t2.micro에서 OOM 위험
-
 ```java
-// 수정 권장: 동시 요청 수 축소
-private static final int MAX_CONCURRENT_REQUESTS = 3; // 기존 10
+// 현재: MAX_CONCURRENT_REQUESTS = 10
+// 수정 필요: MAX_CONCURRENT_REQUESTS = 3 (t2.micro OOM 방지)
 ```
-
-### 3.8 Simulation 프로필 비활성화 확인
-
-**파일**: `backend/.../simulation/bot/BotOrchestrator.java`
-```java
-@Profile("simulation")  // 이 프로필이 활성화되면 1분마다 봇 실행
-@Scheduled(fixedRate = 60000)
-```
-- **배포 시 `SPRING_PROFILES_ACTIVE=prod` 필수 설정**
-- simulation 프로필 절대 사용 금지
 
 ---
 
@@ -235,7 +184,8 @@ FROM amazoncorretto:21-alpine
 WORKDIR /app
 COPY --from=builder /app/build/libs/*.jar app.jar
 EXPOSE 8080
-ENTRYPOINT ["java", "-Xmx384m", "-Xms256m", "-jar", "app.jar"]
+ENV JAVA_OPTS="-Xmx384m -Xms256m -XX:+UseG1GC"
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
 ```
 
 **ai-service/Dockerfile**:
@@ -251,9 +201,168 @@ CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 
 ---
 
-## 5. Terraform 구성 가이드
+## 5. GitHub Actions 배포 (Git → AWS)
 
-### 5.1 디렉토리 구조
+> **Terraform으로 AWS 인프라 생성 전, 먼저 GitHub Actions CI/CD 파이프라인을 구축합니다.**
+
+### 5.1 GitHub Actions Secrets 등록 목록
+
+GitHub Repository → Settings → Secrets and variables → Actions에 등록:
+
+#### Database & Infrastructure (7개)
+
+| Secret Name | 값 | 용도 |
+|-------------|-----|------|
+| `POSTGRES_USER` | `daypoo` | DB 사용자명 |
+| `POSTGRES_PASSWORD` | `YOUR_PASSWORD_HERE` | DB 비밀번호 |
+| `POSTGRES_DB` | `daypoo_db` | DB 이름 |
+| `DB_HOST` | `YOUR_DB_HOST_HERE` | DB 호스트 |
+| `DB_PORT` | `5432` | DB 포트 |
+| `REDIS_HOST` | `localhost` | EC2 로컬 Redis |
+| `REDIS_PORT` | `6379` | Redis 포트 |
+
+#### Authentication & Security (5개)
+
+| Secret Name | 값 | 용도 |
+|-------------|-----|------|
+| `JWT_SECRET_KEY` | `YOUR_SECRET_KEY_HERE` | JWT 서명 |
+| `KAKAO_CLIENT_ID` | `YOUR_CLIENT_ID_HERE` | 카카오 OAuth |
+| `KAKAO_CLIENT_SECRET` | `YOUR_CLIENT_SECRET_HERE` | 카카오 OAuth |
+| `GOOGLE_CLIENT_ID` | `YOUR_CLIENT_ID_HERE` | 구글 OAuth |
+| `GOOGLE_CLIENT_SECRET` | `YOUR_CLIENT_SECRET_HERE` | 구글 OAuth |
+
+#### External APIs (5개)
+
+| Secret Name | 값 | 용도 |
+|-------------|-----|------|
+| `OPENAI_API_KEY` | `YOUR_API_KEY_HERE` | AI 분석 |
+| `PUBLIC_DATA_API_KEY` | `YOUR_API_KEY_HERE` | 공공데이터 API |
+| `TOSS_SECRET_KEY` | `YOUR_SECRET_KEY_HERE` | 토스 결제 (서버) |
+| `VITE_TOSS_CLIENT_KEY` | `YOUR_CLIENT_KEY_HERE` | 토스 결제 (클라이언트) |
+| `VITE_KAKAO_MAP_KEY` | `YOUR_MAP_KEY_HERE` | 카카오맵 SDK |
+
+#### Email (2개)
+
+| Secret Name | 값 | 용도 |
+|-------------|-----|------|
+| `MAIL_USERNAME` | `YOUR_EMAIL_HERE` | Gmail SMTP |
+| `MAIL_PASSWORD` | `YOUR_APP_PASSWORD_HERE` | Gmail SMTP |
+
+#### AWS 배포 전용 (5개)
+
+| Secret Name | 값 | 용도 |
+|-------------|-----|------|
+| `AWS_ACCESS_KEY_ID` | AWS IAM 콘솔에서 생성 | AWS 인증 |
+| `AWS_SECRET_ACCESS_KEY` | AWS IAM 콘솔에서 생성 | AWS 인증 |
+| `AWS_REGION` | `ap-northeast-2` | 서울 리전 |
+| `EC2_SSH_PRIVATE_KEY` | EC2 키페어 PEM 파일 내용 | EC2 SSH 접속 |
+| `EC2_HOST` | Terraform output (EC2 Public IP) | EC2 접속 IP |
+
+**총 24개 시크릿**
+
+### 5.2 배포 워크플로우 구조
+
+**파일**: `.github/workflows/deploy-aws.yml`
+
+```yaml
+name: Deploy to AWS
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:     # 수동 실행 가능
+
+jobs:
+  # ── Job 1: 백엔드 빌드 ──
+  build-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'corretto'
+      - name: Build JAR
+        run: cd backend && ./gradlew bootJar -x test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: backend-jar
+          path: backend/build/libs/*.jar
+
+  # ── Job 2: 프론트엔드 빌드 & S3 업로드 ──
+  build-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Build Frontend
+        run: cd frontend && npm ci && npm run build
+        env:
+          VITE_TOSS_CLIENT_KEY: ${{ secrets.VITE_TOSS_CLIENT_KEY }}
+          VITE_KAKAO_MAP_KEY: ${{ secrets.VITE_KAKAO_MAP_KEY }}
+          VITE_API_URL: ''  # CloudFront에서 프록시
+      - name: Upload to S3
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - run: aws s3 sync frontend/dist s3://daypoo-frontend --delete
+
+  # ── Job 3: EC2 배포 ──
+  deploy:
+    needs: [build-backend, build-frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: backend-jar
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          script: |
+            # 백엔드 JAR 배포
+            sudo systemctl stop daypoo-backend || true
+            sudo cp /tmp/app.jar /opt/daypoo/app.jar
+            sudo systemctl start daypoo-backend
+
+            # AI 서비스 재시작
+            cd /opt/daypoo/ai-service
+            git pull origin main
+            pip install -r requirements.txt
+            sudo systemctl restart daypoo-ai
+
+            # Health check
+            sleep 10
+            curl -f http://localhost:8080/api/health || exit 1
+```
+
+### 5.3 배포 순서
+
+```
+1. GitHub Secrets 24개 등록
+     ↓
+2. Terraform으로 AWS 인프라 생성 (EC2, RDS, S3, CloudFront)
+     ↓
+3. Terraform output에서 EC2_HOST, DB_HOST 확인 → Secrets 업데이트
+     ↓
+4. main 브랜치에 Push → GitHub Actions 자동 배포
+     ↓
+5. 배포 확인:
+   - CloudFront URL → 프론트엔드
+   - /api/health → 백엔드
+   - OAuth 로그인 테스트
+```
+
+---
+
+## 6. Terraform 구성 가이드
+
+### 6.1 디렉토리 구조
 
 ```
 terraform/
@@ -270,7 +379,7 @@ terraform/
 └── ssm.tf               # SSM Parameter Store (시크릿)
 ```
 
-### 5.2 핵심 리소스
+### 6.2 핵심 리소스
 
 **EC2 (t2.micro)**:
 ```hcl
@@ -370,9 +479,9 @@ resource "aws_ssm_parameter" "db_password" {
 
 ---
 
-## 6. Elasticsearch (OpenSearch) 관련
+## 7. Elasticsearch (OpenSearch) 관련
 
-### 6.1 프리티어에 포함되지 않음
+### 7.1 프리티어에 포함되지 않음
 
 | 옵션 | 월 비용 |
 |------|---------|
@@ -380,14 +489,14 @@ resource "aws_ssm_parameter" "db_password" {
 | OpenSearch Serverless | ~$21+/월 |
 | EC2에 직접 설치 | $0 (하지만 1GB RAM에서 OOM) |
 
-### 6.2 현재 코드에 Elasticsearch 코드 없음
+### 7.2 현재 코드에 Elasticsearch 코드 없음
 
 - `build.gradle`에 ES 의존성 없음
 - `application.yml`에 ES 설정 없음
 - 소스 코드에서 ES 참조 없음
 - **새로 추가해야 하는 기능** → 배포 후 별도 작업
 
-### 6.3 프리티어 내 대안
+### 7.3 프리티어 내 대안
 
 - **PostgreSQL Full-Text Search** (`tsvector` + `tsquery`) → 추가 비용 $0
 - 학원 프로젝트 수준에서는 충분
@@ -395,7 +504,7 @@ resource "aws_ssm_parameter" "db_password" {
 
 ---
 
-## 7. t2.micro 메모리 분배 계획
+## 8. t2.micro 메모리 분배 계획
 
 ```
 총 RAM: 1024MB
@@ -411,7 +520,7 @@ resource "aws_ssm_parameter" "db_password" {
 
 ---
 
-## 8. HTTPS 및 도메인 (미구매 상태)
+## 9. HTTPS 및 도메인 (미구매 상태)
 
 - 도메인 없이 HTTPS → **CloudFront 기본 도메인** 사용 (`xxxxx.cloudfront.net`)
 - CloudFront는 기본적으로 HTTPS 지원 (ACM 인증서 불필요)
@@ -422,7 +531,7 @@ resource "aws_ssm_parameter" "db_password" {
 
 ---
 
-## 9. application.yml 프로필 분리 필요
+## 10. application.yml 프로필 분리 필요
 
 현재 `application.yml` 하나로 모든 환경 관리 중
 
@@ -450,35 +559,40 @@ app:
 
 ---
 
-## 10. 배포 전 체크리스트
+## 11. 배포 전 체크리스트
 
 ### CRITICAL (필수)
-- [ ] .env 파일 Git에서 제거 + 시크릿 재발급
+
+- [x] ~~.env 파일 .gitignore 설정~~ ✅ 완료
+- [x] ~~AI 서비스 CORS `*` → 특정 도메인~~ ✅ 완료 (`settings.CORS_ORIGINS`)
+- [x] ~~Java 21 설정~~ ✅ 완료 (`build.gradle`)
+- [x] ~~simulation 프로필 비활성화 확인~~ ✅ 완료 (`@Profile("simulation")`)
 - [ ] Dockerfile 작성 (backend, ai-service)
-- [ ] HikariCP 풀 사이즈 축소 (40 → 5)
-- [ ] JVM 메모리 제한 (-Xmx384m)
-- [ ] EC2 Swap 2GB 설정
+- [ ] HikariCP 풀 사이즈 축소 (application-prod.yml: 40 → 5)
+- [ ] JVM 메모리 제한 (-Xmx384m) → Dockerfile에 포함
+- [ ] EC2 Swap 2GB 설정 → Terraform user_data에 포함
 - [ ] RDS PostGIS 확장 활성화
 - [ ] CORS 설정 변경 (CloudFront 도메인)
 - [ ] OAuth2 리다이렉트 URL 변경
 - [ ] SPRING_PROFILES_ACTIVE=prod 설정
 
 ### HIGH (권장)
+
 - [ ] application-prod.yml 프로필 분리
-- [ ] AI 서비스 CORS `*` → 특정 도메인
-- [ ] simulation 프로필 비활성화 확인
 - [ ] 공공데이터 동기화 동시 요청 수 축소 (10 → 3)
 - [ ] terraform.tfvars를 .gitignore에 추가
 - [ ] VITE_ 환경변수 프로덕션 값 설정
+- [ ] GitHub Actions Secrets 24개 등록
+- [ ] deploy-aws.yml 워크플로우 작성
 
 ### MEDIUM (개선)
-- [ ] GitHub Actions에 AWS 배포 워크플로우 추가
+
 - [ ] CloudWatch 로그 설정
 - [ ] Gmail SMTP → AWS SES 마이그레이션 검토
 
 ---
 
-## 11. 예상 비용 정리
+## 12. 예상 비용 정리
 
 ### 프리티어 기간 (12개월)
 
@@ -503,30 +617,33 @@ app:
 
 ---
 
-## 12. 주요 파일 경로 참조
+## 13. 주요 파일 경로 참조
 
-| 구분 | 파일 | 배포 문제 |
-|------|------|----------|
-| 환경변수 | `.env`, `backend/.env`, `frontend/.env`, `ai-service/.env` | 시크릿 노출 |
-| Spring 설정 | `backend/src/main/resources/application.yml` | 커넥션 풀, 프로필 분리 |
-| 빌드 | `backend/build.gradle` | Java 21 필요 |
-| Vite 설정 | `frontend/vite.config.js` | 프록시 미작동, envDir |
-| Docker | `docker-compose.yml` | 배포용 수정 필요 |
-| CI/CD | `.github/workflows/deploy.yml` | 프론트엔드만 배포 |
-| 마이그레이션 | `backend/src/main/resources/db/migration/V*.sql` | PostGIS 필요 |
-| AI CORS | `ai-service/main.py` | `allow_origins=["*"]` |
-| OAuth | `backend/.../security/OAuth2SuccessHandler.java` | 토큰 URL 노출 |
-| 보안 | `backend/.../security/SecurityConfig.java` | CORS 설정 |
-| 스케줄러 | `backend/.../service/PublicDataSyncService.java` | 동시 요청 10개 OOM |
-| 봇 | `backend/.../simulation/bot/BotOrchestrator.java` | simulation 프로필 확인 |
+| 구분 | 파일 | 상태 |
+|------|------|------|
+| 환경변수 | `.env`, `backend/.env`, `frontend/.env`, `ai-service/.env` | ✅ .gitignore 적용됨 |
+| Spring 설정 | `backend/src/main/resources/application.yml` | ⚠️ 프로필 분리 필요 |
+| 빌드 | `backend/build.gradle` | ✅ Java 21 설정됨 |
+| Vite 설정 | `frontend/vite.config.js` | ⚠️ envDir 주의 |
+| Docker | `docker-compose.yml` | ✅ 로컬용 존재 |
+| CI/CD | `.github/workflows/backend-ci.yml` | ✅ 테스트용 존재 |
+| CI/CD | `.github/workflows/deploy.yml` | ✅ GitHub Pages 배포 |
+| CI/CD | `.github/workflows/deploy-aws.yml` | ❌ 신규 작성 필요 |
+| Dockerfile | `backend/Dockerfile` | ❌ 신규 작성 필요 |
+| Dockerfile | `ai-service/Dockerfile` | ❌ 신규 작성 필요 |
+| Terraform | `terraform/` | ❌ 신규 작성 필요 |
+| AI CORS | `ai-service/main.py` | ✅ 특정 도메인 허용 |
+| OAuth | `backend/.../security/OAuth2SuccessHandler.java` | ⚠️ 토큰 URL 노출 |
+| 스케줄러 | `backend/.../service/PublicDataSyncService.java` | ⚠️ 동시 요청 10→3 |
+| 봇 | `backend/.../simulation/bot/BotOrchestrator.java` | ✅ @Profile 설정됨 |
 
 ---
 
 ## 요약
 
 **배포 전 가장 중요한 3가지**:
-1. **.env 시크릿 정리** - Git에서 제거, AWS SSM Parameter Store로 관리
-2. **리소스 제한** - HikariCP 5개, JVM 384MB, Swap 2GB
+1. **GitHub Actions Secrets 등록** - 24개 시크릿 + deploy-aws.yml 워크플로우
+2. **리소스 제한** - HikariCP 5개, JVM 384MB, Swap 2GB (application-prod.yml + Dockerfile)
 3. **Dockerfile 작성** - 백엔드, AI 서비스 컨테이너화
 
 **Elasticsearch 결론**:

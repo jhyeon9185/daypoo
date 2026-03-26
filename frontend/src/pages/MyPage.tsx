@@ -1010,12 +1010,14 @@ function HomeTab({
       animate={inView ? 'show' : 'hidden'}
       className="flex flex-col gap-8"
     >
-      {/* ★ 아바타 커스터마이징 섹션 (개편 및 사이즈 업) */}
+      {/* ★ 아바타 커스터마이징 섹션 (심리스 듀얼 패널 대시보드) */}
       <motion.div
         variants={fadeUp(0)}
-        className="bg-white rounded-[40px] border border-gray-100 shadow-sm overflow-hidden"
+        className="bg-white rounded-[40px] border border-gray-100 shadow-sm overflow-hidden flex flex-col md:flex-row min-h-[700px]"
       >
-        <div className="flex items-center justify-between px-10 pt-10 pb-8">
+        {/* 왼쪽: 인벤토리 메인 영역 */}
+        <div className="flex-1 flex flex-col border-b md:border-b-0 md:border-r border-gray-100">
+          <div className="flex items-center justify-between px-10 pt-10 pb-8">
           <div>
             <p className="text-sm font-black text-gray-400 uppercase tracking-widest mb-1.5">
               Avatar Customizing
@@ -1086,7 +1088,7 @@ function HomeTab({
             >
               {items.length > 0 ? (
                 <>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                     {items
                       .slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage)
                       .map((item, idx) => {
@@ -1170,37 +1172,64 @@ function HomeTab({
             </motion.div>
           </AnimatePresence>
         </div>
+      </div>
 
-        <p className="text-center text-sm font-semibold text-gray-300 py-4 italic tracking-wide">
+      <p className="text-center text-sm font-semibold text-gray-300 py-4 italic tracking-wide">
           클릭하거나 드래그해서 아바타를 꾸며보세요
         </p>
-
-        {/* 하단 구매/저장 바 (X 버튼 제거 및 가동성 개선) */}
-        <AnimatePresence>
-          {preview && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 15 }}
-              className="flex gap-4 px-10 pb-10 pt-4"
-            >
-              <WaveButtonComponent
-                onClick={handleSave}
-                variant={preview.owned ? 'primary' : 'accent'}
-                size="xl"
-                className="flex-1 shadow-2xl"
-                icon={saved || preview.owned ? <Check size={24} /> : <ShoppingBag size={24} />}
-              >
-                {saved
-                  ? '저장 완료!'
-                  : preview.owned
-                    ? '장착 완료 (저장)'
-                    : `${preview.price?.toLocaleString()}P 충전 후 구매하기`}
-              </WaveButtonComponent>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </motion.div>
+
+      {/* 전역 플로팅 인텔리전트 바 (데스크톱 & 모바일 통합 UX) */}
+      <AnimatePresence>
+        {preview && (
+          <motion.div
+            initial={{ opacity: 0, y: 100 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 100 }}
+            className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[200] w-[90%] max-w-[500px]"
+          >
+            <div 
+              className="flex items-center gap-5 p-4 rounded-[32px] border border-white/40 shadow-[0_30px_90px_rgba(0,0,0,0.2)] backdrop-blur-2xl"
+              style={{ background: 'rgba(255,255,255,0.92)' }}
+            >
+              <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex-shrink-0 relative overflow-hidden group">
+                <img src={generateItemAvatar(preview.id, preview.rawType || 'AVATAR')} className="w-full h-full object-cover p-2 transition-transform group-hover:scale-110" />
+                <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+              
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="text-[9px] font-black text-emerald-600 bg-emerald-100/50 px-2 py-0.5 rounded-full uppercase tracking-tighter">
+                    {preview.type}
+                  </span>
+                </div>
+                <h4 className="text-base font-black text-[#1A2B27] truncate">{preview.name}</h4>
+                <p className="text-[10px] font-bold text-gray-400">
+                  {preview.owned ? (equipped?.id === preview.id ? '현재 장착 중' : '보유 중인 아이템') : `${preview.price?.toLocaleString()}P 필요`}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <WaveButtonComponent
+                  onClick={handleSave}
+                  variant={preview.owned ? 'primary' : 'accent'}
+                  size="sm"
+                  className="!px-6 !rounded-[20px] !h-11 shadow-lg"
+                  icon={saved || preview.owned ? <Check size={18} /> : <ShoppingBag size={18} />}
+                >
+                  {saved ? '저장됨' : preview.owned ? '장착하기' : '구매하기'}
+                </WaveButtonComponent>
+                <button 
+                  onClick={() => setPreview(null)}
+                  className="w-11 h-11 flex items-center justify-center rounded-[18px] bg-gray-50 text-gray-300 hover:bg-gray-100 hover:text-gray-900 transition-all"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* 데일리 AI 분석 섹션 (API 연동) */}
       <motion.div

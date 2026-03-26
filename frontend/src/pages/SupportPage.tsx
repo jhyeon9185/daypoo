@@ -7,7 +7,6 @@ import {
   useInView,
   useMotionValue,
   useSpring,
-  useTransform,
 } from 'framer-motion';
 import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
@@ -195,7 +194,7 @@ function ModernSearch({ value, onChange }: { value: string; onChange: (v: string
   );
 }
 
-// ── 3번 효과: Deep-Glow FAQ Item ────────────────────────────────────
+// ── 3번 효과: Modern Magnetic Glow FAQ Item ────────────────────────────────────
 function TrendyFaqItem({
   item,
   isOpen,
@@ -205,27 +204,65 @@ function TrendyFaqItem({
   isOpen: boolean;
   onToggle: () => void;
 }) {
+  const [isHovered, setIsHovered] = useState(false);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  // Magnetic pull effect (subtle cursor following)
   const x = useMotionValue(0);
   const y = useMotionValue(0);
-  const rotateX = useSpring(useTransform(y, [-0.5, 0.5], [8, -8]));
-  const rotateY = useSpring(useTransform(x, [-0.5, 0.5], [-8, 8]));
+  const springX = useSpring(x, { stiffness: 150, damping: 20 });
+  const springY = useSpring(y, { stiffness: 150, damping: 20 });
 
   function handleMouseMove(event: React.MouseEvent<HTMLDivElement>) {
     const rect = event.currentTarget.getBoundingClientRect();
-    x.set(event.clientX / rect.width - 0.5);
-    y.set(event.clientY / rect.height - 0.5);
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+
+    // Magnetic pull (subtle)
+    const deltaX = (event.clientX - centerX) * 0.08;
+    const deltaY = (event.clientY - centerY) * 0.08;
+    x.set(deltaX);
+    y.set(deltaY);
+
+    // Track mouse for glow effect
+    setMousePosition({
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+    });
+  }
+
+  function handleMouseLeave() {
+    x.set(0);
+    y.set(0);
+    setIsHovered(false);
   }
 
   return (
     <motion.div
-      variants={listItemVariants} // 폭포수 애니메이션 참여
+      variants={listItemVariants}
       layout
       onMouseMove={handleMouseMove}
-      onMouseLeave={() => { x.set(0); y.set(0); }}
-      style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={handleMouseLeave}
+      style={{ x: springX, y: springY }}
       className="group relative mb-4"
     >
-      {/* 3번 효과: Active 호버/오픈 시 글로우 효과 */}
+      {/* 동적 커서 추적 Glow 효과 */}
+      <AnimatePresence>
+        {isHovered && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-0 pointer-events-none"
+            style={{
+              background: `radial-gradient(600px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(82, 183, 136, 0.15), transparent 40%)`,
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Open 상태 글로우 (기존 유지) */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -238,8 +275,23 @@ function TrendyFaqItem({
         )}
       </AnimatePresence>
 
-      <div
-        className={`relative z-10 bg-white rounded-[26px] border ${isOpen ? 'border-[#52B788]/40 shadow-xl' : 'border-black/[0.04] shadow-sm'} overflow-hidden transition-all duration-300`}
+      <motion.div
+        animate={{
+          scale: isHovered ? 1.02 : 1,
+          boxShadow: isHovered
+            ? '0 20px 60px rgba(27, 67, 50, 0.15)'
+            : isOpen
+            ? '0 10px 40px rgba(27, 67, 50, 0.1)'
+            : '0 2px 8px rgba(0, 0, 0, 0.04)',
+        }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        className={`relative z-10 bg-white rounded-[26px] border overflow-hidden ${
+          isOpen
+            ? 'border-[#52B788]/40'
+            : isHovered
+            ? 'border-[#52B788]/20'
+            : 'border-black/[0.04]'
+        }`}
       >
         <button
           onClick={onToggle}
@@ -278,7 +330,7 @@ function TrendyFaqItem({
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </motion.div>
     </motion.div>
   );
 }

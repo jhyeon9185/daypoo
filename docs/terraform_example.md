@@ -76,17 +76,17 @@
 - `/.env` - DB 비밀번호, JWT 키, OAuth 시크릿, 결제 키 전부 포함
 - `/backend/.env` - 백엔드 시크릿
 - `/frontend/.env` - 카카오맵 키, 토스 클라이언트 키
-- `/ai-service/.env` - OpenAI API 키 (`sk-proj-...`)
+- `/ai-service/.env` - OpenAI API 키 (YOUR_API_KEY_HERE)
 
 **노출된 시크릿 목록**:
 | 항목 | 위험도 |
 |------|--------|
-| PostgreSQL Password (`daypoo1234`) | CRITICAL |
+| PostgreSQL Password (`YOUR_PASSWORD_HERE`) | CRITICAL |
 | JWT Secret Key (Base64) | CRITICAL |
-| Toss Payment Secret (`test_sk_...`) | CRITICAL |
+| Toss Payment Secret (`YOUR_SECRET_KEY_HERE`) | CRITICAL |
 | Kakao OAuth Secret | CRITICAL |
 | Google OAuth Secret | CRITICAL |
-| OpenAI API Key (`sk-proj-...`) → 과금 발생 | CRITICAL |
+| OpenAI API Key (`YOUR_API_KEY_HERE`) → 과금 발생 | CRITICAL |
 | Gmail App Password | CRITICAL |
 
 **해결 방법**:
