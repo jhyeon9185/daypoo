@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import type React from 'react';
 import {
   motion,
@@ -57,7 +57,6 @@ interface Inquiry {
   answer?: string;
 }
 
-// ── 데이터 ────────────────────────────────────────────────────────────
 // ── 데이터 (Fallback용) ──────────────────────────────────────────────────
 const FALLBACK_FAQ: FaqItem[] = [
   {
@@ -106,32 +105,77 @@ const FALLBACK_FAQ: FaqItem[] = [
 
 const CATEGORIES: FaqCategory[] = ['전체', '건강/AI분석', '이용방법', '결제/아바타', '계정/보안'];
 
-// ── 공통 컴포넌트 & 애니메이션 ───────────────────────────────────────
+// ── 애니메이션 베리언츠 ───────────────────────────────────────
 const cardVariants = {
-  initial: { opacity: 0, scale: 0.95, y: 20 },
+  initial: { opacity: 0, y: 15, scale: 0.98 },
   animate: {
     opacity: 1,
-    scale: 1,
     y: 0,
+    scale: 1,
     transition: { type: 'spring' as const, stiffness: 100, damping: 20 },
   },
-  exit: { opacity: 0, scale: 0.95, y: -20, transition: { duration: 0.2 } },
+  exit: { opacity: 0, x: -20, transition: { duration: 0.3 } },
 };
 
-// ── 인터랙티브 서치바 ────────────────────────────────────────────────
+const containerVariants = {
+  animate: {
+    transition: {
+      staggerChildren: 0.08, // 폭포수 효과 핵심 (2번 효과)
+    },
+  },
+};
+
+const listItemVariants = {
+  initial: { opacity: 0, y: 20 },
+  animate: { 
+    opacity: 1, 
+    y: 0, 
+    transition: { type: 'spring' as const, stiffness: 150, damping: 15 } 
+  },
+};
+
+// ── 1번 효과: Magnetic Search Bar ────────────────────────────────────
 function ModernSearch({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [isFocused, setIsFocused] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  // 마우스 트래킹을 위한 모션 밸류
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  // 반응형 감도 조절 (Spring으로 부드럽게)
+  const springX = useSpring(mouseX, { stiffness: 150, damping: 20 });
+  const springY = useSpring(mouseY, { stiffness: 150, damping: 20 });
+
+  function handleMouseMove(e: React.MouseEvent) {
+    if (!searchRef.current) return;
+    const rect = searchRef.current.getBoundingClientRect();
+    const x = e.clientX - (rect.left + rect.width / 2);
+    const y = e.clientY - (rect.top + rect.height / 2);
+    // 살짝만 따라오도록 배율 조정 (Magnetic 효과)
+    mouseX.set(x * 0.15);
+    mouseY.set(y * 0.15);
+  }
+
+  function handleMouseLeave() {
+    mouseX.set(0);
+    mouseY.set(0);
+  }
 
   return (
-    <div className="relative w-full max-w-2xl mx-auto mb-12">
+    <div className="relative w-full max-w-2xl mx-auto mb-8">
       <motion.div
+        ref={searchRef}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        style={{ x: springX, y: springY }}
         animate={{
           scale: isFocused ? 1.02 : 1,
-          boxShadow: isFocused ? '0 10px 40px rgba(27,67,50,0.12)' : '0 4px 20px rgba(0,0,0,0.05)',
+          boxShadow: isFocused ? '0 15px 45px rgba(27,67,50,0.15)' : '0 4px 25px rgba(0,0,0,0.06)',
         }}
-        className="relative flex items-center bg-white border border-black/[0.05] rounded-[24px] p-2 pr-6 overflow-hidden transition-all"
+        className="relative flex items-center bg-white border border-black/[0.05] rounded-[28px] p-2 pr-6 overflow-hidden transition-shadow"
       >
-        <div className="flex items-center justify-center w-12 h-12 text-[#2D6A4F]/40 group">
+        <div className="flex items-center justify-center w-12 h-12 text-[#2D6A4F]/40">
           <Search size={20} className={isFocused ? 'text-[#52B788]' : ''} />
         </div>
         <input
@@ -141,17 +185,17 @@ function ModernSearch({ value, onChange }: { value: string; onChange: (v: string
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           placeholder="도움이 필요하신 내용을 검색해보세요"
-          className="flex-1 bg-transparent border-none outline-none py-3 text-[15px] font-bold text-[#1A2B27] placeholder:text-[#5C6B68]/30 placeholder:font-medium"
+          className="flex-1 bg-transparent border-none outline-none py-3 text-[16px] font-bold text-[#1A2B27] placeholder:text-[#5C6B68]/30 placeholder:font-medium"
         />
-        <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-[#F8FAF9] border border-black/[0.03] rounded-lg">
-          <span className="text-[10px] font-black text-[#5C6B68]/40">ESC</span>
+        <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-[#F8FAF9] border border-black/[0.03] rounded-xl">
+          <span className="text-[10px] font-black text-[#5C6B68]/40">ENTER</span>
         </div>
       </motion.div>
     </div>
   );
 }
 
-// ── 3D FAQ 아이템 ───────────────────────────────────────────────────
+// ── 3번 효과: Deep-Glow FAQ Item ────────────────────────────────────
 function TrendyFaqItem({
   item,
   isOpen,
@@ -163,52 +207,57 @@ function TrendyFaqItem({
 }) {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
-  const rotateX = useSpring(useTransform(y, [-0.5, 0.5], [10, -10]));
-  const rotateY = useSpring(useTransform(x, [-0.5, 0.5], [-10, 10]));
+  const rotateX = useSpring(useTransform(y, [-0.5, 0.5], [8, -8]));
+  const rotateY = useSpring(useTransform(x, [-0.5, 0.5], [-8, 8]));
 
   function handleMouseMove(event: React.MouseEvent<HTMLDivElement>) {
     const rect = event.currentTarget.getBoundingClientRect();
-    const width = rect.width;
-    const height = rect.height;
-    const mouseX = event.clientX - rect.left;
-    const mouseY = event.clientY - rect.top;
-    x.set(mouseX / width - 0.5);
-    y.set(mouseY / height - 0.5);
+    x.set(event.clientX / rect.width - 0.5);
+    y.set(event.clientY / rect.height - 0.5);
   }
 
   return (
     <motion.div
+      variants={listItemVariants} // 폭포수 애니메이션 참여
       layout
       onMouseMove={handleMouseMove}
-      onMouseLeave={() => {
-        x.set(0);
-        y.set(0);
-      }}
+      onMouseLeave={() => { x.set(0); y.set(0); }}
       style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }}
-      className={`group relative perspective-1000 mb-4 transition-all duration-500`}
+      className="group relative mb-4"
     >
+      {/* 3번 효과: Active 호버/오픈 시 글로우 효과 */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1.02 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="absolute -inset-1 bg-gradient-to-r from-[#52B788]/20 via-[#E8A838]/10 to-[#52B788]/20 blur-xl rounded-[32px] z-0"
+            transition={{ duration: 1.5, repeat: Infinity, repeatType: 'reverse' }}
+          />
+        )}
+      </AnimatePresence>
+
       <div
-        className={`relative bg-white rounded-[24px] border ${isOpen ? 'border-[#52B788]/30 shadow-[0_20px_50px_rgba(27,67,50,0.08)]' : 'border-black/[0.03] shadow-sm'} overflow-hidden transition-all duration-300`}
+        className={`relative z-10 bg-white rounded-[26px] border ${isOpen ? 'border-[#52B788]/40 shadow-xl' : 'border-black/[0.04] shadow-sm'} overflow-hidden transition-all duration-300`}
       >
         <button
           onClick={onToggle}
-          className="w-full flex items-center gap-5 px-6 py-6 text-left relative z-10"
+          className="w-full flex items-center gap-5 px-6 py-6 text-left"
         >
           <div
-            className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isOpen ? 'bg-[#52B788] text-white' : 'bg-[#f4f9f6] text-[#52B788]'}`}
+            className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isOpen ? 'bg-[#1B4332] text-white' : 'bg-[#f4f9f6] text-[#52B788]'}`}
           >
-            <Hash size={14} className="opacity-50" />
+            <Hash size={14} className={isOpen ? 'opacity-100' : 'opacity-40'} />
           </div>
-          <span
-            className={`flex-1 text-[15px] font-bold ${isOpen ? 'text-[#1A2B27]' : 'text-[#5C6B68]'}`}
-          >
+          <span className={`flex-1 text-[16px] font-bold ${isOpen ? 'text-[#1B4332]' : 'text-[#1A2B27]'}`}>
             {item.q}
           </span>
           <motion.div
-            animate={{ rotate: isOpen ? 180 : 0, scale: isOpen ? 1.1 : 1 }}
+            animate={{ rotate: isOpen ? 180 : 0, scale: isOpen ? 1.2 : 1 }}
             className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${isOpen ? 'text-[#52B788]' : 'text-[#5C6B68]/30'}`}
           >
-            <ChevronDown size={20} />
+            <ChevronDown size={22} />
           </motion.div>
         </button>
 
@@ -218,11 +267,11 @@ function TrendyFaqItem({
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
             >
-              <div className="px-6 pb-6 pt-2 pl-[76px] relative">
-                <div className="absolute left-[36px] top-0 bottom-6 w-[2px] bg-gradient-to-b from-[#52B788]/20 to-transparent rounded-full" />
-                <p className="text-[14px] leading-relaxed text-[#5C6B68] font-medium whitespace-pre-wrap">
+              <div className="px-8 pb-8 pt-2 pl-24 relative">
+                <div className="absolute left-[38px] top-0 bottom-8 w-[2px] bg-gradient-to-b from-[#52B788]/30 to-transparent rounded-full" />
+                <p className="text-[15px] leading-relaxed text-[#5C6B68] font-medium whitespace-pre-wrap">
                   {item.a}
                 </p>
               </div>
@@ -263,32 +312,30 @@ function ModernInquiryForm({ onSuccess }: { onSuccess: () => void }) {
   return (
     <motion.div
       variants={cardVariants}
-      className="max-w-2xl mx-auto bg-white rounded-[40px] p-10 sm:p-14 border border-black/[0.04] shadow-[0_30px_80px_rgba(27,67,50,0.08)] relative overflow-hidden"
+      className="max-w-2xl mx-auto bg-white rounded-[44px] p-10 sm:p-14 border border-black/[0.04] shadow-2xl relative overflow-hidden"
     >
       <div className="absolute top-0 right-0 p-12 text-[#52B788]/5 pointer-events-none">
-        <Send size={160} />
+        <Send size={180} />
       </div>
 
       <div className="relative z-10">
-        <h2 className="text-3xl font-black text-[#1A2B27] mb-10 flex items-center gap-4">
-          <div className="w-12 h-12 bg-[#52B788] rounded-2xl flex items-center justify-center text-white">
-            <Plus size={28} />
+        <h2 className="text-3xl font-black text-[#1A2B27] mb-12 flex items-center gap-4">
+          <div className="w-14 h-14 bg-[#1B4332] rounded-[22px] shadow-lg flex items-center justify-center text-white">
+            <Plus size={32} />
           </div>
           새로운 문의 남기기
         </h2>
 
-        <form onSubmit={submit} className="space-y-8">
+        <form onSubmit={submit} className="space-y-10">
           <div className="space-y-4">
-            <label className="text-[12px] font-black black text-[#5C6B68]/50 uppercase tracking-[0.15em] ml-1">
-              문의 유형을 선택해주세요
-            </label>
+            <label className="text-[12px] font-black text-[#5C6B68]/50 uppercase tracking-[0.2em] ml-2">문의 유형</label>
             <div className="flex flex-wrap gap-2.5">
               {CATEGORY_OPTIONS.map((cat) => (
                 <button
                   key={cat}
                   type="button"
                   onClick={() => setFormData((prev) => ({ ...prev, category: cat }))}
-                  className={`px-5 py-3 rounded-2xl text-[14px] font-bold transition-all duration-300 ${formData.category === cat ? 'bg-[#1B4332] text-white shadow-xl scale-105' : 'bg-[#f4f9f6] text-[#5C6B68]/60 hover:bg-[#eaf4ee]'}`}
+                  className={`px-6 py-3.5 rounded-2xl text-[14px] font-black transition-all ${formData.category === cat ? 'bg-[#1B4332] text-white shadow-xl scale-105' : 'bg-[#f4f9f6] text-[#5C6B68]/60 hover:bg-[#eaf4ee]'}`}
                 >
                   {cat}
                 </button>
@@ -297,56 +344,40 @@ function ModernInquiryForm({ onSuccess }: { onSuccess: () => void }) {
           </div>
 
           <div className="space-y-4">
-            <label className="text-[12px] font-black black text-[#5C6B68]/50 uppercase tracking-[0.15em] ml-1">
-              제목
-            </label>
+            <label className="text-[12px] font-black text-[#5C6B68]/50 uppercase tracking-[0.2em] ml-2">문의 제목</label>
             <input
               type="text"
               value={formData.title}
               onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
-              placeholder="문의 제목을 입력해주세요"
-              className="w-full bg-[#f8faf9] border border-black/[0.04] rounded-2xl p-5 text-[16px] font-bold text-[#1A2B27] outline-none focus:border-[#52B788]/50 focus:bg-white transition-all shadow-sm placeholder:text-[#5C6B68]/40"
+              placeholder="제목을 입력해 주세요"
+              className="w-full bg-[#f8faf9] border border-black/[0.04] rounded-[24px] p-5.5 text-[17px] font-bold text-[#1A2B27] outline-none focus:border-[#52B788]/50 focus:bg-white transition-all shadow-inner"
             />
           </div>
 
           <div className="space-y-4">
-            <label className="text-[12px] font-black black text-[#5C6B68]/50 uppercase tracking-[0.15em] ml-1">
-              상세 내용
-            </label>
+            <label className="text-[12px] font-black text-[#5C6B68]/50 uppercase tracking-[0.2em] ml-2">내용</label>
             <textarea
               value={formData.content}
               onChange={(e) => setFormData((prev) => ({ ...prev, content: e.target.value }))}
-              placeholder="구체적인 상황을 알려주시면 빠르게 답변해 드릴게요 (최소 10자)"
+              placeholder="최소 10자 이상 입력해 주세요"
               rows={8}
-              className="w-full bg-[#f8faf9] border border-black/[0.04] rounded-2xl p-6 text-[16px] font-bold text-[#1A2B27] outline-none focus:border-[#52B788]/50 focus:bg-white transition-all shadow-sm resize-none placeholder:text-[#5C6B68]/40"
+              className="w-full bg-[#f8faf9] border border-black/[0.04] rounded-[30px] p-7 text-[17px] font-bold text-[#1A2B27] outline-none focus:border-[#52B788]/50 focus:bg-white transition-all shadow-inner resize-none"
             />
-            <div className="flex justify-between items-center px-1 text-[12px]">
-              <span
-                className={
-                  formData.content.length < 10 ? 'text-red-400' : 'text-[#52B788] font-bold'
-                }
-              >
-                {formData.content.length}자 입력함
-              </span>
-              <span className="text-[#5C6B68]/40 italic">평일 기준 24시간 내 답변 예정</span>
+            <div className="flex justify-between items-center px-2 text-[12px] font-bold">
+              <span className={formData.content.length < 10 ? 'text-red-400' : 'text-[#52B788]'}>{formData.content.length}자</span>
+              <span className="text-[#5C6B68]/30">평일 기준 24시간 내 순차적 답변</span>
             </div>
           </div>
 
           {error && <p className="text-red-500 text-sm font-bold text-center">{error}</p>}
 
           <motion.button
-            whileHover={{ scale: 1.02 }}
+            whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.98 }}
             disabled={loading || !formData.title || formData.content.length < 10}
-            className={`w-full py-5 rounded-2xl font-black text-[18px] shadow-2xl flex items-center justify-center gap-4 transition-all ${loading || !formData.title || formData.content.length < 10 ? 'bg-[#f4f9f6] text-[#5C6B68]/30 cursor-not-allowed' : 'bg-[#1B4332] text-white hover:bg-[#2D6A4F] shadow-emerald-900/20'}`}
+            className={`w-full py-6 rounded-3xl font-black text-[19px] shadow-2xl flex items-center justify-center gap-4 transition-all ${loading || !formData.title || formData.content.length < 10 ? 'bg-[#f4f9f6] text-[#5C6B68]/30 cursor-not-allowed' : 'bg-[#1B4332] text-white hover:bg-[#2D6A4F] shadow-emerald-900/10'}`}
           >
-            {loading ? (
-              <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <>
-                <Send size={22} /> 문의 등록하기
-              </>
-            )}
+            {loading ? <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" /> : <><Send size={24} /> 문의 보내기</>}
           </motion.button>
         </form>
       </div>
@@ -360,83 +391,51 @@ function ModernHistory() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api
-      .get('/support/inquiries')
-      .then((data) => {
-        if (Array.isArray(data)) setInquiries(data);
-      })
+    api.get('/support/inquiries')
+      .then((data) => { if (Array.isArray(data)) setInquiries(data); })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading)
-    return (
-      <div className="py-20 text-center flex flex-col items-center gap-4">
-        <div className="w-12 h-12 border-4 border-[#52B788]/20 border-t-[#52B788] rounded-full animate-spin" />
-        <p className="text-sm font-bold text-[#5C6B68]/50 uppercase tracking-widest leading-loose">
-          Loading your history...
-        </p>
-      </div>
-    );
+  if (loading) return <div className="py-20 text-center flex flex-col items-center gap-4"><div className="w-12 h-12 border-4 border-[#52B788]/20 border-t-[#52B788] rounded-full animate-spin" /><p className="text-sm font-black text-[#5C6B68]/30 tracking-widest uppercase">Fetching Data...</p></div>;
 
   return (
-    <div className="grid gap-6 max-w-3xl mx-auto">
+    <motion.div variants={containerVariants} initial="initial" animate="animate" className="grid gap-6 max-w-3xl mx-auto">
       {inquiries.length === 0 ? (
-        <div className="py-32 text-center bg-white rounded-[40px] border border-black/[0.03]">
-          <div className="w-24 h-24 bg-[#f4f9f6] rounded-[32px] mx-auto mb-8 flex items-center justify-center text-5xl">
-            📭
-          </div>
-          <p className="text-[#5C6B68]/40 text-lg font-bold">아직 등록된 문의 내역이 없어요</p>
+        <div className="py-32 text-center bg-white rounded-[44px] border border-black/[0.02] shadow-sm">
+          <div className="w-24 h-24 bg-[#f4f9f6] rounded-[36px] mx-auto mb-8 flex items-center justify-center text-5xl">📫</div>
+          <p className="text-[#5C6B68]/40 text-lg font-black">아직 등록된 문의 내역이 없어요</p>
         </div>
       ) : (
         inquiries.map((inq, idx) => (
           <motion.div
             key={inq.id}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: idx * 0.05 }}
-            className="bg-white border border-black/[0.03] rounded-[32px] p-8 hover:shadow-2xl transition-all group"
+            variants={listItemVariants}
+            className="bg-white border border-black/[0.04] rounded-[36px] p-10 hover:shadow-2xl hover:border-emerald-500/10 transition-all group"
           >
             <div className="flex justify-between items-start mb-6">
-              <span
-                className={`px-4 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-wider ${inq.status === '답변 완료' ? 'bg-[#52B788]/10 text-[#2D6A4F]' : 'bg-[#E8A838]/10 text-[#B5810F]'}`}
-              >
-                {inq.status}
-              </span>
-              <span className="text-[13px] font-medium text-[#5C6B68]/30">{inq.createdAt}</span>
+              <span className={`px-5 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider ${inq.status === '답변 완료' ? 'bg-[#52B788]/10 text-[#2D6A4F]' : 'bg-[#E8A838]/10 text-[#B5810F]'}`}>{inq.status}</span>
+              <span className="text-[13px] font-bold text-[#5C6B68]/30">{inq.createdAt}</span>
             </div>
-            <h3 className="text-[20px] font-black text-[#1A2B27] mb-3 group-hover:text-[#52B788] transition-colors">
-              {inq.title}
-            </h3>
-            <p className="text-[15px] text-[#5C6B68]/70 line-clamp-3 leading-relaxed">
-              {inq.content}
-            </p>
+            <h3 className="text-[22px] font-black text-[#1A2B27] mb-4 group-hover:text-[#52B788] transition-colors">{inq.title}</h3>
+            <p className="text-[16px] text-[#5C6B68]/70 line-clamp-2 leading-relaxed font-medium">{inq.content}</p>
             {inq.answer && (
-              <div className="mt-8 pt-6 border-t border-black/[0.03] flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-[#2D6A4F] flex items-center justify-center text-white shrink-0">
-                  <Sparkles size={18} />
-                </div>
-                <div className="flex-1 bg-[#f4f9f6] p-6 rounded-3xl">
-                  <p className="text-[15px] font-bold text-[#1B4332] leading-relaxed italic">
-                    " {inq.answer} "
-                  </p>
-                </div>
+              <div className="mt-10 pt-8 border-t border-black/[0.03] flex items-start gap-6">
+                <div className="w-12 h-12 rounded-2xl bg-[#1B4332] flex items-center justify-center text-white shrink-0 shadow-lg"><Sparkles size={22} /></div>
+                <div className="flex-1 bg-[#f4f9f6] p-7 rounded-[32px]"><p className="text-[16px] font-bold text-[#1B4332] leading-relaxed">" {inq.answer} "</p></div>
               </div>
             )}
           </motion.div>
         ))
       )}
-    </div>
+    </motion.div>
   );
 }
 
 // ── 메인 페이지 ───────────────────────────────────────────────────────
-export function SupportPage({
-  openAuth,
-}: {
-  openAuth: (mode: 'login' | 'signup', callback?: () => void) => void;
-}) {
+export function SupportPage({ openAuth }: { openAuth: (mode: 'login' | 'signup', callback?: () => void) => void; }) {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const initialTab = (searchParams.get('tab') as SupportTab) || 'faq';
 
   const [activeTab, setActiveTab] = useState<SupportTab>(initialTab);
@@ -446,25 +445,15 @@ export function SupportPage({
   const [faqData, setFaqData] = useState<FaqItem[]>(FALLBACK_FAQ);
 
   useEffect(() => {
-    api
-      .get<FaqItem[]>('/support/faqs')
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setFaqData(data);
-        }
-      })
-      .catch((err) => {
-        console.warn('Failed to fetch FAQs, using fallback:', err);
-      });
+    api.get<FaqItem[]>('/support/faqs')
+      .then((data) => { if (Array.isArray(data) && data.length > 0) setFaqData(data); })
+      .catch((err) => console.warn('Using fallback FAQs:', err));
   }, []);
 
-  // 필터링된 FAQ 데이터
   const filteredFaqs = useMemo(() => {
     return faqData.filter((item) => {
       const matchesCategory = activeCategory === '전체' || item.category === activeCategory;
-      const matchesSearch =
-        item.q.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.a.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = item.q.toLowerCase().includes(searchQuery.toLowerCase()) || item.a.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
     });
   }, [faqData, activeCategory, searchQuery]);
@@ -473,10 +462,7 @@ export function SupportPage({
     if (k !== 'faq') {
       const token = localStorage.getItem('accessToken');
       if (!token) {
-        openAuth?.('login', () => {
-          setActiveTab(k);
-          setSearchParams({ tab: k });
-        });
+        openAuth?.('login', () => { setActiveTab(k); setSearchParams({ tab: k }); });
         return;
       }
     }
@@ -489,107 +475,57 @@ export function SupportPage({
       <Navbar openAuth={openAuth} />
 
       {/* Hero Section */}
-      <section className="relative pt-[160px] pb-[120px] px-6 overflow-hidden bg-[#F8FAF9]">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#52B788] blur-[120px] rounded-full opacity-[0.08]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#E8A838] blur-[120px] rounded-full opacity-[0.05]" />
+      <section className="relative pt-[180px] pb-[80px] px-6 overflow-hidden bg-[#F8FAF9]">
+        <div className="absolute top-[-10%] left-[-10%] w-[45%] h-[45%] bg-[#52B788] blur-[140px] rounded-full opacity-[0.1]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[45%] h-[45%] bg-[#E8A838] blur-[140px] rounded-full opacity-[0.08]" />
 
         <div className="max-w-5xl mx-auto text-center relative z-10">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[#1B4332]/5 rounded-full mb-8"
-          >
-            <div className="w-2 h-2 bg-[#52B788] rounded-full animate-pulse" />
-            <span className="text-[11px] font-black text-[#1B4332] uppercase tracking-[0.2em]">
-              Support Center
-            </span>
+          <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="inline-flex items-center gap-2.5 px-5 py-2.5 bg-[#1B4332]/5 rounded-full mb-10 border border-[#1B4332]/5">
+            <Sparkles size={14} className="text-[#E8A838]" />
+            <span className="text-[12px] font-black text-[#1B4332] uppercase tracking-[0.25em]">Customer Support</span>
           </motion.div>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-5xl md:text-7xl font-black mb-10 leading-[1.05] tracking-tight text-[#1A2B27]"
-          >
-            우리가 무엇을
-            <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1B4332] to-[#52B788]">
-              도와드릴까요?
-            </span>
+          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="text-6xl md:text-8xl font-black mb-12 leading-[0.95] tracking-tighter text-[#1A2B27]">
+            우리가 무엇을<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1B4332] via-[#2D6A4F] to-[#52B788]">도와드릴까요?</span>
           </motion.h1>
 
           <ModernSearch value={searchQuery} onChange={setSearchQuery} />
         </div>
-
-        {/* Hero to Content divider */}
         <WaveDivider fill="white" />
       </section>
 
       {/* Main Content Area */}
       <main className="relative z-10 bg-white">
-        <div className="max-w-6xl mx-auto px-6 py-[100px] flex flex-col md:flex-row gap-12">
-          {/* Navigation Sidebar (Desktop) */}
-          <aside className="w-full md:w-[240px] shrink-0">
-            <div className="sticky top-[100px] space-y-10">
-              {/* Main Tabs */}
-              <div className="flex flex-col gap-2">
+        <div className="max-w-[1240px] mx-auto px-6 pt-[60px] pb-[120px] flex flex-col lg:flex-row gap-16">
+          <aside className="w-full lg:w-[260px] shrink-0">
+            <div className="sticky top-[120px] space-y-12">
+              <div className="flex flex-col gap-2.5">
                 {[
-                  {
-                    id: 'faq' as const,
-                    label: '자주 묻는 질문',
-                    icon: <MessageSquare size={18} />,
-                  },
-                  { id: 'inquiry' as const, label: '1:1 문의하기', icon: <Plus size={18} /> },
-                  {
-                    id: 'myinquiry' as const,
-                    label: '나의 문의 내역',
-                    icon: <FileText size={18} />,
-                  },
+                  { id: 'faq' as const, label: '자주 묻는 질문', icon: <MessageSquare size={19} /> },
+                  { id: 'inquiry' as const, label: '1:1 문의하기', icon: <Plus size={19} /> },
+                  { id: 'myinquiry' as const, label: '나의 문의 내역', icon: <FileText size={19} /> },
                 ].map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => handleTabChange(tab.id)}
-                    className={`flex items-center justify-between group px-5 py-4 rounded-2xl transition-all duration-300 relative overflow-hidden ${activeTab === tab.id ? 'bg-[#1B4332] text-white shadow-[0_10px_20px_rgba(27,67,50,0.15)]' : 'bg-[#f4f9f6] hover:bg-[#eaf4ee] text-[#5C6B68]'}`}
+                    className={`flex items-center justify-between group px-6 py-5 rounded-[22px] transition-all duration-300 relative overflow-hidden ${activeTab === tab.id ? 'bg-[#1B4332] text-white shadow-2xl scale-[1.03]' : 'bg-[#f4f9f6] hover:bg-[#eaf4ee] text-[#5C6B68]'}`}
                   >
-                    <div className="flex items-center gap-3 relative z-10">
-                      <span
-                        className={
-                          activeTab === tab.id
-                            ? 'text-[#52B788]'
-                            : 'text-[#5C6B68]/40 group-hover:text-[#52B788]'
-                        }
-                      >
-                        {tab.icon}
-                      </span>
-                      <span className="text-[14px] font-black">{tab.label}</span>
+                    <div className="flex items-center gap-4 relative z-10">
+                      <span className={activeTab === tab.id ? 'text-[#52B788]' : 'text-[#5C6B68]/40 group-hover:text-[#52B788]'}>{tab.icon}</span>
+                      <span className="text-[15px] font-black tracking-tight">{tab.label}</span>
                     </div>
-                    <ArrowRight
-                      size={14}
-                      className={`relative z-10 transition-transform ${activeTab === tab.id ? 'translate-x-0 opacity-100' : '-translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-40'}`}
-                    />
+                    <ArrowRight size={16} className={`relative z-10 transition-transform duration-500 ${activeTab === tab.id ? 'translate-x-0 opacity-100' : '-translate-x-6 opacity-0 group-hover:translate-x-0 group-hover:opacity-100'}`} />
                   </button>
                 ))}
               </div>
 
-              {/* Categories Filter (Only visible when FAQ active) */}
               <AnimatePresence>
                 {activeTab === 'faq' && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    className="space-y-4"
-                  >
-                    <div className="flex items-center gap-2 px-2 text-[11px] font-black text-[#5C6B68]/30 uppercase tracking-widest">
-                      <Filter size={12} /> Categories
-                    </div>
-                    <div className="flex flex-wrap md:flex-col gap-1.5 px-1">
+                  <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="space-y-5">
+                    <div className="flex items-center gap-2.5 px-3 text-[11px] font-black text-[#5C6B68]/40 uppercase tracking-[0.2em]"><Filter size={13} /> CATEGORIES</div>
+                    <div className="grid grid-cols-2 lg:flex lg:flex-col gap-2 px-1">
                       {CATEGORIES.map((cat) => (
-                        <button
-                          key={cat}
-                          onClick={() => setActiveCategory(cat)}
-                          className={`px-4 py-2 rounded-xl text-[13px] font-bold text-left transition-all ${activeCategory === cat ? 'bg-[#52B788]/10 text-[#2D6A4F]' : 'bg-transparent text-[#5C6B68]/40 hover:text-[#5C6B68] hover:bg-[#f4f9f6]'}`}
-                        >
+                        <button key={cat} onClick={() => setActiveCategory(cat)} className={`px-5 py-3 rounded-2xl text-[14px] font-black text-left transition-all ${activeCategory === cat ? 'bg-[#52B788]/15 text-[#1B4332] shadow-sm' : 'bg-transparent text-[#5C6B68]/50 hover:text-[#1A2B27] hover:bg-[#f4f9f6]'}`}>
                           {cat}
                         </button>
                       ))}
@@ -598,105 +534,60 @@ export function SupportPage({
                 )}
               </AnimatePresence>
 
-              {/* Support Card */}
-              <div className="hidden md:block bg-[#1B4332] rounded-[28px] p-6 text-white overflow-hidden relative group shadow-xl">
-                <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
+              <div className="hidden lg:block bg-gradient-to-br from-[#1B4332] to-[#0A1F17] rounded-[36px] p-8 text-white overflow-hidden relative group shadow-2xl">
+                <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-[#52B788]/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000" />
                 <div className="relative z-10">
-                  <LifeBuoy className="text-[#52B788] mb-4" />
-                  <h4 className="text-[15px] font-black mb-1">고객센터 운영안내</h4>
-                  <p className="text-[12px] text-white/50 leading-relaxed mb-4">
-                    평일 09:00 - 18:00
-                    <br />
-                    보통 24시간 내에 답변드립니다.
-                  </p>
-                  <button className="text-[11px] font-bold text-[#52B788] flex items-center gap-1 group">
-                    운영정책 보기{' '}
-                    <ChevronRight
-                      size={10}
-                      className="group-hover:translate-x-1 transition-transform"
-                    />
+                  <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mb-6"><LifeBuoy className="text-[#52B788]" size={24} /></div>
+                  <h4 className="text-[17px] font-black mb-2">도움이 필요하신가요?</h4>
+                  <p className="text-[13px] text-white/50 leading-relaxed mb-6 font-medium">평일 09:00 - 18:00 운영<br />친밀하고 정확한 상담</p>
+                  <button 
+                    onClick={() => navigate('/privacy')}
+                    className="px-5 py-2.5 rounded-xl bg-[#52B788] text-[#1B4332] text-[12px] font-black hover:bg-white transition-colors duration-300"
+                  >
+                    운영정책 전체보기
                   </button>
                 </div>
               </div>
             </div>
           </aside>
 
-          {/* Dynamic content area */}
           <div className="flex-1 min-w-0">
+            {/* 4번 효과: AnimatePresence를 사용한 탭 슬라이드 전환 */}
             <AnimatePresence mode="wait">
               {activeTab === 'faq' && (
-                <motion.div
-                  key="faq"
-                  variants={cardVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  className="space-y-4"
-                >
-                  <div className="flex items-center justify-between mb-8">
-                    <div className="flex items-center gap-3">
-                      <div className="p-3 bg-[#52B788]/10 rounded-2xl text-[#2D6A4F]">
-                        <MessageSquare size={20} />
-                      </div>
-                      <div>
-                        <h2 className="text-xl font-black text-[#1A2B27]">{activeCategory}</h2>
-                        <p className="text-[12px] font-medium text-[#5C6B68]/40">
-                          {filteredFaqs.length}개의 관련 질문이 있습니다.
-                        </p>
-                      </div>
+                <motion.div key="faq" variants={containerVariants} initial="initial" animate="animate" exit="exit" className="space-y-6">
+                  <div className="flex items-center gap-4 mb-10 px-2 lg:px-0">
+                    <div className="p-4 bg-[#1B4332]/5 rounded-[22px] text-[#1B4332]"><MessageSquare size={24} /></div>
+                    <div>
+                      <h2 className="text-2xl font-black text-[#1A2B27] tracking-tight">{activeCategory}</h2>
+                      <p className="text-[13px] font-bold text-[#5C6B68]/40">{filteredFaqs.length}개의 정제된 답변이 확인되었습니다.</p>
                     </div>
                   </div>
-
-                  {filteredFaqs.length > 0 ? (
-                    filteredFaqs.map((item) => (
-                      <TrendyFaqItem
-                        key={item.id}
-                        item={item}
-                        isOpen={openFaqId === item.id}
-                        onToggle={() => setOpenFaqId(openFaqId === item.id ? null : item.id)}
-                      />
-                    ))
-                  ) : (
-                    <div className="text-center py-20 bg-[#f4f9f6] rounded-[32px] border border-black/[0.03]">
-                      <div className="text-4xl mb-4">🔍</div>
-                      <p className="text-[#5C6B68]/40 font-bold">
-                        검색 결과가 없어요. 다른 키워드를 입력해보세요.
-                      </p>
-                    </div>
-                  )}
+                  <div className="space-y-4">
+                    {filteredFaqs.length > 0 ? (
+                      filteredFaqs.map((item) => (
+                        <TrendyFaqItem key={item.id} item={item} isOpen={openFaqId === item.id} onToggle={() => setOpenFaqId(openFaqId === item.id ? null : item.id)} />
+                      ))
+                    ) : (
+                      <div className="text-center py-24 bg-[#f8faf9]/50 rounded-[44px] border border-black/[0.03]"><div className="text-5xl mb-6">🏜️</div><p className="text-[#5C6B68]/40 font-black text-lg">해당 키워드의 검색 결과가 없습니다</p></div>
+                    )}
+                  </div>
                 </motion.div>
               )}
 
               {activeTab === 'inquiry' && (
-                <motion.div
-                  key="inquiry"
-                  variants={cardVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                >
+                <motion.div key="inquiry" variants={cardVariants} initial="initial" animate="animate" exit="exit">
                   <ModernInquiryForm onSuccess={() => handleTabChange('myinquiry')} />
                 </motion.div>
               )}
 
               {activeTab === 'myinquiry' && (
-                <motion.div
-                  key="myinquiry"
-                  variants={cardVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  className="pt-2"
-                >
-                  <div className="flex items-center gap-3 mb-10">
-                    <div className="p-3 bg-amber-100 rounded-2xl text-amber-600">
-                      <FileText size={20} />
-                    </div>
+                <motion.div key="myinquiry" variants={containerVariants} initial="initial" animate="animate" exit="exit">
+                  <div className="flex items-center gap-4 mb-10">
+                    <div className="p-4 bg-amber-100 rounded-[22px] text-amber-600 shadow-sm"><FileText size={24} /></div>
                     <div>
-                      <h2 className="text-xl font-black text-[#1A2B27]">나의 문의 내역</h2>
-                      <p className="text-[12px] font-medium text-[#5C6B68]/40">
-                        답변 완료까지 조금만 기다려주세요
-                      </p>
+                      <h2 className="text-2xl font-black text-[#1A2B27]">나의 문의 내역</h2>
+                      <p className="text-[13px] font-bold text-[#5C6B68]/40">최근 3개월간의 내역입니다.</p>
                     </div>
                   </div>
                   <ModernHistory />
@@ -705,14 +596,8 @@ export function SupportPage({
             </AnimatePresence>
           </div>
         </div>
-
-        {/* Content to Footer divider */}
-        <div className="h-32" />
         <WaveDivider fill="#111e18" />
       </main>
-
-      {/* Bottom accent bar */}
-      <div className="fixed bottom-0 left-0 w-full h-1 bg-gradient-to-r from-[#1B4332] via-[#52B788] to-[#E8A838] opacity-30 z-50 px-6 sm:px-12" />
 
       <Footer />
     </div>
