@@ -189,7 +189,7 @@ export function Navbar({ openAuth }: { openAuth: (mode: 'login' | 'signup') => v
               onClick={() => setNotifOpen(!notifOpen)}
               className="relative p-2 rounded-full transition-colors hover:bg-white/10 hidden md:flex items-center justify-center"
               style={{ color: 'rgba(255,255,255,0.6)', background: 'none', border: 'none' }}
-              title="알림"
+              aria-label={unreadCount > 0 ? `알림 (읽지 않은 알림 ${unreadCount}개)` : '알림'}
             >
               <Bell size={18} />
               {unreadCount > 0 && (
@@ -198,6 +198,7 @@ export function Navbar({ openAuth }: { openAuth: (mode: 'login' | 'signup') => v
                   animate={{ scale: 1 }}
                   className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full"
                   style={{ backgroundColor: '#E85D5D', border: '1.5px solid #1A2B27' }}
+                  aria-hidden="true"
                 />
               )}
             </motion.button>

@@ -2515,8 +2515,10 @@ const SystemView = () => {
   const fetchSettings = async () => {
     try {
       const data = await api.get<SystemSettings>('/admin/settings');
-      setSettings(data);
-      setTempNoticeMessage(data.noticeMessage);
+      if (data) {
+        setSettings(data);
+        setTempNoticeMessage(data.noticeMessage || '');
+      }
     } catch (error: any) {
       console.error('설정 조회 실패 (백엔드 미구현):', error);
       // 백엔드 미구현 시 Mock 데이터 사용
@@ -2535,7 +2537,9 @@ const SystemView = () => {
   const fetchStats = async () => {
     try {
       const data = await api.get<SystemStats>('/admin/stats');
-      setStats(data);
+      if (data) {
+        setStats(data);
+      }
     } catch (error: any) {
       console.error('통계 조회 실패 (백엔드 미구현):', error);
       // Mock 데이터
@@ -2551,8 +2555,13 @@ const SystemView = () => {
   const fetchLogs = async () => {
     try {
       const data = await api.get<PageResponse<SystemLog>>(`/admin/logs?page=${logPage}&size=10`);
-      setLogs(data.content);
-      setTotalLogPages(data.totalPages);
+      if (data && data.content) {
+        setLogs(data.content);
+        setTotalLogPages(data.totalPages || 0);
+      } else {
+        setLogs([]);
+        setTotalLogPages(0);
+      }
     } catch (error: any) {
       console.error('로그 조회 실패 (백엔드 미구현):', error);
       // Mock 로그 데이터
@@ -2713,7 +2722,7 @@ const SystemView = () => {
             </div>
             <div>
               <p className="text-xs font-bold text-black/40 uppercase tracking-wider mb-1">API Calls</p>
-              <p className="text-3xl font-black text-purple-500">{stats.todayApiCalls.toLocaleString()}</p>
+              <p className="text-3xl font-black text-purple-500">{(stats?.todayApiCalls ?? 0).toLocaleString()}</p>
             </div>
           </div>
         </GlassCard>
@@ -2725,7 +2734,7 @@ const SystemView = () => {
             </div>
             <div>
               <p className="text-xs font-bold text-black/40 uppercase tracking-wider mb-1">Total Revenue</p>
-              <p className="text-3xl font-black text-yellow-500">{stats.totalRevenue.toLocaleString()}₩</p>
+              <p className="text-3xl font-black text-yellow-500">{(stats?.totalRevenue ?? 0).toLocaleString()}₩</p>
             </div>
           </div>
         </GlassCard>
@@ -2927,7 +2936,7 @@ const SystemView = () => {
                       <p className="text-xs text-black/70 font-bold mb-2">{log.description}</p>
                       <div className="flex items-center gap-2 text-[10px] font-bold text-black/40">
                         <Clock size={12} />
-                        {new Date(log.timestamp).toLocaleString('ko-KR')}
+                        {log.timestamp ? new Date(log.timestamp).toLocaleString('ko-KR') : '날짜 없음'}
                       </div>
                     </div>
                   </div>

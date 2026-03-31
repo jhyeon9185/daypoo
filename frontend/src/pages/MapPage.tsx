@@ -312,6 +312,60 @@ export function MapPage({ openAuth }: { openAuth: (mode: 'login' | 'signup') => 
           onFilterChange={setFilter}
         />
 
+        {/* 검색 결과 목록 */}
+        <AnimatePresence>
+          {searchQuery.trim() !== '' && filteredToilets.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="absolute top-[200px] left-1/2 -translate-x-1/2 z-20 w-full px-4"
+              style={{ maxWidth: '600px' }}
+            >
+              <div
+                className="bg-white rounded-2xl shadow-2xl overflow-hidden"
+                style={{ maxHeight: '400px', border: '1.5px solid rgba(27,67,50,0.1)' }}
+              >
+                <div className="p-4 border-b border-gray-100">
+                  <p className="text-sm font-bold text-[#1B4332]">
+                    검색 결과 {filteredToilets.length}개
+                  </p>
+                </div>
+                <div className="overflow-y-auto" style={{ maxHeight: '340px' }}>
+                  {filteredToilets.slice(0, 10).map((toilet) => (
+                    <button
+                      key={toilet.id}
+                      onClick={() => {
+                        handleSelectToilet(toilet);
+                        mapViewRef.current?.panTo(toilet.lat, toilet.lng);
+                        setSearchQuery(''); // 검색어 초기화
+                      }}
+                      className="w-full p-4 text-left hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="text-2xl flex-shrink-0">🚽</div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-[#1A2B27] mb-1 truncate">
+                            {toilet.name}
+                          </p>
+                          <p className="text-xs text-gray-500 truncate">
+                            {toilet.roadAddress || toilet.jibunAddress}
+                          </p>
+                          {pos && (
+                            <p className="text-xs text-[#7a9e8a] mt-1">
+                              내 위치에서 {Math.round(calculateDistance(pos.lat, pos.lng, toilet.lat, toilet.lng))}m
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div className="absolute right-4 bottom-8 z-20">
           <button
             onClick={() => mapViewRef.current?.panTo(pos.lat, pos.lng)}
