@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { X, Trophy, MessageSquare, Info, Star } from 'lucide-react';
 
-export type ToastType = 'info' | 'achievement' | 'message' | 'star';
+export type ToastType = 'info' | 'achievement' | 'message' | 'star' | 'error';
 
 interface NotificationToastProps {
   type: ToastType;
@@ -19,6 +19,7 @@ export function NotificationToast({ type, title, message, icon, onClose }: Notif
       case 'achievement': return <Trophy className="text-yellow-500" size={18} />;
       case 'message': return <MessageSquare className="text-blue-500" size={18} />;
       case 'star': return <Star className="text-purple-500 fill-purple-500" size={18} />;
+      case 'error': return <X className="text-red-500" size={18} />;
       default: return <Info className="text-emerald-500" size={18} />;
     }
   };
@@ -28,6 +29,7 @@ export function NotificationToast({ type, title, message, icon, onClose }: Notif
       case 'achievement': return '#E8A838';
       case 'message': return '#3B82F6';
       case 'star': return '#A855F7';
+      case 'error': return '#EF4444';
       default: return '#1B4332';
     }
   };

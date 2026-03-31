@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Bell, X, Trash2, Info, Trophy, MessageSquare, Sparkles, CheckCheck } from 'lucide-react';
 import { useNotification } from '../context/NotificationContext';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
 type FilterType = 'all' | 'unread';
 
@@ -19,37 +19,25 @@ export function NotificationPanel({ isOpen, onClose }: { isOpen: boolean; onClos
   } = useNotification();
 
   const [filter, setFilter] = useState<FilterType>('all');
-  const [showDevTools, setShowDevTools] = useState(import.meta.env.DEV); // 개발환경에서는 기본으로 표시
+  const [showDevTools, setShowDevTools] = useState(import.meta.env.DEV);
   const [clickCount, setClickCount] = useState(0);
 
   // 알림 클릭 핸들러
   const handleNotificationClick = async (n: any) => {
-    // 1. 읽음 처리
     if (!n.isRead) {
       await markAsRead(n.id);
     }
-    
-    // 2. 리다이렉트 (redirectUrl이 있는 경우)
     if (n.redirectUrl) {
-      onClose(); // 패널 닫기
+      onClose();
       navigate(n.redirectUrl);
     }
-    };
+  };
 
-    const filteredNotifications = useMemo(() => {
+  const filteredNotifications = useMemo(() => {
     return filter === 'unread'
       ? notifications.filter(n => !n.isRead)
       : notifications;
-    }, [notifications, filter]);
-
-    const getTimeAgo = (dateStr: string) => {
-
-    markAllAsRead();
-  };
-
-  const deleteNotif = (id: number) => {
-    deleteNotification(id);
-  };
+  }, [notifications, filter]);
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -77,6 +65,10 @@ export function NotificationPanel({ isOpen, onClose }: { isOpen: boolean; onClos
     return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
   };
 
+  const deleteNotif = (id: number) => {
+    deleteNotification(id);
+  };
+
   // 개발자 모드 토글 (헤더 3번 클릭)
   const handleHeaderClick = () => {
     setClickCount(prev => {
@@ -85,7 +77,7 @@ export function NotificationPanel({ isOpen, onClose }: { isOpen: boolean; onClos
         setShowDevTools(prev => !prev);
         return 0;
       }
-      setTimeout(() => setClickCount(0), 1000); // 1초 후 리셋
+      setTimeout(() => setClickCount(0), 1000);
       return newCount;
     });
   };
@@ -136,7 +128,6 @@ export function NotificationPanel({ isOpen, onClose }: { isOpen: boolean; onClos
                         {unreadCount}개의 새로운 알림
                       </p>
                     )}
-                    {/* Click indicator */}
                     {clickCount > 0 && (
                       <motion.div
                         initial={{ scale: 0, opacity: 0 }}
@@ -316,7 +307,7 @@ export function NotificationPanel({ isOpen, onClose }: { isOpen: boolean; onClos
               {notifications.length > 0 && (
                 <div className="p-4 pb-3">
                   <button
-                    onClick={handleMarkAllRead}
+                    onClick={markAllAsRead}
                     disabled={unreadCount === 0}
                     className="w-full py-3 px-4 rounded-2xl font-bold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     style={{

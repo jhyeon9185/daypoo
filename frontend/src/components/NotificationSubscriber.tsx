@@ -77,7 +77,7 @@ export const NotificationSubscriber: React.FC = () => {
           showToast(
             '알림 연결 실패',
             '알림 서비스에 연결할 수 없습니다. 나중에 다시 시도해주세요.',
-            'error'
+            'info'
           );
           return;
         }
