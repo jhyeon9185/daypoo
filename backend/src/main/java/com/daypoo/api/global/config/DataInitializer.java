@@ -53,7 +53,7 @@ public class DataInitializer implements CommandLineRunner {
                 existingAdmin.updateRole(Role.ROLE_ADMIN);
               }
               // 테스트를 위해 무조건 초기화된 비밀번호로 덮어씌움
-              existingAdmin.setPassword(passwordEncoder.encode("admin1234"));
+              existingAdmin.updatePassword(passwordEncoder.encode("admin1234"));
               userRepository.save(existingAdmin);
             },
             () -> {
