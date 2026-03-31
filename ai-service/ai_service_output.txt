@@ -1,67 +1,9 @@
-INFO:     Will watch for changes in these directories: ['/Users/changjun/Desktop/project/daypoo/ai-service']
+INFO:     Will watch for changes in these directories: ['/Users/changjun/Desktop/project/daypoo_fork/ai-service']
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-INFO:     Started reloader process [53014] using StatReload
-INFO:     Started server process [53017]
+INFO:     Started reloader process [3338] using StatReload
+INFO:     Started server process [3408]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
-INFO:     127.0.0.1:56156 - "GET /health HTTP/1.1" 200 OK
-2026-03-26 09:12:36.149 | INFO     | app.api.v1.endpoints.report:generate_report:24 - Health report for user 40881 found in Redis cache.
-INFO:     127.0.0.1:56459 - "POST /api/v1/report/generate HTTP/1.1" 200 OK
-2026-03-26 09:13:27.669 | INFO     | app.api.v1.endpoints.report:generate_report:24 - Health report for user 40881 found in Redis cache.
-INFO:     127.0.0.1:56723 - "POST /api/v1/report/generate HTTP/1.1" 200 OK
-2026-03-26 09:13:28.807 | INFO     | app.api.v1.endpoints.report:generate_report:24 - Health report for user 40881 found in Redis cache.
-INFO:     127.0.0.1:56723 - "POST /api/v1/report/generate HTTP/1.1" 200 OK
-WARNING:  StatReload detected changes in 'app/schemas/analysis.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [53017]
-INFO:     Started server process [57862]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-WARNING:  StatReload detected changes in 'app/services/report_service.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [57862]
-INFO:     Started server process [57875]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-WARNING:  StatReload detected changes in 'app/api/v1/endpoints/report.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [57875]
-Traceback (most recent call last):
-  File "<string>", line 1, in <module>
-  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/multiprocessing/spawn.py", line 116, in spawn_main
-    exitcode = _main(fd, parent_sentinel)
-  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/multiprocessing/spawn.py", line 125, in _main
-    prepare(preparation_data)
-  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/multiprocessing/spawn.py", line 236, in prepare
-    _fixup_main_from_path(data['init_main_from_path'])
-  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/multiprocessing/spawn.py", line 287, in _fixup_main_from_path
-    main_content = runpy.run_path(main_path,
-  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/runpy.py", line 268, in run_path
-    return _run_module_code(code, init_globals, run_name,
-  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/runpy.py", line 97, in _run_module_code
-    _run_code(code, mod_globals, init_globals,
-  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/runpy.py", line 87, in _run_code
-    exec(code, run_globals)
-  File "/Users/changjun/Desktop/project/daypoo/ai-service/main.py", line 3, in <module>
-    from app.api.v1.endpoints import analysis, report
-  File "/Users/changjun/Desktop/project/daypoo/ai-service/app/api/v1/endpoints/report.py", line 6
-    except Exception as e:
-IndentationError: unexpected indent
-WARNING:  StatReload detected changes in 'app/api/v1/endpoints/report.py'. Reloading...
-INFO:     Started server process [57900]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-WARNING:  StatReload detected changes in 'app/api/v1/endpoints/report.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [57900]
-INFO:     Started server process [60071]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
+2026-03-31 11:40:56.463 | INFO     | app.services.report_service:generate_health_report:27 - Generating health report for user 40881 (DAILY)...
+2026-03-31 11:41:03.776 | INFO     | app.services.report_service:generate_health_report:132 - Health report generation complete.
+INFO:     127.0.0.1:50519 - "POST /api/v1/report/generate HTTP/1.1" 200 OK
