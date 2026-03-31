@@ -873,13 +873,13 @@ export function RankingPage({ openAuth }: { openAuth: (mode: 'login' | 'signup')
                           backgroundClip: 'text',
                         }}
                       >
-                        우리 동네 활동이 필요해요!
+                        📍 아직 소속된 지역이 없습니다!
                       </h3>
 
                       {/* 설명 */}
-                      <p className="text-sm sm:text-base text-gray-600 text-center mb-2 max-w-md relative z-10 leading-relaxed">
-                        <span className="font-bold text-[#1B4332]">화장실 방문 인증</span>을 하면<br className="sm:hidden" />
-                        우리 동네 랭킹에 참여할 수 있어요
+                      <p className="text-sm sm:text-base text-gray-600 text-center mb-2 max-w-md relative z-10 leading-relaxed px-4">
+                        지도에서 <span className="font-bold text-[#1B4332]">화장실을 1회 이상 방문 후 인증</span>을 완료하면,<br className="hidden sm:block" />
+                        파악된 현재 지역의 동네 랭킹을 확인할 수 있어요.
                       </p>
                       <p className="text-xs text-gray-400 mb-8 relative z-10">
                         💪 지금 바로 시작하고 1등에 도전하세요!
@@ -1010,6 +1010,22 @@ export function RankingPage({ openAuth }: { openAuth: (mode: 'login' | 'signup')
                       >
                         다시 시도
                       </button>
+                    </div>
+                  ) : tab === 'local' && !regionName ? (
+                    <div className="flex flex-col items-center justify-center py-20 px-6 bg-white/50 rounded-3xl border border-gray-100">
+                      <MapPin size={48} className="text-gray-300 mb-4" />
+                      <h3 className="text-xl font-black text-gray-800 mb-2">지역 인증이 필요합니다</h3>
+                      <p className="text-sm text-gray-500 text-center max-w-xs leading-relaxed">
+                        현재 소속된 지역이 없습니다. 화장실 1회 이상 방문 인증 후 랭킹에 참여해보세요!
+                      </p>
+                    </div>
+                  ) : users.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-20 px-6 bg-white/50 rounded-3xl border border-gray-100">
+                      <Trophy size={48} className="text-gray-300 mb-4" />
+                      <h3 className="text-xl font-black text-gray-800 mb-2">데이터가 없습니다</h3>
+                      <p className="text-sm text-gray-500 text-center">
+                        이 지역의 첫 번째 랭커가 되어보세요!
+                      </p>
                     </div>
                   ) : (
                     users.map((user, i) => (
