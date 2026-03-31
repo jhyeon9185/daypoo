@@ -2536,36 +2536,41 @@ const SystemView = () => {
 
   const fetchStats = async () => {
     try {
-      const data = await api.get<SystemStats>('/admin/stats');
+      const data = await api.get<AdminStatsResponse>('/admin/stats');
       if (data) {
-        setStats(data);
+        setStats({
+          activeUsers: Number(data.totalUsers || 0),
+          todaySignups: Number(data.todayNewUsers || 0),
+          todayInquiries: Number(data.todayInquiries || 0),
+          totalToilets: Number(data.totalToilets || 0),
+        });
       }
     } catch (error: any) {
-      console.error('통계 조회 실패 (백엔드 미구현):', error);
-      // Mock 데이터
+      console.error('통계 조회 실패:', error);
+      // Fallback Mock
       setStats({
-        activeUsers: Math.floor(Math.random() * 100) + 50,
-        todaySignups: Math.floor(Math.random() * 20) + 5,
-        todayApiCalls: Math.floor(Math.random() * 5000) + 1000,
-        totalRevenue: Math.floor(Math.random() * 1000000) + 500000,
+        activeUsers: 0,
+        todaySignups: 0,
+        todayInquiries: 0,
+        totalToilets: 0,
       });
     }
   };
 
   const fetchLogs = async () => {
     try {
-      const data = await api.get<PageResponse<SystemLog>>(`/admin/logs?page=${logPage}&size=10`);
-      if (data && data.content) {
-        setLogs(data.content);
-        setTotalLogPages(data.totalPages || 0);
+      // 백엔드는 PageResponse가 아닌 List<SystemLogResponse>를 반환함
+      const data = await api.get<SystemLog[]>('/admin/logs');
+      if (Array.isArray(data)) {
+        setLogs(data);
+        setTotalLogPages(1); // 단순 리스트 제공 시 1페이지로 고정
       } else {
         setLogs([]);
-        setTotalLogPages(0);
       }
     } catch (error: any) {
-      console.error('로그 조회 실패 (백엔드 미구현):', error);
-      // Mock 로그 데이터
-      const mockLogs: SystemLog[] = [
+      console.error('로그 조회 실패:', error);
+      setLogs([]);
+    }
         {
           id: 1,
           timestamp: new Date().toISOString(),
@@ -2640,26 +2645,20 @@ const SystemView = () => {
     setEditingNotice(false);
   };
 
-  const getLogIcon = (type: SystemLog['type']) => {
-    switch (type) {
-      case 'USER': return <Users size={16} className="text-blue-500" />;
-      case 'REVIEW': return <MessageCircle size={16} className="text-green-500" />;
-      case 'TOILET': return <MapPin size={16} className="text-purple-500" />;
-      case 'SHOP': return <ShoppingBag size={16} className="text-yellow-500" />;
-      case 'ERROR': return <AlertTriangle size={16} className="text-red-500" />;
-      case 'SYSTEM': return <Server size={16} className="text-gray-500" />;
+  const getLogIcon = (level: SystemLog['level']) => {
+    switch (level) {
+      case 'INFO': return <Activity size={16} className="text-blue-500" />;
+      case 'WARN': return <AlertTriangle size={16} className="text-yellow-500" />;
+      case 'ERROR': return <XCircle size={16} className="text-red-500" />;
       default: return <Activity size={16} />;
     }
   };
 
-  const getLogBgColor = (type: SystemLog['type']) => {
-    switch (type) {
-      case 'USER': return 'bg-blue-50 border-blue-200';
-      case 'REVIEW': return 'bg-green-50 border-green-200';
-      case 'TOILET': return 'bg-purple-50 border-purple-200';
-      case 'SHOP': return 'bg-yellow-50 border-yellow-200';
+  const getLogBgColor = (level: SystemLog['level']) => {
+    switch (level) {
+      case 'INFO': return 'bg-blue-50 border-blue-200';
+      case 'WARN': return 'bg-yellow-50 border-yellow-200';
       case 'ERROR': return 'bg-red-50 border-red-200';
-      case 'SYSTEM': return 'bg-gray-50 border-gray-200';
       default: return 'bg-white border-gray-200';
     }
   };
@@ -2721,8 +2720,8 @@ const SystemView = () => {
               <Activity size={24} className="text-purple-500" />
             </div>
             <div>
-              <p className="text-xs font-bold text-black/40 uppercase tracking-wider mb-1">API Calls</p>
-              <p className="text-3xl font-black text-purple-500">{(stats?.todayApiCalls ?? 0).toLocaleString()}</p>
+              <p className="text-xs font-bold text-black/40 uppercase tracking-wider mb-1">Today Inquiries</p>
+              <p className="text-3xl font-black text-purple-500">{(stats?.todayInquiries ?? 0).toLocaleString()}</p>
             </div>
           </div>
         </GlassCard>
@@ -2730,11 +2729,11 @@ const SystemView = () => {
         <GlassCard>
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-xl bg-yellow-500/10">
-              <DollarSign size={24} className="text-yellow-500" />
+              <MapPin size={24} className="text-yellow-500" />
             </div>
             <div>
-              <p className="text-xs font-bold text-black/40 uppercase tracking-wider mb-1">Total Revenue</p>
-              <p className="text-3xl font-black text-yellow-500">{(stats?.totalRevenue ?? 0).toLocaleString()}₩</p>
+              <p className="text-xs font-bold text-black/40 uppercase tracking-wider mb-1">Total Toilets</p>
+              <p className="text-3xl font-black text-yellow-500">{(stats?.totalToilets ?? 0).toLocaleString()}</p>
             </div>
           </div>
         </GlassCard>
@@ -2920,20 +2919,16 @@ const SystemView = () => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.05 }}
-                  className={`p-4 rounded-xl border ${getLogBgColor(log.type)}`}
+                  className={`p-4 rounded-xl border ${getLogBgColor(log.level)}`}
                 >
                   <div className="flex items-start gap-3">
-                    <div className="mt-0.5">{getLogIcon(log.type)}</div>
+                    <div className="mt-0.5">{getLogIcon(log.level)}</div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-black text-sm text-black">{log.action}</span>
-                        {log.username && (
-                          <span className="text-xs font-bold text-black/50">
-                            by {log.username}
-                          </span>
-                        )}
+                        <span className="font-black text-xs uppercase tracking-widest text-black/30">{log.source}</span>
+                        <span className="px-1.5 py-0.5 rounded-md text-[10px] font-black bg-black/5 text-black/50">{log.level}</span>
                       </div>
-                      <p className="text-xs text-black/70 font-bold mb-2">{log.description}</p>
+                      <p className="text-sm text-black/70 font-bold mb-2">{log.message}</p>
                       <div className="flex items-center gap-2 text-[10px] font-bold text-black/40">
                         <Clock size={12} />
                         {log.timestamp ? new Date(log.timestamp).toLocaleString('ko-KR') : '날짜 없음'}
