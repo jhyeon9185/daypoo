@@ -22,13 +22,18 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { NotificationSubscriber } from './components/NotificationSubscriber';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 
 function LoginPage() {
+  const { search } = useLocation();
+  const query = new URLSearchParams(search);
+  const error = query.get('error');
+  
   // 백엔드(Spring Security)에서 OAuth2 인증 실패 또는 로그인 페이지로의
   // 리다이렉트가 발생했을 때 이 컴포넌트로 라우팅됩니다. 
-  // 더미 페이지 대신, 메인 페이지로 돌아가 로그인 모달을 다시 열 수 있도록 처리합니다.
-  return <Navigate to="/main?login=open" replace />;
+  // 에러 발생시에는 에러 파라미터를 유지한 채로 메인으로가고, 아니면 로그인 모달을 다시 엽니다.
+  const to = error ? `/main?error=${encodeURIComponent(error)}` : `/main?login=open`;
+  return <Navigate to={to} replace />;
 }
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
@@ -72,18 +77,18 @@ function App() {
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
 
-  // URL에 ?login=open 이 있을 경우 자동으로 AuthModal을 열어줌
+  // URL에 ?login=open 이나 error 가 있을 경우 처리
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('login') === 'open') {
-      setAuthMode('login');
-      setAuthOpen(true);
-      // 열고 난 후 URL 파라미터 정리
-      window.history.replaceState({}, document.title, window.location.pathname);
-    } else if (params.get('error')) {
+    if (params.get('error')) {
       // OAuth2 인증 실패(예: KAKAO_CLIENT_ID 없음 등) 시 
       console.error('OAuth Error:', params.get('error'));
       alert('소셜 로그인 처리 중 문제가 발생했습니다. (설정/비밀키 누락 등)\n서버 관리자에게 문의하세요.');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (params.get('login') === 'open') {
+      setAuthMode('login');
+      setAuthOpen(true);
+      // 열고 난 후 URL 파라미터 정리
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);

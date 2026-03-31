@@ -25,4 +25,6 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
 
   @Query("SELECT DISTINCT p.user FROM PooRecord p")
   List<User> findUsersWithRecords();
+
+  long countByRoleIn(List<com.daypoo.api.entity.enums.Role> roles);
 }
