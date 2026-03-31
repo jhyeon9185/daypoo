@@ -57,7 +57,7 @@ interface AvatarItem {
   isEquipped?: boolean; // 장착 여부
 }
 
-const DEFAULT_AVATAR_URL = 'https://api.dicebear.com/7.x/notionists/svg?seed=user';
+const DEFAULT_AVATAR_URL = '/assets/default-avatar.svg';
 
 // ── 공통 헬퍼 함수 ───────────────────────────────────────────────────────
 export const isEmoji = (str: string) => {
@@ -1237,7 +1237,7 @@ function HomeTab({
                                 className="w-12 h-12 rounded-full blur-2xl opacity-20 absolute"
                                 style={{ background: color }}
                               />
-                              {item.imageUrl && (isEmoji(item.imageUrl) || (!item.imageUrl.includes(':') && !item.imageUrl.startsWith('http'))) ? (
+                              {item.imageUrl && (isEmoji(item.imageUrl) || (!item.imageUrl.includes(':') && !item.imageUrl.startsWith('http') && !item.imageUrl.startsWith('/'))) ? (
                                 <span className="text-6xl transition-transform group-hover:scale-110 duration-500 select-none leading-none">
                                   {item.imageUrl}
                                 </span>
@@ -1320,7 +1320,7 @@ function HomeTab({
               style={{ background: 'rgba(255,255,255,0.92)' }}
             >
               <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex-shrink-0 relative overflow-hidden group flex items-center justify-center">
-                {preview.imageUrl && (isEmoji(preview.imageUrl) || (!preview.imageUrl.includes(':') && !preview.imageUrl.startsWith('http'))) ? (
+                {preview.imageUrl && (isEmoji(preview.imageUrl) || (!preview.imageUrl.includes(':') && !preview.imageUrl.startsWith('http') && !preview.imageUrl.startsWith('/'))) ? (
                   <span className="text-3xl select-none leading-none">{preview.imageUrl}</span>
                 ) : (
                   <img

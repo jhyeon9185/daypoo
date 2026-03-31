@@ -53,9 +53,9 @@ export const generateAvatar = (
 };
 
 /**
- * 디폴트 아바타 URL
+ * 디폴트 아바타 URL (시스템 공통 똥 캐릭터 SVG)
  */
-export const DEFAULT_AVATAR_URL = generateAvatar('default');
+export const DEFAULT_AVATAR_URL = '/assets/default-avatar.svg';
 
 /**
  * React 컴포넌트에서 사용하기 쉬운 훅
@@ -69,33 +69,33 @@ export const useAvatar = (
 };
 
 /**
- * 랭킹 페이지용 아바타 (장착 아바타가 있으면 반영)
+ * 랭킹 페이지용 아바타 (장착 아바타가 있으면 반영, 없으면 시스템 기본값)
  */
 export const generateRankingAvatar = (userId: string | number, rank: number, equippedAvatarUrl?: string | null): string => {
   if (equippedAvatarUrl) {
     return parseDicebearUrl(equippedAvatarUrl, userId, 'AVATAR', 128);
   }
-  return generateAvatar(userId, 'funEmoji', 128);
+  return DEFAULT_AVATAR_URL;
 };
 
 /**
- * 프로필용 아바타 (큰 사이즈, 장착 아바타가 있으면 반영)
+ * 프로필용 아바타 (큰 사이즈, 장착 아바타가 있으면 반영, 없으면 시스템 기본값)
  */
 export const generateProfileAvatar = (userId: string | number, equippedAvatarUrl?: string | null): string => {
   if (equippedAvatarUrl) {
     return parseDicebearUrl(equippedAvatarUrl, userId, 'AVATAR', 256);
   }
-  return generateAvatar(userId, 'avataaars', 256);
+  return DEFAULT_AVATAR_URL;
 };
 
 /**
- * 채팅/댓글용 아바타 (작은 사이즈, 장착 아바타가 있으면 반영)
+ * 채팅/댓글용 아바타 (작은 사이즈, 장착 아바타가 있으면 반영, 없으면 시스템 기본값)
  */
 export const generateSmallAvatar = (userId: string | number, equippedAvatarUrl?: string | null): string => {
   if (equippedAvatarUrl) {
     return parseDicebearUrl(equippedAvatarUrl, userId, 'AVATAR', 48);
   }
-  return generateAvatar(userId, 'funEmoji', 48);
+  return DEFAULT_AVATAR_URL;
 };
 
 /**
