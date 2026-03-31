@@ -27,11 +27,11 @@ import {
   Navigation,
   Star,
   Maximize2,
-  X,
   Home,
   Trash2,
   Database,
   Sparkles,
+  Lock,
 } from 'lucide-react';
 import WaveButtonComponent from '../components/WaveButton';
 import { generateItemAvatar, parseDicebearUrl } from '../utils/avatar';
@@ -262,18 +262,20 @@ const DashboardView = ({
       sales: d.sales,
     })) || [];
 
-  const pieData = [
-    { name: '프리미엄 (PRO)', value: 400, color: COLORS.primary },
-    { name: '베이직', value: 300, color: '#52b788' },
-    { name: '무료', value: 300, color: COLORS.accent },
-  ];
-
-  const totalUsersCount = stats?.totalUsers || 0;
-
-  const usersSpark = (stats?.weeklyTrend || []).map((d) => ({ v: d.users }));
-  const salesSpark = (stats?.weeklyTrend || []).map((d) => ({ v: d.sales }));
   const inquiriesSpark = (stats?.weeklyTrend || []).map((d) => ({ v: d.inquiries }));
-  const toiletSpark = [12, 15, 18, 22, 25, 28, 32].map((v) => ({ v })); // Mock trend
+  const toiletSpark = (stats?.weeklyTrend || []).map((d) => ({ v: d.visits || 0 })); // Actual visits from stats
+
+  const pieData = stats?.userDistribution 
+    ? [
+        { name: '프리미엄 (PRO)', value: stats.userDistribution.pro, color: COLORS.primary },
+        { name: '베이직', value: stats.userDistribution.basic, color: '#52b788' },
+        { name: '무료', value: stats.userDistribution.free, color: COLORS.accent },
+      ]
+    : [
+        { name: '프리미엄 (PRO)', value: 400, color: COLORS.primary },
+        { name: '베이직', value: 300, color: '#52b788' },
+        { name: '무료', value: 300, color: COLORS.accent },
+      ];
 
   if (loading)
     return (
@@ -1562,7 +1564,6 @@ const CsView = ({
       setLoading(false);
     }
   };
-
   const handleGenerateTestData = async () => {
     if (generatingData) return;
     setGeneratingData(true);
@@ -2410,202 +2411,22 @@ const StoreView = ({ setActiveTab }: { setActiveTab: (tab: AdminTab) => void }) 
 
 // ── Screen: System Settings ───────────────────────────────────────────
 const SystemView = () => {
-  const systemMetrics = [
-    { subject: '사용자 인터페이스', value: 120, fullMark: 150 },
-    { subject: '성능', value: 135, fullMark: 150 },
-    { subject: '보안', value: 128, fullMark: 150 },
-    { subject: '기능성', value: 110, fullMark: 150 },
-    { subject: '사용 편의성', value: 125, fullMark: 150 },
-    { subject: '고객 지원', value: 95, fullMark: 150 },
-  ];
-
-  const healthMetrics = [
-    { label: '가동 시간', value: '99.98%', color: '#1B4332', icon: <Activity size={18} /> },
-    { label: '응답 시간', value: '14ms', color: '#E8A838', icon: <Zap size={18} /> },
-    { label: '활성 사용자', value: '1,247', color: '#3B82F6', icon: <Users size={18} /> },
-    { label: '분당 요청', value: '8.5K', color: '#52b788', icon: <TrendingUp size={18} /> },
-  ];
-
   return (
-    <div className="space-y-4">
-      <div className="mb-2">
-        <h3 className="text-xl font-black text-black">시스템 성능 분석</h3>
-        <p className="text-xs text-black/70 font-bold mt-0.5">
-          실시간 인프라 및 서비스 지표 모니터링
+    <div className="flex flex-col items-center justify-center py-40 gap-6">
+      <div className="p-6 rounded-full bg-black/5 text-black/20">
+        <Lock size={64} />
+      </div>
+      <div className="text-center space-y-2">
+        <h3 className="text-2xl font-black text-black uppercase tracking-tighter">System Monitoring Restricted</h3>
+        <p className="text-sm font-bold text-black/40 max-w-sm mx-auto">
+          서버 성능 및 인프라 지표 모니터링 기능은 현재 백엔드 Actuator 엔진 고도화 중입니다. 
+          추후 실제 메트릭 연동과 함께 활성화될 예정입니다.
         </p>
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        {/* Radar Chart - Main Visual */}
-        <div className="lg:col-span-3">
-          <GlassCard className="h-full flex flex-col">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="text-base font-black text-black">시스템 성능 레이더</h4>
-              <div className="px-2.5 py-1 rounded-lg bg-green-100 text-green-700 text-[10px] font-black uppercase tracking-wider">
-                Optimal Status
-              </div>
-            </div>
-
-            <div className="flex-1 w-full min-h-[380px] flex items-center justify-center -mt-6">
-              <ResponsiveContainer width="100%" height={400}>
-                <RadarChart cx="50%" cy="50%" outerRadius="85%" data={systemMetrics}>
-                  <PolarGrid stroke="rgba(27,67,50,0.15)" />
-                  <PolarAngleAxis
-                    dataKey="subject"
-                    tick={{ fill: 'rgba(26,43,39,0.85)', fontSize: 13, fontWeight: 900 }}
-                  />
-                  {/* 가독성을 위해 PolarRadiusAxis의 숫자를 제거함 (tick={false}) */}
-                  <PolarRadiusAxis angle={90} domain={[0, 150]} tick={false} axisLine={false} />
-                  <Radar
-                    name="시스템 지표"
-                    dataKey="value"
-                    stroke="#1B4332"
-                    fill="#1B4332"
-                    fillOpacity={0.45}
-                    strokeWidth={4}
-                    dot={{ r: 5, fill: '#E8A838', strokeWidth: 2, stroke: '#fff' }}
-                  />
-                  <Tooltip
-                    content={({ active, payload }: any) => {
-                      if (active && payload && payload.length) {
-                        return (
-                          <div
-                            className="bg-white/90 backdrop-blur-md p-4 rounded-2xl border shadow-2xl"
-                            style={{ borderColor: 'rgba(27,67,50,0.1)' }}
-                          >
-                            <p className="font-black text-[10px] uppercase tracking-widest text-[#1B4332]/40 mb-1">
-                              {payload[0].payload.subject}
-                            </p>
-                            <p className="text-2xl font-black text-[#1A2B27] tabular-nums">
-                              {payload[0].value}
-                              <span className="text-xs text-black/20 ml-1">
-                                / {payload[0].payload.fullMark}
-                              </span>
-                            </p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                </RadarChart>
-              </ResponsiveContainer>
-            </div>
-
-            <div className="mt-auto pt-4 flex justify-center gap-6 border-t border-black/[0.03]">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#1B4332]" />
-                <span className="text-[10px] font-black text-black/40 uppercase tracking-tight">
-                  현재 지표
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#E8A838]" />
-                <span className="text-[10px] font-black text-black/40 uppercase tracking-tight">
-                  중요 포인트
-                </span>
-              </div>
-            </div>
-          </GlassCard>
+      <div className="flex gap-4">
+        <div className="px-4 py-2 border rounded-xl text-[10px] font-black text-black/30 border-black/10 uppercase tracking-widest">
+          Expected Beta: Q3 2026
         </div>
-
-        {/* Health Metrics - Side Panel */}
-        <div className="lg:col-span-2 space-y-4">
-          <GlassCard>
-            <div className="mb-4 p-3 rounded-xl bg-gradient-to-br from-[#1B4332] to-[#2D6A4F] inline-block">
-              <Shield size={24} className="text-white" />
-            </div>
-            <h4 className="text-base font-black mb-1.5 text-[#1B4332]">시스템 상태</h4>
-            <p className="text-xs text-black/70 font-bold mb-4">모든 서비스가 정상 작동 중입니다</p>
-            <div className="space-y-2.5">
-              {healthMetrics.map((metric, idx) => (
-                <div
-                  key={idx}
-                  className="p-3 rounded-lg bg-gradient-to-r from-black/[0.02] to-transparent border border-black/5 hover:border-[#1B4332]/20 transition-all"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div
-                        className="p-1.5 rounded-lg"
-                        style={{ backgroundColor: `${metric.color}15`, color: metric.color }}
-                      >
-                        {metric.icon}
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-black uppercase text-black/50 tracking-wide">
-                          {metric.label}
-                        </p>
-                        <p className="text-lg font-black text-black mt-0.5">{metric.value}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </GlassCard>
-
-          <GlassCard>
-            <h4 className="text-sm font-black mb-3 text-black">서비스 상태</h4>
-            <div className="space-y-2">
-              {[
-                { label: '데이터베이스', status: '연결됨', color: 'green' },
-                { label: '레디스 캐시', status: '활성', color: 'green' },
-                { label: 'API 게이트웨이', status: '실행 중', color: 'green' },
-                { label: '파일 저장소', status: '사용 가능', color: 'green' },
-              ].map((item, i) => (
-                <div key={i} className="flex items-center justify-between py-1.5">
-                  <span className="text-xs font-bold text-black/70">{item.label}</span>
-                  <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full bg-${item.color}-500 animate-pulse`} />
-                    <span className="text-xs font-black text-green-600">{item.status}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </GlassCard>
-        </div>
-      </div>
-
-      {/* Additional Info Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <GlassCard className="border-l-4 border-l-[#1B4332]">
-          <div className="flex items-start gap-3">
-            <div className="p-2.5 rounded-xl bg-[#1B4332]/10">
-              <Activity size={22} className="text-[#1B4332]" />
-            </div>
-            <div>
-              <p className="text-[11px] font-black uppercase text-black/50 mb-0.5">CPU 사용률</p>
-              <p className="text-2xl font-black text-black">32.5%</p>
-              <p className="text-xs text-black/70 font-bold mt-0.5">4코어 평균</p>
-            </div>
-          </div>
-        </GlassCard>
-
-        <GlassCard className="border-l-4 border-l-[#E8A838]">
-          <div className="flex items-start gap-3">
-            <div className="p-2.5 rounded-xl bg-[#E8A838]/10">
-              <Activity size={22} className="text-[#E8A838]" />
-            </div>
-            <div>
-              <p className="text-[11px] font-black uppercase text-black/50 mb-0.5">메모리</p>
-              <p className="text-2xl font-black text-black">8.2 GB</p>
-              <p className="text-xs text-black/70 font-bold mt-0.5">전체 16GB 중</p>
-            </div>
-          </div>
-        </GlassCard>
-
-        <GlassCard className="border-l-4 border-l-[#3B82F6]">
-          <div className="flex items-start gap-3">
-            <div className="p-2.5 rounded-xl bg-[#3B82F6]/10">
-              <Activity size={22} className="text-[#3B82F6]" />
-            </div>
-            <div>
-              <p className="text-[11px] font-black uppercase text-black/50 mb-0.5">디스크 I/O</p>
-              <p className="text-2xl font-black text-black">245 MB/s</p>
-              <p className="text-xs text-black/70 font-bold mt-0.5">읽기/쓰기 속도</p>
-            </div>
-          </div>
-        </GlassCard>
       </div>
     </div>
   );
@@ -3140,32 +2961,28 @@ const AddTitleView = ({
 // ── Screen: System Logs View ──────────────────────────────────────────
 
 const LogsView = () => {
-  // TODO: 백엔드 로그 API 연동 시 실제 데이터로 교체 필요 (현재 UI 데모용 mock 데이터)
-  const logs = [
-    {
-      id: 1,
-      type: 'SECURITY',
-      msg: 'Admin login detected from 192.168.0.1',
-      time: '15:02:11',
-      status: 'OK',
-    },
-    { id: 2, type: 'API', msg: 'GET /api/v1/toilets response 200', time: '15:01:45', status: 'OK' },
-    { id: 3, type: 'DB', msg: 'PostGIS query took 42ms', time: '15:01:30', status: 'SLOW' },
-    {
-      id: 4,
-      type: 'AUTH',
-      msg: 'JWT Token refreshed for user id: 402',
-      time: '15:00:55',
-      status: 'OK',
-    },
-    {
-      id: 5,
-      type: 'WARN',
-      msg: 'Cache hit rate dropped below 80%',
-      time: '14:58:22',
-      status: 'WARN',
-    },
-  ];
+  const [logs, setLogs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchLogs = async () => {
+      try {
+        const response = await api.get('/admin/logs');
+        setLogs(response.data);
+      } catch (error) {
+        console.error('로그 조회 실패:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLogs();
+  }, []);
+
+  if (loading) return (
+    <div className="flex justify-center py-20">
+      <RefreshCw size={24} className="animate-spin text-black/20" />
+    </div>
+  );
 
   return (
     <div className="space-y-6">
