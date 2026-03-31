@@ -4,6 +4,15 @@ variable "aws_region" {
   default     = "ap-northeast-2"
 }
 
+variable "openai_api_key" {
+  description = "OpenAI API Key for Lambda Bot"
+  type        = string
+  sensitive   = true
+}
+  type        = string
+  default     = "ap-northeast-2"
+}
+
 variable "project_name" {
   description = "Project name"
   type        = string
