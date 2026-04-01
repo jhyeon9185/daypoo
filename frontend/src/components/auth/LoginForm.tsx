@@ -36,6 +36,10 @@ export function LoginForm({ onSwitch, onSuccess, onClose }: LoginFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // 이미 요청 중이면 추가 요청 방지 (Debounce 역할)
+    if (loading) return;
+
     if (!validate()) {
       setShake(true);
       setTimeout(() => setShake(false), 500);
