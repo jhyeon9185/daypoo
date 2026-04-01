@@ -1,7 +1,9 @@
 import { motion, useAnimation, useInView } from 'framer-motion';
 import { useRef, useEffect, useState } from 'react';
 import { Activity, MapPin, Sparkles, TrendingUp, Zap } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import WaveButton from './WaveButton';
+import { useAuth } from '../context/AuthContext';
 import { TimelineSteps } from './TimelineSteps';
 import { BlobStatsSection } from './BlobStatsSection';
 import { WaveDivider } from './WaveDivider';
@@ -13,6 +15,8 @@ interface HeroSectionProps {
 }
 
 export function HeroSection({ onCtaClick, openAuth }: HeroSectionProps) {
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const controls = useAnimation();
   const ref = useRef(null);
   const inView = useInView(ref);
@@ -107,7 +111,13 @@ export function HeroSection({ onCtaClick, openAuth }: HeroSectionProps) {
                 우리 동네 순위 확인하기
               </WaveButton>
               <WaveButton 
-                onClick={() => openAuth('signup')} 
+                onClick={() => {
+                  if (isAuthenticated) {
+                    navigate('/mypage');
+                  } else {
+                    openAuth('signup');
+                  }
+                }} 
                 variant="accent" 
                 className="px-10 py-5 text-lg font-bold shadow-lg shadow-amber-500/20"
               >
