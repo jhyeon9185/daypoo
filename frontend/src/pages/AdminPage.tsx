@@ -58,6 +58,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   BarChart,
+  ComposedChart,
   Bar,
   RadarChart,
   Radar,
@@ -437,104 +438,146 @@ const DashboardView = ({
       {/* 📊 Bento Grid: Main Analytics Section */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Main Growth Chart */}
-        <GlassCard className="lg:col-span-8 group relative overflow-hidden">
-          {/* Subtle Grid Background */}
-          <div className="absolute inset-0 bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:24px_24px] opacity-[0.03] pointer-events-none" />
+        <GlassCard className="lg:col-span-8 group relative overflow-hidden bg-white/40 border-none shadow-[0_32px_64px_-12px_rgba(0,0,0,0.08)]">
+          {/* 💎 Premium Mesh Background */}
+          <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,#1B4332,transparent)]" />
+            <div className="absolute inset-0 bg-[#1B4332]/5 [mask-image:linear-gradient(to_bottom,white,transparent)]" />
+          </div>
           
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-10">
+          <div className="relative z-10 p-2">
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-8">
               <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="p-1.5 rounded-lg bg-[#E8A838]/10 text-[#E8A838]">
-                    <TrendingUp size={16} />
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2.5 rounded-2xl bg-black text-white shadow-2xl flex items-center justify-center">
+                    <Activity size={20} className="animate-pulse" />
                   </div>
-                  <h3 className="text-xl font-black text-black tracking-tight">핵심 성장 지표</h3>
+                  <div>
+                    <h3 className="text-2xl font-black text-black tracking-tighter leading-none mb-1">성장 엔진 리포트</h3>
+                    <div className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                      <span className="text-[10px] font-black text-black/30 uppercase tracking-[0.3em]">Real-time Cluster Analysis</span>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-[10px] font-black text-black/30 uppercase tracking-[0.3em] ml-9">
-                  Metrics & Growth Velocity
-                </p>
               </div>
-              <div className="flex p-1 bg-black/5 rounded-2xl">
-                {['7D', '30D'].map((range) => (
-                  <button 
-                    key={range}
-                    onClick={() => setChartRange(range as any)}
-                    className={`px-5 py-2 rounded-xl text-[11px] font-black transition-all ${chartRange === range ? 'bg-white text-black shadow-[0_4px_12px_rgba(0,0,0,0.1)] scale-105' : 'text-black/30 hover:text-black/60'}`}
-                  >
-                    {range}
-                  </button>
-                ))}
+              
+              <div className="flex items-center gap-10">
+                <div className="flex flex-col items-end">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 text-[9px] font-black tracking-tighter uppercase">
+                      Momentum +12.4%
+                    </span>
+                    <span className="text-[10px] font-black text-black/20 uppercase tracking-widest">Peak Traffic</span>
+                  </div>
+                  <span className="text-2xl font-black text-black tracking-tighter">
+                    {Math.max(...trendData.map(d => d.users)).toLocaleString()}
+                  </span>
+                </div>
+                <div className="h-8 w-[1px] bg-black/5" />
+                <div className="flex p-1.5 bg-black/[0.03] rounded-2xl border border-black/5">
+                  {['7D', '30D'].map((range) => (
+                    <button 
+                      key={range}
+                      onClick={() => setChartRange(range as any)}
+                      className={`relative px-6 py-2.5 rounded-xl text-[11px] font-black transition-all duration-500 ${chartRange === range ? 'text-white' : 'text-black/30 hover:text-black/60'}`}
+                    >
+                      {chartRange === range && (
+                        <motion.div 
+                          layoutId="activeRange"
+                          className="absolute inset-0 bg-black rounded-xl shadow-xl z-0"
+                          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                        />
+                      )}
+                      <span className="relative z-10">{range}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
-            <div className="h-[420px] w-full">
+            <div className="h-[440px] w-full relative">
+              {/* Floating Value Indicator */}
+              <motion.div 
+                key={chartRange}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="absolute left-6 top-0 z-20 flex flex-col gap-1 pointer-events-none"
+              >
+                <span className="text-[10px] font-black text-emerald-600/60 uppercase tracking-[0.4em]">Current Growth Velocity</span>
+                <span className="text-7xl font-black text-black tracking-[calc(-0.06em)] tabular-nums">
+                  {trendData.length > 0 ? trendData[trendData.length - 1].users.toLocaleString() : 0}
+                </span>
+              </motion.div>
+
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={trendData} margin={{ top: 20, right: 20, left: -20, bottom: 0 }}>
+                <ComposedChart data={trendData} margin={{ top: 100, right: 30, left: -20, bottom: 0 }}>
                   <defs>
-                    <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={COLORS.primary} stopOpacity={0.4} />
-                      <stop offset="60%" stopColor={COLORS.primary} stopOpacity={0.1} />
-                      <stop offset="100%" stopColor={COLORS.primary} stopOpacity={0} />
+                    <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feGaussianBlur stdDeviation="6" result="blur" />
+                      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    </filter>
+                    <linearGradient id="mainGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#1B4332" stopOpacity={0.15} />
+                      <stop offset="100%" stopColor="#1B4332" stopOpacity={0} />
                     </linearGradient>
-                    <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={COLORS.accent} stopOpacity={0.4} />
-                      <stop offset="60%" stopColor={COLORS.accent} stopOpacity={0.1} />
-                      <stop offset="100%" stopColor={COLORS.accent} stopOpacity={0} />
+                    <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#E8A838" stopOpacity={0.4} />
+                      <stop offset="100%" stopColor="#E8A838" stopOpacity={0.1} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="6 6" vertical={false} stroke="rgba(0,0,0,0.05)" />
+                  <CartesianGrid strokeDasharray="10 10" vertical={false} stroke="rgba(0,0,0,0.03)" />
                   <XAxis
                     dataKey="name"
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fontSize: 11, fontWeight: 900, fill: 'rgba(0,0,0,0.3)' }}
-                    dy={15}
+                    tick={{ fontSize: 11, fontWeight: 900, fill: 'rgba(0,0,0,0.2)' }}
+                    dy={25}
                   />
                   <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 11, fontWeight: 900, fill: 'rgba(0,0,0,0.3)' }}
+                    hide
                   />
                   <Tooltip
                     content={<CustomTooltip />}
-                    cursor={{ stroke: 'rgba(27,67,50,0.1)', strokeWidth: 20, strokeLinecap: 'round' }}
+                    cursor={{ fill: 'rgba(0,0,0,0.02)', radius: [10, 10, 0, 0] }}
+                  />
+                  <Bar
+                    dataKey="sales"
+                    name="유료 결제"
+                    fill="url(#barGradient)"
+                    radius={[12, 12, 0, 0]}
+                    barSize={20}
                   />
                   <Area
                     type="monotone"
                     dataKey="users"
                     name="신규 방문"
-                    stroke={COLORS.primary}
-                    strokeWidth={5}
-                    strokeLinecap="round"
-                    fill="url(#colorUsers)"
-                    fillOpacity={1}
-                    animationDuration={3000}
-                    activeDot={{ r: 8, strokeWidth: 4, stroke: "#fff", fill: COLORS.primary, shadow: "0 4px 10px rgba(0,0,0,0.3)" }}
+                    stroke="#1B4332"
+                    strokeWidth={6}
+                    fill="url(#mainGradient)"
+                    animationDuration={2500}
+                    style={{ filter: 'url(#neonGlow)' }}
+                    activeDot={{ r: 10, strokeWidth: 0, fill: "#000" }}
                   />
-                  <Area
-                    type="monotone"
-                    dataKey="sales"
-                    name="유료 결제"
-                    stroke={COLORS.accent}
-                    strokeWidth={5}
-                    strokeLinecap="round"
-                    fill="url(#colorSales)"
-                    fillOpacity={1}
-                    animationDuration={3000}
-                    activeDot={{ r: 8, strokeWidth: 4, stroke: "#fff", fill: COLORS.accent, shadow: "0 4px 10px rgba(0,0,0,0.3)" }}
-                  />
-                </AreaChart>
+                </ComposedChart>
               </ResponsiveContainer>
             </div>
             
-            <div className="flex items-center gap-10 mt-6 ml-8">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-[#1B4332] shadow-[0_0_10px_rgba(27,67,50,0.5)]" />
-                <span className="text-[11px] font-black text-black/50 uppercase tracking-widest">New Traffic</span>
+            <div className="flex items-center justify-between mt-10 px-6">
+              <div className="flex items-center gap-10">
+                <div className="flex items-center gap-4 group/leg">
+                  <div className="w-4 h-1.5 rounded-full bg-[#1B4332] group-hover:w-8 transition-all duration-500" />
+                  <span className="text-[12px] font-black text-black/40 uppercase tracking-[0.2em]">Active Traffic</span>
+                </div>
+                <div className="flex items-center gap-4 group/leg">
+                  <div className="w-4 h-1.5 rounded-full bg-[#E8A838] group-hover:w-8 transition-all duration-500" />
+                  <span className="text-[12px] font-black text-black/40 uppercase tracking-[0.2em]">Revenue Flow</span>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-[#E8A838] shadow-[0_0_10px_rgba(232,168,56,0.5)]" />
-                <span className="text-[11px] font-black text-black/50 uppercase tracking-widest">Revenue Growth</span>
+              
+              <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-black/5">
+                <RefreshCw size={12} className="animate-spin duration-10s text-black/20" />
+                <span className="text-[10px] font-black text-black/30 uppercase tracking-widest">Auto Sync On</span>
               </div>
             </div>
           </div>
