@@ -67,7 +67,7 @@ public class SupportService {
             .findById(inquiryId)
             .orElseThrow(() -> new BusinessException(ErrorCode.ADMIN_INQUIRY_NOT_FOUND));
 
-    if (!inquiry.getUser().getId().equals(user.getId())) {
+    if (!java.util.Objects.equals(inquiry.getUser().getId(), user.getId())) {
       throw new BusinessException(ErrorCode.HANDLE_ACCESS_DENIED);
     }
 
@@ -82,7 +82,7 @@ public class SupportService {
             .findById(inquiryId)
             .orElseThrow(() -> new BusinessException(ErrorCode.ADMIN_INQUIRY_NOT_FOUND));
 
-    if (!inquiry.getUser().getId().equals(user.getId())) {
+    if (!java.util.Objects.equals(inquiry.getUser().getId(), user.getId())) {
       throw new BusinessException(ErrorCode.HANDLE_ACCESS_DENIED);
     }
 

@@ -38,8 +38,9 @@ public class SupportController {
   /** 내 문의 삭제 */
   @DeleteMapping("/inquiries/{id}")
   public ResponseEntity<Void> deleteInquiry(
-      @AuthenticationPrincipal String email, @PathVariable("id") Long id) {
-    User user = userService.getByEmail(email);
+      java.security.Principal principal, @PathVariable("id") Long id) {
+    if (principal == null) return ResponseEntity.status(401).build();
+    User user = userService.getByEmail(principal.getName());
     supportService.deleteInquiry(user, id);
     return ResponseEntity.ok().build();
   }
@@ -47,10 +48,11 @@ public class SupportController {
   /** 내 문의 수정 */
   @PutMapping("/inquiries/{id}")
   public ResponseEntity<Void> updateInquiry(
-      @AuthenticationPrincipal String email,
+      java.security.Principal principal,
       @PathVariable("id") Long id,
       @RequestBody InquiryRequest request) {
-    User user = userService.getByEmail(email);
+    if (principal == null) return ResponseEntity.status(401).build();
+    User user = userService.getByEmail(principal.getName());
     supportService.updateInquiry(user, id, request);
     return ResponseEntity.ok().build();
   }
