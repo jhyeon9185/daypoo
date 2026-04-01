@@ -719,7 +719,7 @@ function HeroBanner({
               {/* ★ Knockout Wobble 닉네임 */}
               <motion.div variants={fadeUp(0.1)} className="mb-1">
                 <KnockoutWobble
-                  text={user?.nickname || '회원님'}
+                  text={user?.nickname || '익명의 쾌변러'}
                   gradient="#1B4332"
                   fontSize="clamp(22px, 5vw, 36px)"
                   fontWeight={900}
@@ -886,6 +886,32 @@ function TabBar({ active, onChange }: { active: TabKey; onChange: (k: TabKey) =>
   );
 }
 
+function NicknameSetupBanner({ onSettingsClick }: { onSettingsClick: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="mx-3 sm:mx-10 mb-8 p-5 rounded-3xl bg-amber-50 border border-amber-200 flex items-center justify-between gap-4 shadow-sm"
+    >
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-600 flex-shrink-0">
+          <Sparkles size={24} />
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm sm:text-base font-black text-amber-900 leading-tight">아아, 쾌변러님! 잠시만요!</p>
+          <p className="text-xs sm:text-sm font-bold text-amber-700/80 mt-1 truncate">나만의 닉네임을 설정하면 랭킹에서 더욱 빛날 수 있어요.</p>
+        </div>
+      </div>
+      <button
+        onClick={onSettingsClick}
+        className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-xs sm:text-sm font-black rounded-2xl transition-all shadow-md shadow-amber-200 flex-shrink-0"
+      >
+        설정하러 가기
+      </button>
+    </motion.div>
+  );
+}
+
 // ── 홈 탭 ─────────────────────────────────────────────────────────────
 function HomeTab({
   equipped,
@@ -896,6 +922,7 @@ function HomeTab({
   initialShopTab = 'inventory',
   refreshUser,
   fetchShopData,
+  onTabChange,
   records = [],
 }: {
   equipped: AvatarItem | null;
@@ -906,6 +933,7 @@ function HomeTab({
   initialShopTab?: 'inventory' | 'shop';
   refreshUser: () => Promise<void>;
   fetchShopData: () => Promise<void>;
+  onTabChange?: (k: TabKey) => void;
   records?: any[];
 }) {
   const [shopTab, setShopTab] = useState<'inventory' | 'shop'>(initialShopTab);
@@ -3263,6 +3291,7 @@ export function MyPage({ openAuth }: { openAuth: (mode: 'login' | 'signup') => v
                 }
                 refreshUser={refreshUser}
                 fetchShopData={fetchShopData}
+                onTabChange={handleTabChange}
                 records={records}
               />
             )}

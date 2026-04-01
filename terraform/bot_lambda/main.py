@@ -111,7 +111,9 @@ def lambda_handler(event, context):
                 "password": password,
                 "nickname": nickname
             })
+            print(f"Bot {bot_idx}: Signup Success")
         except Exception:
+            print(f"Bot {bot_idx}: Signup Skipped (Already exists)")
             pass
             
         # 2. Login
@@ -122,8 +124,13 @@ def lambda_handler(event, context):
                 token = res['accessToken']
             elif res and 'data' in res and 'accessToken' in res['data']:
                 token = res['data']['accessToken']
+            
+            if token:
+                print(f"Bot {bot_idx}: Login Success")
+            else:
+                print(f"Bot {bot_idx}: Login Failed (Token missing)")
         except Exception as e:
-            print(f"Bot {bot_idx} login failed. Skipping.")
+            print(f"Bot {bot_idx} login failed: {str(e)}. Skipping.")
             continue
             
         if not token:
@@ -154,7 +161,7 @@ def lambda_handler(event, context):
                 toilet_lat = t.get('latitude', lat)
                 toilet_lng = t.get('longitude', lng)
         except Exception as e:
-            print(f"Bot {bot_idx} toilet fetch failed. Skipping activity.", e)
+            print(f"Bot {bot_idx} toilet fetch failed. Skipping activity.", str(e))
             continue
 
         if not toilet_id:
@@ -171,15 +178,16 @@ def lambda_handler(event, context):
         try:
             do_request("POST", "/records", {
                 "toiletId": toilet_id,
-                "bristolScale": bristol_scale,
+                "bristolScale": brist_scale if 'brist_scale' in locals() else bristol_scale, # Fix typo if any in remote
                 "color": color,
                 "conditionTags": condition_tags,
                 "dietTags": diet_tags,
                 "latitude": toilet_lat,
                 "longitude": toilet_lng
             }, token)
+            print(f"Bot {bot_idx}: Poo Record Success (ToiletID: {toilet_id})")
         except Exception as e:
-            print(f"Bot {bot_idx} poo record failed.", e)
+            print(f"Bot {bot_idx}: Poo record failed - {str(e)}")
             
         # 5. Toilet Review (100% chance for selected bots if pool is valid)
         try:
@@ -190,8 +198,9 @@ def lambda_handler(event, context):
                 "emojiTags": tags,
                 "comment": review_text
             }, token)
+            print(f"Bot {bot_idx}: Toilet Review Success (ToiletID: {toilet_id})")
         except Exception as e:
-            print(f"Bot {bot_idx} toilet review failed.", e)
+            print(f"Bot {bot_idx}: Toilet review failed - {str(e)}")
             
         # 6. CS Inquiry (1-2% ultra low chance)
         if random.random() < 0.015:

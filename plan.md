@@ -1,19 +1,35 @@
-# [PLAN] 마이페이지 및 관리자 페이지 아이템 그리드 수정
+# [계획서] 운영 환경 시뮬레이션 봇 활성화 및 개선
 
-## 📋 개요
-사용자의 피드백에 따라 마이페이지 상점 탭과 관리자 페이지 프리미엄 상점 탭의 아이템 나열 방식을 수정합니다. 현재 1줄에 5개씩 총 12개가 표시되어 마지막 줄에 2개만 남는 문제를 해결하기 위해, 한 페이지당 아이템 표시 개수를 15개로 변경하여 3줄이 꽉 차도록(5x3) 구성합니다.
+이 계획서는 배포 환경의 활성 사용자 수를 늘리고 봇 활동을 안정화하기 위한 단계별 수정 사항을 담고 있습니다.
 
-## 🛠 수정 사항
+## 1. 수정 목표
+- 백엔드 서버에 `simulation` 프로필을 활성화하여 내부 봇 가동.
+- Lambda 봇의 실행 시간을 확보하고(타임아웃 상향), 동작 상태를 상세히 로깅.
 
-### 1. 마이페이지 (frontend/src/pages/MyPage.tsx)
-- `HomeTab` 컴포넌트 내의 `itemsPerPage` 변수 값을 `12`에서 `15`로 변경합니다.
-- 이를 통해 한 페이지에 최대 15개의 아이템이 표시되어 5개씩 3줄의 그리드가 완성되도록 합니다.
+## 2. 상세 작업 내역
 
-### 2. 관리자 페이지 (frontend/src/pages/AdminPage.tsx)
-- `StoreView` 컴포넌트 내 `fetchItems` 함수에서 사용하는 `size` 파라미터 값을 `'12'`에서 `'15'`로 변경합니다.
-- 마이페이지와 동일하게 5개씩 3줄(총 15개)이 한 페이지에 표시되도록 정렬합니다.
+### Step 1: 백엔드 환경 설정 변경 (`docker-compose.prod.yml`)
+- `SPRING_PROFILES_ACTIVE` 환경 변수에 `simulation` 추가.
+- 최종 값: `prod,simulation`
 
-## 🧪 검증 계획
-- 수정 후 마이페이지 상점 탭에서 아이템이 한 줄에 5개씩, 최대 15개까지 한 페이지에 표시되는지 확인합니다.
-- 관리자 페이지 프리미엄 상점 탭에서도 동일하게 한 페이지에 15개의 아이템이 정상적으로 로드되는지 확인합니다.
-- 하위 호환성 및 반응형 레이아웃(모바일/태블릿)에서 그리드가 깨지지 않는지 확인합니다.
+### Step 2: Lambda 인프라 설정 변경 (`terraform/lambda.tf`)
+- `aws_lambda_function.simulation_bot` 리소스의 `timeout`을 `300`에서 `600`으로 상향 조정.
+
+### Step 3: Lambda 봇 로깅 강화 (`terraform/bot_lambda/main.py`)
+- 각 단계(로그인, 기록 생성, 리뷰 작성 등)마다 성공/실패 여부를 명시적으로 출력하도록 수정.
+- CloudWatch Logs에서 각 봇의 세부 활동 추적 가능하도록 함.
+
+## 3. 수정 예정 파일
+1. `docker-compose.prod.yml`
+2. `terraform/lambda.tf`
+3. `terraform/bot_lambda/main.py`
+
+## 4. 검증 계획
+- 배포 후 `GET /api/v1/rankings/global` 응답에서 `activeUserCount`가 기존 5명에서 30명 이상으로 증가하는지 확인.
+## 5. 인프라 확장: OpenSearch 서비스 구축
+- 목적: 화장실 검색 기능 강화 및 대규모 데이터 처리 최적화 (OpenSearch 도입).
+- 작업 내용:
+    - `d:/poop-map/terraform` 경로에서 `terraform apply` 수행.
+    - 데이터 암호화, VPC 배포, `t3.small.search` 단일 인스턴스 구성.
+- 예상 소요 시간: 약 15~20분.
+- 최종 출력물: `opensearch_endpoint` 확인 및 기록.

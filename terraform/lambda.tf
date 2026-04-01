@@ -37,7 +37,7 @@ resource "aws_lambda_function" "simulation_bot" {
   handler          = "main.lambda_handler"
   runtime          = "python3.12"
   role             = aws_iam_role.lambda_bot_role.arn
-  timeout          = 300 # 5분 제한, 최대 20개의 봇을 처리하므로 충분함
+  timeout          = 600 # 봇 수 증가에 따른 안정적인 수행을 위해 10분으로 상향
 
   environment {
     variables = {
