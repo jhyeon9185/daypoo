@@ -1,5 +1,18 @@
 # Backend & AI Service Modification History
 
+## [2026-04-01 16:25:00] 관리자 페이지 유저 검색 및 필터링 백엔드 구현
+- **작업 내용**: 관리자 페이지 유저 관리 섹션의 검색 기능을 이메일/닉네임으로 한정하고, 역할 및 구독 플랜별 필터링 기능을 백엔드에 구현함.
+- **상세 변경 내역**:
+    - **`AdminUserController.java`**: `getUsers` API에 `SubscriptionPlan plan` 파라미터를 추가하여 필터링 조건 수신 가능하게 수정.
+    - **`AdminManagementService.java`**: 
+        - `getUsers` 메서드의 JPA `Specification` 로직을 확장.
+        - `email` 및 `nickname` 필드에 대한 키워드 검색(Partial Match) 한정 적용.
+        - `Subscription` 엔터티를 Join하여 현재 활성화된(ACTIVE) 구독 플랜별 필터링 조건 추가 (BASIC, PRO, PREMIUM 대응).
+    - **가이드 작성**: 프론트엔드 팀의 원활한 연동을 위해 `docs/frontend-implementation-guide.md`에 API 규격 및 UI 구현 주의사항 정리.
+- **결과/영향**: 관리자가 수만 명의 유저 중 특정 이메일/닉네임이나 구독 등급별로 대상자를 신속하게 추출하여 관리할 수 있는 기반 마련.
+
+---
+
 ## [2026-04-01 16:10:00] 람다봇(Lambda Bot) 메가 업그레이드 (대규모 증설 및 서울 전역 확장)
 - **작업 내용**: 서비스 활성화를 위해 람다봇의 규모를 대폭 늘리고 활동 범위를 서울 전역으로 확장.
 - **상세 변경 내역**:
