@@ -8,11 +8,12 @@ class PoopAnalysisRequest(BaseModel):
 
 
 class PoopAnalysisResult(BaseModel):
-    bristol_scale: int = Field(..., ge=1, le=7, description="Bristol stool scale (1-7)")
-    color: str = Field(..., description="Dominant color of the stool")
-    shape_description: str = Field(..., description="Detailed description of the shape")
-    health_score: int = Field(
-        ..., ge=0, le=100, description="Overall health score for this sample"
+    is_poop: bool = Field(..., description="Whether the image contains a stool")
+    bristol_scale: Optional[int] = Field(None, ge=1, le=7, description="Bristol stool scale (1-7), null if is_poop=false")
+    color: Optional[str] = Field(None, description="Dominant color of the stool, null if is_poop=false")
+    shape_description: Optional[str] = Field(None, description="Detailed description of the shape, null if is_poop=false")
+    health_score: Optional[int] = Field(
+        None, ge=0, le=100, description="Overall health score for this sample, null if is_poop=false"
     )
     ai_comment: str = Field(..., description="Brief AI feedback for the user")
     warning_tags: List[str] = Field(

@@ -36,6 +36,7 @@ public enum ErrorCode {
   NO_RECORDS_FOR_REPORT(HttpStatus.BAD_REQUEST, "R004", "분석할 배변 기록이 없습니다."),
   STAY_TIME_NOT_MET(HttpStatus.BAD_REQUEST, "R005", "화장실 내 체류 시간이 충분하지 않습니다. (최소 60초)"),
   OUT_OF_RANGE(HttpStatus.BAD_REQUEST, "R006", "화장실 반경 밖에서는 인증할 수 없습니다."),
+  NOT_POOP_IMAGE(HttpStatus.BAD_REQUEST, "R007", "똥 사진이 아닌 것 같아요! 변기 안의 변을 촬영해주세요."),
 
   // Admin
   ADMIN_USER_NOT_FOUND(HttpStatus.NOT_FOUND, "A001", "사용자를 찾을 수 없습니다."),
