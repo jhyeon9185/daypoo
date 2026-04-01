@@ -715,7 +715,7 @@ function HeroBanner({
                     border: '1px solid rgba(232,168,56,0.2)',
                   }}
                 >
-                  <Trophy size={9} /> {user?.equippedTitleName || '보유 칭호 없음'}
+                  <Trophy size={9} /> {(user?.equippedTitleName && user.equippedTitleName !== '새내기 쾌변러') ? user.equippedTitleName : '보유 칭호 없음'}
                 </span>
               </motion.div>
 

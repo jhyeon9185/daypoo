@@ -666,7 +666,7 @@ export function RankingPage({ openAuth }: { openAuth: (mode: 'login' | 'signup')
           emoji: Number(r.rank) === 1 ? '💎' : Number(r.rank) === 2 ? '🦊' : '🐸',
           avatarUrl: generateRankingAvatar(r.userId, Number(r.rank || 0), r.equippedAvatarUrl),
           nick: r.nickname || '익명',
-          title: r.titleName || '보유 칭호 없음',
+          title: (r.titleName && r.titleName !== '새내기 쾌변러') ? r.titleName : '보유 칭호 없음',
           titleColor: Number(r.rank) === 1 ? '#E8A838' : Number(r.rank) === 2 ? '#B0B8B4' : Number(r.rank) === 3 ? '#CD7C4A' : '#52b788',
           titleBg: Number(r.rank) === 1 ? 'rgba(232,168,56,0.12)' : Number(r.rank) === 2 ? 'rgba(176,184,180,0.12)' : Number(r.rank) === 3 ? 'rgba(205,124,74,0.12)' : 'rgba(82,183,136,0.1)',
           level: Number(r.level || 0),

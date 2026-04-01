@@ -33,37 +33,28 @@ const SquishyClayEffect = ({ isHovered }: { isHovered: boolean }) => {
         animate={{
           borderRadius: isHovered ? symbioteRadius : baseRadius,
           scale: isHovered ? [1, 1.2, 0.9, 1.15, 1] : [1, 1.02, 1],
-          backgroundColor: isHovered ? "#E85D5D" : "#FDA4AF", // 호버 시 비비드 코랄, 평상시 연한 코랄
-          backgroundImage: isHovered 
-            ? "radial-gradient(circle at 30% 30%, #FF8A8A 0%, #E85D5D 100%)" 
-            : "linear-gradient(135deg, #FFE4E6 0%, #FDA4AF 100%)",
+          backgroundColor: isHovered ? "#E85D5D" : "#FF7F7F", // 호버 시 강렬한 레드-코랄, 평상시 선명한 소프트 코랄
         }}
         transition={{
           borderRadius: { duration: isHovered ? 0.7 : 6, repeat: Infinity, ease: "easeInOut" },
           scale: { duration: isHovered ? 1.2 : 6, repeat: Infinity, ease: "easeInOut" },
-          backgroundColor: { duration: 0.5 },
+          backgroundColor: { duration: 0.3 },
         }}
         className="absolute inset-0 shadow-2xl"
         style={{
           boxShadow: isHovered 
-            ? '0 30px 60px rgba(232,93,93,0.4), inset -5px -5px 15px rgba(255,255,255,0.4), inset 5px 5px 15px rgba(0,0,0,0.1)'
-            : '0 15px 30px rgba(232,93,93,0.15), inset -5px -5px 10px rgba(0,0,0,0.05), inset 5px 5px 10px rgba(255,255,255,0.5)',
+            ? '0 20px 40px rgba(232,93,93,0.5), inset -2px -2px 6px rgba(0,0,0,0.2), inset 2px 2px 6px rgba(255,255,255,0.15)'
+            : '0 10px 25px rgba(232,93,93,0.2), inset -2px -2px 5px rgba(0,0,0,0.15), inset 2px 2px 5px rgba(255,255,255,0.1)',
         }}
       >
-        {/* 2. 내부 부유물 (생동감) */}
+        {/* 내부 디테일 (단색 느낌을 위해 투명도와 블러 대폭 축소) */}
         <motion.div
           animate={{
-            scale: isHovered ? [1.2, 0.7, 1.3, 1] : [0.95, 1.05, 0.95],
-            opacity: isHovered ? [0.6, 0.9, 0.6] : [0.3, 0.5, 0.3],
+            scale: isHovered ? [1.1, 0.8, 1.2, 1] : [0.98, 1.02, 0.98],
+            opacity: isHovered ? [0.4, 0.7, 0.4] : [0.15, 0.25, 0.15],
           }}
           transition={{ duration: isHovered ? 1.5 : 8, repeat: Infinity, ease: "linear" }}
-          className={`absolute inset-4 rounded-full blur-xl ${isHovered ? 'bg-white/40' : 'bg-white/20'}`}
-        />
-        
-        {/* 3. 코랄 광택 */}
-        <motion.div 
-          animate={isHovered ? { opacity: [0.5, 0.8, 0.5], y: [-1, 1, -1] } : { opacity: 0.4 }}
-          className="absolute top-[10%] left-[15%] w-[40%] h-[25%] bg-gradient-to-b from-white/60 to-transparent blur-sm rounded-[100%]" 
+          className={`absolute inset-6 rounded-full blur-md ${isHovered ? 'bg-white/30' : 'bg-white/10'}`}
         />
       </motion.div>
 

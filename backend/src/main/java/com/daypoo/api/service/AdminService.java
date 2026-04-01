@@ -49,9 +49,8 @@ public class AdminService {
     // 1. 유저 분포 통계 (PRO, BASIC, FREE)
     // ROLE_PRO, ROLE_PREMIUM -> pro
     long proUsersCount = userRepository.countByRoleIn(List.of(
-        Role.ROLE_PRO, 
-        Role.ROLE_PREMIUM
-    ));
+        Role.ROLE_PRO,
+        Role.ROLE_PREMIUM));
     long freeUsersCount = allUsers - proUsersCount;
 
     UserDistribution distributionStats = UserDistribution.builder()
@@ -71,18 +70,16 @@ public class AdminService {
 
       // 실제 데이터 기반 (데이터가 없을 경우 0)
       List<Payment> dailyPayments = paymentRepository.findAllByCreatedAtBetween(start, end);
-      
-      long dailyUsers = dailyPayments != null ? 
-          dailyPayments.stream()
-              .map(Payment::getEmail)
-              .filter(e -> e != null)
-              .distinct()
-              .count() : 0;
 
-      long sales = dailyPayments != null ?
-          dailyPayments.stream()
-              .mapToLong(Payment::getAmount)
-              .sum() : 0;
+      long dailyUsers = dailyPayments != null ? dailyPayments.stream()
+          .map(Payment::getEmail)
+          .filter(e -> e != null)
+          .distinct()
+          .count() : 0;
+
+      long sales = dailyPayments != null ? dailyPayments.stream()
+          .mapToLong(Payment::getAmount)
+          .sum() : 0;
 
       long dailyInquiries = inquiryRepository.countByCreatedAtBetween(start, end);
 
@@ -99,7 +96,7 @@ public class AdminService {
     LocalDateTime todayEnd = LocalDate.now().atTime(23, 59, 59);
     long todayNewUsers = userRepository.countByCreatedAtAfter(todayStart);
     long todayInquiriesCount = inquiryRepository.countByCreatedAtBetween(todayStart, todayEnd);
-    
+
     // 당일 AI 호출 건수 집계 (SystemLog 기준)
     // build/check-in/report 생성 시 'AI' source로 로그를 남긴다고 가정
     long todayApiCalls = systemLogService.getRecentLogs().stream()
@@ -128,18 +125,16 @@ public class AdminService {
   public void generateTestData() {
     log.info("Generating test data for Admin Dashboard...");
 
-    User user =
-        userRepository.findAll().stream()
-            .findFirst()
-            .orElseThrow(() -> new RuntimeException("테스트 데이터를 생성할 유저가 없습니다."));
+    User user = userRepository.findAll().stream()
+        .findFirst()
+        .orElseThrow(() -> new RuntimeException("테스트 데이터를 생성할 유저가 없습니다."));
 
     for (int i = 13; i >= 0; i--) {
       LocalDate date = LocalDate.now().minusDays(i);
       int dailyCount = (int) (Math.random() * 10) + 5; // 하루 5~15건 결제
 
       for (int j = 0; j < dailyCount; j++) {
-        LocalDateTime createdAt =
-            date.atTime((int) (Math.random() * 23), (int) (Math.random() * 59));
+        LocalDateTime createdAt = date.atTime((int) (Math.random() * 23), (int) (Math.random() * 59));
 
         paymentRepository.save(
             Payment.builder()
@@ -161,27 +156,25 @@ public class AdminService {
   private void generateInquiryTestData(User user) {
     log.info("Generating 30 mock inquiries...");
     String[] titles = {
-      "화장실 청소 상태가 안 좋아요",
-      "결제가 자꾸 실패합니다",
-      "비밀번호를 잊어버렸어요",
-      "앱이 너무 느려요",
-      "위치 정보가 정확하지 않습니다",
-      "새로운 기능을 제안합니다",
-      "포인트 적립이 안 됐어요",
-      "아이템 사용법을 모르겠어요"
+        "화장실 청소 상태가 안 좋아요",
+        "결제가 자꾸 실패합니다",
+        "비밀번호를 잊어버렸어요",
+        "앱이 너무 느려요",
+        "위치 정보가 정확하지 않습니다",
+        "새로운 기능을 제안합니다",
+        "포인트 적립이 안 됐어요",
+        "아이템 사용법을 모르겠어요"
     };
 
-    com.daypoo.api.entity.enums.InquiryType[] types =
-        com.daypoo.api.entity.enums.InquiryType.values();
+    com.daypoo.api.entity.enums.InquiryType[] types = com.daypoo.api.entity.enums.InquiryType.values();
 
     for (int i = 1; i <= 30; i++) {
-      Inquiry inquiry =
-          Inquiry.builder()
-              .user(user)
-              .type(types[i % types.length])
-              .title(titles[i % titles.length] + " (" + i + ")")
-              .content("이것은 테스트를 위한 " + i + "번째 문의 내용입니다. 상세한 처리를 부탁드립니다.")
-              .build();
+      Inquiry inquiry = Inquiry.builder()
+          .user(user)
+          .type(types[i % types.length])
+          .title(titles[i % titles.length] + " (" + i + ")")
+          .content("이것은 테스트를 위한 " + i + "번째 문의 내용입니다. 상세한 처리를 부탁드립니다.")
+          .build();
 
       inquiryRepository.save(inquiry);
     }
