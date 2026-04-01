@@ -264,6 +264,9 @@ public class PooRecordService {
 
     if (hasImage) {
       AiAnalysisResponse ai = aiClient.analyzePoopImage(request.imageBase64());
+      if (Boolean.FALSE.equals(ai.isPoop())) {
+        throw new BusinessException(ErrorCode.NOT_POOP_IMAGE);
+      }
       List<String> warnings = ai.warningTags() != null ? ai.warningTags() : Collections.emptyList();
       log.info(
           "AI Analysis: Bristol {}, Color {}, Warnings: {}",
