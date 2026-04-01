@@ -912,21 +912,26 @@ function HomeTab({
   records?: any[];
 }) {
   const [shopTab, setShopTab] = useState<'inventory' | 'shop'>(initialShopTab);
+  const [categoryFilter, setCategoryFilter] = useState<'all' | 'AVATAR' | 'EFFECT'>('all');
   const [preview, setPreview] = useState<AvatarItem | null>(null);
   const [saved, setSaved] = useState(false);
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-40px' });
 
-  const items =
-    shopTab === 'inventory'
-      ? (avatarItems || [])
-          .filter((i) => i.owned)
-          .sort((a, b) => {
-            if (a.isEquipped && !b.isEquipped) return -1;
-            if (!a.isEquipped && b.isEquipped) return 1;
-            return 0;
-          })
-      : (avatarItems || []).filter((i) => !i.owned);
+  const items = (() => {
+    const base =
+      shopTab === 'inventory'
+        ? (avatarItems || [])
+            .filter((i) => i.owned)
+            .sort((a, b) => {
+              if (a.isEquipped && !b.isEquipped) return -1;
+              if (!a.isEquipped && b.isEquipped) return 1;
+              return 0;
+            })
+        : (avatarItems || []).filter((i) => !i.owned);
+    if (categoryFilter === 'all') return base;
+    return base.filter((i) => i.rawType === categoryFilter);
+  })();
 
   // DepthDeck 카드 데이터 변환
   const deckCards: DeckCard[] = items.map((item) => ({
@@ -947,10 +952,10 @@ function HomeTab({
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 15;
 
-  // shopTab 변경 시 페이지 리셋
+  // shopTab 또는 카테고리 변경 시 페이지 리셋
   useEffect(() => {
     setCurrentPage(0);
-  }, [shopTab]);
+  }, [shopTab, categoryFilter]);
 
   // 토스 페이먼츠 결제창 호출
   const handleTossPayment = async () => {
@@ -1143,9 +1148,30 @@ function HomeTab({
         </div>
 
         <div className="px-3 sm:px-6 pb-4 sm:pb-6">
+          {/* 카테고리 필터 (전체 / 아바타 / 오라효과) */}
+          <div className="flex gap-2 mb-4">
+            {([
+              { key: 'all' as const, label: '전체' },
+              { key: 'AVATAR' as const, label: '아바타' },
+              { key: 'EFFECT' as const, label: '오라효과' },
+            ]).map((cat) => (
+              <button
+                key={cat.key}
+                onClick={() => setCategoryFilter(cat.key)}
+                className={`px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all ${
+                  categoryFilter === cat.key
+                    ? 'bg-[#1B4332] text-white shadow-md'
+                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+
           <AnimatePresence mode="wait">
             <motion.div
-              key={shopTab}
+              key={`${shopTab}-${categoryFilter}`}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}

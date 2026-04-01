@@ -696,7 +696,9 @@ export function RankingPage({ openAuth }: { openAuth: (mode: 'login' | 'signup')
         nick: user.nickname || '나',
         lv: user.level || 1,
         needed: 1,
-        top: 100
+        top: 100,
+        userId: user.id,
+        equippedAvatarUrl: user.equippedAvatarUrl,
       };
     }
 
@@ -712,6 +714,8 @@ export function RankingPage({ openAuth }: { openAuth: (mode: 'login' | 'signup')
       score: myScore,
       top: topPercent,
       needed: 5,
+      userId: rawMyRank.userId,
+      equippedAvatarUrl: rawMyRank.equippedAvatarUrl,
     };
   }, [isDataValid, data, user, users.length]);
 
