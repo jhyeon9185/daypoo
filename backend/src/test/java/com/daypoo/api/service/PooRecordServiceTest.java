@@ -80,7 +80,6 @@ class PooRecordServiceTest {
     given(locationVerificationService.isWithinAllowedDistance(eq(100L), anyDouble(), anyDouble()))
         .willReturn(true);
     given(locationVerificationService.hasStayedLongEnough(eq(1L), eq(100L))).willReturn(true);
-    given(locationVerificationService.checkAndSetCooldown(eq(1L), eq(100L))).willReturn(true);
     given(geocodingService.reverseGeocode(anyDouble(), anyDouble())).willReturn("역삼1동");
 
     PooRecord savedRecord =
@@ -134,7 +133,6 @@ class PooRecordServiceTest {
     given(locationVerificationService.isWithinAllowedDistance(eq(100L), anyDouble(), anyDouble()))
         .willReturn(true);
     given(locationVerificationService.hasStayedLongEnough(eq(1L), eq(100L))).willReturn(true);
-    given(locationVerificationService.checkAndSetCooldown(eq(1L), eq(100L))).willReturn(true);
     given(geocodingService.reverseGeocode(anyDouble(), anyDouble())).willReturn("역삼1동");
 
     AiAnalysisResponse aiResponse =
@@ -197,7 +195,6 @@ class PooRecordServiceTest {
     given(locationVerificationService.isWithinAllowedDistance(eq(100L), anyDouble(), anyDouble()))
         .willReturn(true);
     given(locationVerificationService.hasStayedLongEnough(eq(1L), eq(100L))).willReturn(true);
-    given(locationVerificationService.checkAndSetCooldown(eq(1L), eq(100L))).willReturn(false);
 
     // when & then
     assertThatThrownBy(() -> pooRecordService.createRecord("test@test.com", request))
