@@ -32,7 +32,8 @@ public class ToiletSearchService {
    * @param query 검색어 (일반 한글 또는 초성만)
    * @param size 최대 결과 개수
    */
-  public List<ToiletSearchResultResponse> search(String query, int size, Double latitude, Double longitude) {
+  public List<ToiletSearchResultResponse> search(
+      String query, int size, Double latitude, Double longitude) {
     if (query == null || query.isBlank()) return List.of();
 
     try {
@@ -57,7 +58,8 @@ public class ToiletSearchService {
 
   // ── private helpers ──────────────────────────────────────────────────────
 
-  private String buildQuery(String query, int size, Double latitude, Double longitude) throws Exception {
+  private String buildQuery(String query, int size, Double latitude, Double longitude)
+      throws Exception {
     boolean isChosung = ChosungUtils.isChosungOnly(query);
     // 사용자 검색어도 공백/특수문자 제거 후 순수 초성만 추출
     String chosungQuery = ChosungUtils.extractChosung(query);
@@ -70,11 +72,16 @@ public class ToiletSearchService {
           Map.of(
               "multi_match",
               Map.of(
-                  "query", query,
-                  "fields", List.of("name^10", "address"),
-                  "type", "best_fields",
-                  "minimum_should_match", "75%",
-                  "boost", 5.0)));
+                  "query",
+                  query,
+                  "fields",
+                  List.of("name^10", "address"),
+                  "type",
+                  "best_fields",
+                  "minimum_should_match",
+                  "75%",
+                  "boost",
+                  5.0)));
 
       // 2. 접두사 검색 (나비 -> 나비상가)
       shouldClauses.add(
@@ -91,26 +98,33 @@ public class ToiletSearchService {
 
     // 5. 초성 중간 포함 검색 (ㄴㅂ -> 강남북동화장실) - 낮은 가중치
     shouldClauses.add(
-        Map.of("wildcard", Map.of("nameChosung", Map.of("value", "*" + chosungQuery + "*", "boost", 1.0))));
+        Map.of(
+            "wildcard",
+            Map.of("nameChosung", Map.of("value", "*" + chosungQuery + "*", "boost", 1.0))));
 
     // 5. 주소 초성 검색 (참고용)
     shouldClauses.add(
-        Map.of("wildcard", Map.of("addressChosung", Map.of("value", "*" + chosungQuery + "*", "boost", 0.5))));
+        Map.of(
+            "wildcard",
+            Map.of("addressChosung", Map.of("value", "*" + chosungQuery + "*", "boost", 0.5))));
 
     java.util.LinkedHashMap<String, Object> queryBody = new java.util.LinkedHashMap<>();
-    queryBody.put("query", Map.of("bool", Map.of("should", shouldClauses, "minimum_should_match", 1)));
+    queryBody.put(
+        "query", Map.of("bool", Map.of("should", shouldClauses, "minimum_should_match", 1)));
     queryBody.put("size", size);
 
     // 화장실 검색 특성상 사용자와의 거리를 1순위로, 텍스트 일치도를 2순위로 정렬
     if (latitude != null && longitude != null) {
-      queryBody.put("sort", List.of(
-          Map.of("_geo_distance", Map.of(
-              "location", Map.of("lat", latitude, "lon", longitude),
-              "order", "asc",
-              "unit", "m"
-          )),
-          Map.of("_score", "desc")
-      ));
+      queryBody.put(
+          "sort",
+          List.of(
+              Map.of(
+                  "_geo_distance",
+                  Map.of(
+                      "location", Map.of("lat", latitude, "lon", longitude),
+                      "order", "asc",
+                      "unit", "m")),
+              Map.of("_score", "desc")));
     }
 
     return objectMapper.writeValueAsString(queryBody);
