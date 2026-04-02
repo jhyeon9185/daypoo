@@ -2,7 +2,7 @@
 
 우리 프로젝트(DayPoo)는 원본 저장소(`Upstream`)를 안전하게 보호하고, 각자의 공간에서 자유롭게 실험하며 코드를 작성할 수 있도록 **Fork(포크) 기반 협업 방식**을 채택했습니다.
 
-새롭게 합류하신 팀원분들은 아래의 1~5단계를 순서대로 따라 초기 세팅과 일일 개발 사이클을 연습해 보세요!
+새롭게 합류하신 팀원분들은 아래의 1~8단계를 순서대로 따라 초기 세팅과 일일 개발 사이클을 연습해 보세요!
 
 ---
 
@@ -14,8 +14,8 @@
 2. 우측 상단의 **[Fork]** 버튼을 눌러 자신의 GitHub 계정으로 저장소를 통째로 복사합니다.
 3. 내 계정으로 복사된(Fork된) 저장소의 주소를 복사한 뒤, 내 컴퓨터(로컬) 터미널을 열고 클론합니다.
    ```bash
-   # 팀원의 터미널에서 실행
-   git clone [내 깃허브 계정에 Fork된 저장소 주소 URL]
+   # 내 깃허브 계정에 Fork된 저장소 주소 URL로 클론
+   git clone https://github.com/<YOUR_ID>/daypoo.git
    cd daypoo
    ```
 
@@ -25,13 +25,13 @@
 
 ```bash
 # 원본 저장소 주소를 'upstream'이라는 이름으로 등록
-git remote add upstream [DayPoo 원본 저장소 주소 URL]
+git remote add upstream https://github.com/<ORG_ID>/daypoo.git
 
 # 제대로 등록되었는지 확인 (origin과 upstream 두 개가 보이면 정상)
 git remote -v
 ```
 
-### 3단계: 필수 초기 세팅 실행 (매우 중요 ⭐️)
+### 3단계: 필수 전역 초기 세팅 (매우 중요 ⭐️)
 
 클론을 받았어도 아직 내 컴퓨터에는 **문법 검사 및 커밋 규칙을 제어하는 봇(Husky)**이 설치되어 있지 않습니다.
 
@@ -46,41 +46,30 @@ npm install
 
 루트 `npm install`은 Git Hook만 활성화합니다. 실제 개발에 필요한 라이브러리는 각 폴더에서 따로 설치해야 합니다.
 
-#### ⚛️ 프론트엔드 (React + Vite)
-
+#### ⚛️ 프론트엔드 (React 19 + Vite + Tailwind v4)
 ```bash
 cd frontend
 npm install
 ```
 
-#### ☕ 백엔드 (Spring Boot + Gradle)
-
-Gradle은 빌드 시 의존성을 자동으로 다운로드합니다. 아래 명령어를 실행하면 의존성을 미리 받아올 수 있습니다.
-
+#### ☕ 백엔드 (Spring Boot 3.4 + Java 21)
+Gradle은 빌드 시 의존성을 자동으로 다운로드합니다. 아래 명령어로 의존성을 미리 받아오고 프로젝트를 빌드해 보세요.
 ```bash
 cd backend
+# Windows (PowerShell)
+.\gradlew.bat build -x test
 
-# Windows — CMD
-gradlew.bat dependencies
-
-# Windows — PowerShell
-.\gradlew.bat dependencies
-
-# Windows — Git Bash  /  Mac  /  Linux
-./gradlew dependencies
+# Mac / Linux / Git Bash
+./gradlew build -x test
 ```
 
-> 💡 **Tip:** VS Code나 IntelliJ의 기본 터미널이 **Git Bash**로 설정되어 있다면 OS에 상관없이 `./gradlew dependencies`를 사용하세요.
-
-#### 🐍 AI 서비스 (Python)
-
+#### 🐍 AI 서비스 (Python 3.12 + FastAPI)
 ```bash
 cd ai-service
-
 # 가상환경 생성 (최초 1회)
 python -m venv .venv
 
-# 가상환경 활성화
+# 가상환경 활성화 (쉘에 따라 다름)
 .venv\Scripts\activate         # Windows (CMD / PowerShell)
 source .venv/bin/activate      # Windows (Git Bash) / Mac / Linux
 
@@ -88,13 +77,9 @@ source .venv/bin/activate      # Windows (Git Bash) / Mac / Linux
 pip install -r requirements.txt
 ```
 
-> 💡 **Tip:** 이후 AI 서비스 작업 시에는 매번 가상환경을 활성화(`activate`)한 후 작업해주세요!
-
 ---
 
 ## 💻 [매일 반복] 일일 기능 개발 사이클
-
-자, 이제 **'새로운 기능(예: 지도 마커 추가)'**을 개발하라는 임무를 받았다고 가정해 봅시다. 매일 개발을 시작할 때와 끝낼 때는 아래 사이클을 반복합니다.
 
 ### 5단계: 최신화 및 브랜치 생성
 
@@ -104,49 +89,44 @@ pip install -r requirements.txt
 # 1. 원본(upstream)의 최신 코드를 받아와서 내 로컬 main 폴더를 최신화
 git pull upstream main
 
-# 2. 내 작업용 독립 브랜치 생성 및 이동 (규칙: 자율, 권장: feature/[기능명])
+# 2. 내 작업용 독립 브랜치 생성 및 이동 (규칙: feature/[기능명])
 git checkout -b feature/map-marker
 ```
 
 ### 6단계: 열심히 코딩하고 커밋하기
 
-이제 코드를 열심히 작성합니다! 에러가 나든 지저분하게 짜든 괜찮습니다.
-작업을 마치고 저장을 한 뒤, 커밋을 시도합니다.
+코드를 열심히 작성하고 저장을 한 뒤, 커밋을 시도합니다.
 
 ```bash
 git add .
-
 # 우리가 설정한 규칙에 맞게 커밋 메시지 작성! (타입: 내용)
 git commit -m "feat: 카카오맵 마커 렌더링 추가"
 ```
 
 > **🪄 여기서 마법 발생!**
-> 커밋을 누르는 순간 Husky가 자동으로 실행되어, 내가 수정한 코드의 들여쓰기와 띄어쓰기를(Prettier, Spotless 등) **최고의 표준에 맞게 자동으로 착착 다림질해 줍니다.** 만약 치명적인 오류가 있다면 여기서 멈춰서 알려줍니다!
+> 커밋을 누르는 순간 Husky가 자동으로 실행되어, 내가 수정한 코드의 들여쓰기와 띄어쓰기를(Prettier, Spotless, Black 등) **최고의 표준에 맞게 자동으로 착착 다림질해 줍니다.** 만약 치명적인 오류가 있다면 여기서 멈춰서 알려줍니다!
 
 검사를 무사히 통과했다면, 다림질된 코드를 **나의 깃허브(origin)**에 올립니다.
-
 ```bash
 git push origin feature/map-marker
 ```
 
 ### 7단계: 원본에 합쳐달라고 요청하기 (Pull Request 날리기)
 
-1. 팀원의 깃허브(내 포크된 저장소)에 들어가면 위에 **"Compare & pull request"**라는 초록색 버튼이 뜹니다. 클릭!
+1. 팀원의 깃허브(내 포크된 저장소)에 접속하여 **"Compare & pull request"** 버튼을 클릭합니다.
 2. 목적지(base)를 **원본 저장소(Upstream)의 `main`**으로 잘 맞춥니다.
-3. 우리가 아까 만들어둔 **PR 템플릿(체크리스트)**이 자동으로 뜹니다. 내용을 정성스럽게 채우고 제출!
-4. 리뷰어(팀장 등)가 코드를 확인하고 승인(Approve)하면, 자랑스럽게 짠 내 코드가 원본 저장소에 "Squash and Merge"로 영원히 기록됩니다! 🎉
+3. PR 템플릿(체크리스트)을 정성스럽게 채우고 제출합니다.
+4. 리뷰어가 승인(Approve)하면, 원본 저장소에 **"Squash and Merge"**로 영원히 기록됩니다! 🎉
 
 ### 8단계: PR 머지 후 — 팀원 모두 최신 코드 동기화하기
 
-내 PR이 원본 저장소(`Upstream`)의 `main`에 머지되었다면, **모든 팀원은 자신의 로컬을 최신 상태로 업데이트**해야 합니다. 그래야 다음 작업이 최신 코드 위에서 시작됩니다.
+내 PR이 원본 저장소(`Upstream`)의 `main`에 머지되었다면, **모든 팀원은 자신의 로컬을 최신 상태로 업데이트**해야 합니다.
 
 ```bash
 # 1. main 브랜치로 이동
 git checkout main
 
-# 2. 원본(upstream)의 최신 코드를 받아와서 내 로컬 main 동기화
-#    ⚠️ 'git pull origin main'이 아닌 'upstream'임을 주의!
-#       origin = 내 포크 저장소 / upstream = 원본(팀) 저장소
+# 2. 원본(upstream)의 최신 코드를 받아와서 내 로컬 main 동기화 (주의: origin이 아닌 upstream!)
 git pull upstream main
 
 # 3. (선택) 내 포크(origin)에도 반영해두기
@@ -156,15 +136,10 @@ git push origin main
 git checkout -b feature/다음-기능
 ```
 
-> **💡 왜 `origin`이 아닌 `upstream`인가요?**
->
-> - `origin` = **내 포크 저장소** (내 GitHub 계정의 복사본)
-> - `upstream` = **원본 팀 저장소** (PR이 머지된 실제 목적지)
->
-> PR이 머지되는 곳은 `upstream`이므로, 최신 코드도 `upstream`에서 받아와야 합니다!
-
 ---
 
-> **전체 흐름 요약**:
->
-> `Fork + Clone` ➔ `upstream 등록` ➔ `최신화(pull upstream)` ➔ `브랜치 생성` ➔ `코딩 + 커밋` ➔ `내 포크에 push` ➔ `PR 제출` ➔ `머지 완료` ➔ **`다시 pull upstream`** ➔ ♻️ 무한 반복!
+> **💡 핵심 요약**:
+> - `origin` = **내 포크 저장소** (내 전용 놀이터)
+> - `upstream` = **원본 팀 저장소** (실제 배포되는 곳)
+> - **PR은 무조건 `upstream/main`으로 날립니다.**
+> - **커밋 시 자동 포맷팅이 작동하므로 스타일 걱정 없이 코딩하세요!** 🚀
