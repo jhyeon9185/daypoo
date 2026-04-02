@@ -2,12 +2,14 @@ package com.daypoo.api.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
+@Disabled("외부 공공데이터 API를 실제 호출하는 통합 테스트 - 로컬에서만 수동 실행")
 @SpringBootTest
 @ActiveProfiles("test")
 public class PublicDataSyncTest {
