@@ -85,7 +85,9 @@ public class AdminController {
     return ResponseEntity.ok(adminSettingsService.updateSettings(request));
   }
 
-  @Operation(summary = "OpenSearch 검색 인덱스 재구축", description = "DB의 모든 화장실 데이터를 바탕으로 OpenSearch 통합 검색 인덱스를 처음부터 다시 생성합니다.")
+  @Operation(
+      summary = "OpenSearch 검색 인덱스 재구축",
+      description = "DB의 모든 화장실 데이터를 바탕으로 OpenSearch 통합 검색 인덱스를 처음부터 다시 생성합니다.")
   @PostMapping("/reindex-search")
   public ResponseEntity<String> reindexSearch() {
     adminService.reindexSearch();
