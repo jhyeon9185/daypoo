@@ -89,10 +89,14 @@ public class ToiletSearchService {
           Map.of(
               "multi_match",
               Map.of(
-                  "query", query,
-                  "fields", List.of("name^10", "address"),
-                  "type", "best_fields",
-                  "boost", 5.0)));
+                  "query",
+                  query,
+                  "fields",
+                  List.of("name^10", "address"),
+                  "type",
+                  "best_fields",
+                  "boost",
+                  5.0)));
       shouldClauses.add(
           Map.of("match_phrase_prefix", Map.of("name", Map.of("query", query, "boost", 15.0))));
     }
@@ -119,20 +123,24 @@ public class ToiletSearchService {
           Map.of(
               "function_score",
               Map.of(
-                  "query", Map.of("bool", Map.of("should", shouldClauses, "minimum_should_match", 1)),
+                  "query",
+                  Map.of("bool", Map.of("should", shouldClauses, "minimum_should_match", 1)),
                   "functions",
-                      List.of(
+                  List.of(
+                      Map.of(
+                          "gauss",
                           Map.of(
-                              "gauss",
+                              "location",
                               Map.of(
-                                  "location",
-                                  Map.of(
-                                      "origin", Map.of("lat", latitude, "lon", longitude),
-                                      "offset", "500m",
-                                      "scale", "3km")),
-                              "weight", 2.0)),
-                  "score_mode", "multiply",
-                  "boost_mode", "multiply"));
+                                  "origin", Map.of("lat", latitude, "lon", longitude),
+                                  "offset", "500m",
+                                  "scale", "3km")),
+                          "weight",
+                          2.0)),
+                  "score_mode",
+                  "multiply",
+                  "boost_mode",
+                  "multiply"));
     } else {
       finalQuery = Map.of("bool", Map.of("should", shouldClauses, "minimum_should_match", 1));
     }
