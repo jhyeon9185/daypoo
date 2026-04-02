@@ -16,6 +16,7 @@ import com.daypoo.api.mapper.PooRecordMapper;
 import com.daypoo.api.repository.PooRecordRepository;
 import com.daypoo.api.repository.ToiletRepository;
 import com.daypoo.api.repository.UserRepository;
+import com.daypoo.api.repository.VisitLogRepository;
 import java.util.Collections;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,12 +28,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import org.springframework.test.util.ReflectionTestUtils;
-
-import com.daypoo.api.repository.UserRepository;
-import com.daypoo.api.repository.VisitLogRepository;
-import com.daypoo.api.repository.ToiletRepository;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -112,7 +109,8 @@ class PooRecordServiceTest {
 
     verify(recordRepository).save(any(PooRecord.class));
     verify(userRepository).save(testUser);
-    verify(eventPublisher, times(1)).publishEvent(any(com.daypoo.api.event.PooRecordCreatedEvent.class));
+    verify(eventPublisher, times(1))
+        .publishEvent(any(com.daypoo.api.event.PooRecordCreatedEvent.class));
   }
 
   @Test
