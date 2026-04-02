@@ -60,12 +60,17 @@ Gradle은 빌드 시 의존성을 자동으로 다운로드합니다. 아래 명
 ```bash
 cd backend
 
-# Windows
+# Windows — CMD
 gradlew.bat dependencies
 
-# Mac / Linux
+# Windows — PowerShell
+.\gradlew.bat dependencies
+
+# Windows — Git Bash  /  Mac  /  Linux
 ./gradlew dependencies
 ```
+
+> 💡 **Tip:** VS Code나 IntelliJ의 기본 터미널이 **Git Bash**로 설정되어 있다면 OS에 상관없이 `./gradlew dependencies`를 사용하세요.
 
 #### 🐍 AI 서비스 (Python)
 
@@ -76,8 +81,8 @@ cd ai-service
 python -m venv .venv
 
 # 가상환경 활성화
-.venv\Scripts\activate         # Windows
-# source .venv/bin/activate    # Mac / Linux
+.venv\Scripts\activate         # Windows (CMD / PowerShell)
+source .venv/bin/activate      # Windows (Git Bash) / Mac / Linux
 
 # 의존성 설치
 pip install -r requirements.txt
@@ -152,6 +157,7 @@ git checkout -b feature/다음-기능
 ```
 
 > **💡 왜 `origin`이 아닌 `upstream`인가요?**
+>
 > - `origin` = **내 포크 저장소** (내 GitHub 계정의 복사본)
 > - `upstream` = **원본 팀 저장소** (PR이 머지된 실제 목적지)
 >
