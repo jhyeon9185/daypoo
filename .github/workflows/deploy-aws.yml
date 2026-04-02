@@ -135,17 +135,16 @@ jobs:
             docker compose -f docker-compose.prod.yml down --remove-orphans
             docker compose -f docker-compose.prod.yml up -d
 
-            # 백엔드 헬스체크 (최대 3분 대기)
+            # 백엔드 헬스체크 - EC2 호스트에서 직접 HTTP 체크 (최대 3분 대기)
             echo "⏳ Waiting for backend to become healthy..."
             for i in $(seq 1 18); do
-              STATUS=$(docker inspect --format='{{.State.Health.Status}}' daypoo-backend 2>/dev/null || echo "starting")
-              echo "  [$i/18] Status: $STATUS"
-              if [ "$STATUS" = "healthy" ]; then
-                echo "✅ Backend is healthy!"
+              if curl -sf http://localhost/actuator/health > /dev/null 2>&1; then
+                echo "✅ Backend is healthy! [$i/18]"
                 break
               fi
+              echo "  [$i/18] Not ready yet..."
               if [ $i -eq 18 ]; then
-                echo "❌ Backend failed to become healthy. Last 50 lines of logs:"
+                echo "❌ Backend failed to respond after 3 minutes. Last 50 lines of logs:"
                 docker compose -f docker-compose.prod.yml logs backend --tail=50
                 exit 1
               fi

@@ -31,11 +31,11 @@ services:
       - AI_SERVICE_URL=http://ai:8000
       - OPENSEARCH_URL=${OPENSEARCH_URL}
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:8080/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 90s
+      start_period: 60s
     depends_on:
       - redis
     restart: always
