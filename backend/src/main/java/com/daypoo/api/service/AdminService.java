@@ -34,7 +34,6 @@ public class AdminService {
   private final InquiryRepository inquiryRepository;
   private final PaymentRepository paymentRepository;
   private final SystemLogService systemLogService;
-  private final ToiletIndexingService toiletIndexingService;
 
   @Transactional(readOnly = true)
   public AdminStatsResponse getAdminStats() {
@@ -180,10 +179,5 @@ public class AdminService {
       inquiryRepository.save(inquiry);
     }
     inquiryRepository.flush();
-  }
-
-  public void reindexSearch() {
-    log.info("[Admin] Manual search reindexing triggered.");
-    toiletIndexingService.forceReindex();
   }
 }
