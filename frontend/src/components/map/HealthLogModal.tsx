@@ -77,8 +77,7 @@ export function HealthLogModal({
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        className="relative z-10 w-full max-w-[480px] bg-white rounded-[32px] overflow-hidden flex flex-col shadow-2xl"
-        style={{ maxHeight: 'calc(100vh - 80px)' }}
+        className="relative z-10 w-full max-w-[480px] bg-white rounded-[32px] overflow-hidden flex flex-col shadow-2xl max-h-[calc(100vh-80px)]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -93,6 +92,7 @@ export function HealthLogModal({
           </div>
           <button
             onClick={handleBackdropClick}
+            aria-label="닫기"
             className="w-10 h-10 rounded-full bg-[#f4faf6] text-[#7a9e8a] flex items-center justify-center hover:bg-[#e8f3ec] transition-colors"
           >
             <X size={20} />
@@ -106,18 +106,14 @@ export function HealthLogModal({
               <m.div
                 initial={false}
                 animate={{ scaleX: i <= step ? 1 : 0 }}
-                style={{ transformOrigin: 'left' }}
-                className="h-full bg-[#1B4332] w-full"
+                className="h-full bg-[#1B4332] w-full origin-left"
               />
             </div>
           ))}
         </div>
 
         {/* Content */}
-        <div
-          className="flex-1 overflow-y-auto px-6 py-6 custom-scrollbar"
-          style={{ minHeight: '320px' }}
-        >
+        <div className="flex-1 overflow-y-auto px-6 py-6 custom-scrollbar min-h-[320px]">
           <AnimatePresence mode="wait">
             <m.div
               key={step}
@@ -176,6 +172,7 @@ export function HealthLogModal({
                       <button
                         key={key}
                         onClick={() => setColor(key)}
+                        aria-label={`${val.label} 색상 선택`}
                         className={`flex flex-col items-center gap-3 p-4 rounded-2xl border-2 transition-all ${
                           color === key
                             ? 'border-[#1B4332] bg-[#f4faf6]'
@@ -184,7 +181,7 @@ export function HealthLogModal({
                       >
                         <div
                           className="w-12 h-12 rounded-full shadow-inner"
-                          style={{ background: val.hex }}
+                          style={{ backgroundColor: val.hex }}
                         />
                         <span className="text-sm font-bold text-[#1a2b22]">{val.label}</span>
                       </button>
@@ -251,6 +248,7 @@ export function HealthLogModal({
           {step > 0 && (
             <button
               onClick={() => setStep(step - 1)}
+              aria-label="이전 단계"
               className="flex items-center justify-center w-14 h-14 rounded-2xl border-2 border-[#eef5f0] text-[#7a9e8a] hover:bg-[#f4faf6]"
             >
               <ChevronLeft size={24} />

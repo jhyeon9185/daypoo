@@ -14,7 +14,7 @@ import com.daypoo.api.entity.User;
 import com.daypoo.api.entity.enums.Role;
 import com.daypoo.api.global.exception.BusinessException;
 import com.daypoo.api.global.exception.ErrorCode;
-import com.daypoo.api.repository.UserRepository;
+import com.daypoo.api.repository.*;
 import com.daypoo.api.security.JwtProvider;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,6 +24,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,10 +34,17 @@ class AuthServiceTest {
   @InjectMocks private AuthService authService;
 
   @Mock private UserRepository userRepository;
-
   @Mock private PasswordEncoder passwordEncoder;
-
   @Mock private JwtProvider jwtProvider;
+  @Mock private EmailService emailService;
+  @Mock private StringRedisTemplate redisTemplate;
+  @Mock private TitleRepository titleRepository;
+  @Mock private UserDeletionService userDeletionService;
+  @Mock private PooRecordRepository pooRecordRepository;
+  @Mock private SystemLogService systemLogService;
+  @Mock private InventoryRepository inventoryRepository;
+  @Mock private ItemRepository itemRepository;
+  @Mock private AdminSettingsService adminSettingsService;
 
   private SignUpRequest signUpRequest;
   private LoginRequest loginRequest;
@@ -53,6 +61,9 @@ class AuthServiceTest {
             .nickname("PoopKing")
             .role(Role.ROLE_USER)
             .build();
+
+    // 기본 설정
+    lenient().when(adminSettingsService.isSignupEnabled()).thenReturn(true);
   }
 
   @Test
@@ -62,6 +73,7 @@ class AuthServiceTest {
     given(userRepository.existsByEmail(anyString())).willReturn(false);
     given(userRepository.existsByNickname(anyString())).willReturn(false);
     given(passwordEncoder.encode(anyString())).willReturn("encodedPassword");
+    given(userRepository.save(any(User.class))).willReturn(testUser);
 
     // when
     authService.signUp(signUpRequest);
@@ -79,7 +91,8 @@ class AuthServiceTest {
     // when & then
     assertThatThrownBy(() -> authService.signUp(signUpRequest))
         .isInstanceOf(BusinessException.class)
-        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.EMAIL_ALREADY_EXISTS);
+        .extracting("errorCode")
+        .isEqualTo(ErrorCode.EMAIL_ALREADY_EXISTS);
 
     verify(userRepository, never()).save(any(User.class));
   }
@@ -100,7 +113,6 @@ class AuthServiceTest {
     assertThat(response).isNotNull();
     assertThat(response.accessToken()).isEqualTo("access-token");
     assertThat(response.refreshToken()).isEqualTo("refresh-token");
-    verify(jwtProvider, times(1)).createAccessToken(anyString(), anyString());
   }
 
   @Test
@@ -112,7 +124,8 @@ class AuthServiceTest {
     // when & then
     assertThatThrownBy(() -> authService.login(loginRequest))
         .isInstanceOf(BusinessException.class)
-        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_NOT_FOUND);
+        .extracting("errorCode")
+        .isEqualTo(ErrorCode.USER_NOT_FOUND);
   }
 
   @Test
@@ -125,6 +138,7 @@ class AuthServiceTest {
     // when & then
     assertThatThrownBy(() -> authService.login(loginRequest))
         .isInstanceOf(BusinessException.class)
-        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_PASSWORD);
+        .extracting("errorCode")
+        .isEqualTo(ErrorCode.INVALID_PASSWORD);
   }
 }

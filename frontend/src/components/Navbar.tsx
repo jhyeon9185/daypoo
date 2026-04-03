@@ -101,20 +101,7 @@ export function Navbar({ openAuth }: { openAuth: (mode: 'login' | 'signup') => v
 
   return (
     <>
-      <div
-        style={{
-          position: 'fixed',
-          top: '24px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 100,
-          width: '100%',
-          display: 'flex',
-          justifyContent: 'center',
-          padding: '0 16px',
-          pointerEvents: 'none',
-        }}
-      >
+      <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] w-full flex justify-center px-4 pointer-events-none">
         <m.nav
           variants={{
             visible: { y: 0, opacity: 1 },
@@ -122,40 +109,20 @@ export function Navbar({ openAuth }: { openAuth: (mode: 'login' | 'signup') => v
           }}
           animate={hidden ? 'hidden' : 'visible'}
           transition={{ duration: 0.35, ease: 'easeInOut' }}
-          style={{
-            scale,
-            pointerEvents: 'auto',
-            display: 'flex',
-            alignItems: 'center',
-            background: '#1A2B27',
-            borderRadius: '100px',
-            padding: '12px 20px 12px 24px',
-            boxShadow: '0 12px 48px rgba(0,0,0,0.3)',
-            gap: '16px',
-          }}
+          className="flex items-center bg-[#1A2B27] rounded-full px-5 py-3 shadow-[0_12px_48px_rgba(0,0,0,0.3)] gap-4 pointer-events-auto"
+          style={{ scale }}
         >
           {/* 로고 */}
           <Link
             to="/main"
             onClick={handleLogoClick}
-            style={{
-              fontFamily: 'SchoolSafetyNotification, sans-serif',
-              fontSize: '22px',
-              color: '#fff',
-              textDecoration: 'none',
-              letterSpacing: '-0.01em',
-              fontWeight: 700,
-              flexShrink: 0,
-            }}
+            className="font-['SchoolSafetyNotification'] text-[22px] text-white no-underline tracking-[-0.01em] font-bold shrink-0"
           >
-            Day<span style={{ color: '#E8A838' }}>.</span>Poo
+            Day<span className="text-[#E8A838]">.</span>Poo
           </Link>
 
           {/* 구분선 - 데스크톱 */}
-          <div
-            className="hidden md:block"
-            style={{ width: '1px', height: '16px', background: 'rgba(255,255,255,0.15)' }}
-          />
+          <div className="hidden md:block w-px h-4 bg-white/15" />
 
           {/* 네비 링크 - 데스크톱 */}
           <div
@@ -175,20 +142,16 @@ export function Navbar({ openAuth }: { openAuth: (mode: 'login' | 'signup') => v
           </div>
 
           {/* 구분선 - 데스크톱 */}
-          <div
-            className="hidden md:block"
-            style={{ width: '1px', height: '16px', background: 'rgba(255,255,255,0.15)' }}
-          />
+          <div className="hidden md:block w-px h-4 bg-white/15" />
 
           {/* 우측 — 데스크톱 인증 버튼 */}
-          <div className="hidden md:flex" style={{ alignItems: 'center', gap: '12px' }}>
+          <div className="hidden md:flex items-center gap-3">
             {isAuthenticated ? (
               <>
                 {/* 글로벌 기록하기 버튼 (로그인 시에만) */}
                 <button
                   onClick={() => setShowHealthLog(true)}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold transition-all hover:opacity-90 active:scale-95"
-                  style={{ background: '#E8A838', color: '#1A2B27', border: 'none', flexShrink: 0 }}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold transition-all hover:opacity-90 active:scale-95 bg-[#E8A838] text-[#1A2B27] shrink-0"
                 >
                   <Plus size={14} />
                   기록하기
@@ -196,16 +159,14 @@ export function Navbar({ openAuth }: { openAuth: (mode: 'login' | 'signup') => v
 
                 <Link
                   to="/mypage"
-                  className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all hover:bg-white/10"
-                  style={{ color: 'rgba(255,255,255,0.85)' }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all hover:bg-white/10 text-white/85"
                 >
                   <User size={15} />
                   마이페이지
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-semibold transition-all hover:bg-white/10"
-                  style={{ color: 'rgba(255,255,255,0.4)', background: 'none', border: 'none' }}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-full text-[11px] font-semibold transition-all hover:bg-white/10 text-white/40"
                 >
                   <LogOut size={13} />
                   로그아웃
@@ -215,15 +176,13 @@ export function Navbar({ openAuth }: { openAuth: (mode: 'login' | 'signup') => v
               <>
                 <button
                   onClick={() => openAuth('login')}
-                  className="text-sm font-bold transition-all hover:text-white cursor-pointer"
-                  style={{ color: 'rgba(255,255,255,0.6)', background: 'none', border: 'none' }}
+                  className="text-sm font-bold transition-all hover:text-white cursor-pointer text-white/60"
                 >
                   로그인
                 </button>
                 <button
                   onClick={() => openAuth('signup')}
-                  className="text-sm font-bold transition-all hover:text-white cursor-pointer"
-                  style={{ color: 'rgba(255,255,255,0.6)', background: 'none', border: 'none' }}
+                  className="text-sm font-bold transition-all hover:text-white cursor-pointer text-white/60"
                 >
                   회원가입
                 </button>
@@ -237,8 +196,7 @@ export function Navbar({ openAuth }: { openAuth: (mode: 'login' | 'signup') => v
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={() => setNotifOpen(!notifOpen)}
-              className="relative p-2 rounded-full transition-colors hover:bg-white/10 hidden md:flex items-center justify-center"
-              style={{ color: 'rgba(255,255,255,0.6)', background: 'none', border: 'none' }}
+              className="relative p-2 rounded-full transition-colors hover:bg-white/10 hidden md:flex items-center justify-center text-white/60"
               aria-label={unreadCount > 0 ? `알림 (읽지 않은 알림 ${unreadCount}개)` : '알림'}
             >
               <Bell size={18} />
@@ -257,8 +215,8 @@ export function Navbar({ openAuth }: { openAuth: (mode: 'login' | 'signup') => v
           {/* 햄버거 메뉴 - 모바일 */}
           <button
             onClick={() => setDrawerOpen(true)}
-            className="md:hidden flex items-center justify-center p-2 rounded-full transition-colors hover:bg-white/10"
-            style={{ color: 'rgba(255,255,255,0.7)', background: 'none', border: 'none' }}
+            aria-label="메뉴 열기"
+            className="md:hidden flex items-center justify-center p-2 rounded-full transition-colors hover:bg-white/10 text-white/70"
           >
             <Menu size={20} />
           </button>
@@ -283,28 +241,17 @@ export function Navbar({ openAuth }: { openAuth: (mode: 'login' | 'signup') => v
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-              className="fixed top-0 right-0 z-[151] w-[280px] h-full flex flex-col md:hidden"
-              style={{
-                background: 'linear-gradient(180deg, #1A2B27 0%, #0F1D19 100%)',
-                boxShadow: '-8px 0 40px rgba(0,0,0,0.3)',
-              }}
+              className="fixed top-0 right-0 z-[151] w-[280px] h-full flex flex-col md:hidden bg-gradient-to-b from-[#1A2B27] to-[#0F1D19] shadow-[-8px_0_40px_rgba(0,0,0,0.3)]"
             >
               {/* 드로어 헤더 */}
               <div className="flex items-center justify-between px-6 pt-6 pb-4">
-                <span
-                  style={{
-                    fontFamily: 'SchoolSafetyNotification, sans-serif',
-                    fontSize: '20px',
-                    color: '#fff',
-                    fontWeight: 700,
-                  }}
-                >
-                  Day<span style={{ color: '#E8A838' }}>.</span>Poo
+                <span className="font-['SchoolSafetyNotification'] text-xl text-white font-bold">
+                  Day<span className="text-[#E8A838]">.</span>Poo
                 </span>
                 <button
                   onClick={() => setDrawerOpen(false)}
-                  className="w-9 h-9 rounded-full flex items-center justify-center transition-colors hover:bg-white/10"
-                  style={{ color: 'rgba(255,255,255,0.5)', background: 'none', border: 'none' }}
+                  aria-label="메뉴 닫기"
+                  className="w-9 h-9 rounded-full flex items-center justify-center transition-colors hover:bg-white/10 text-white/50"
                 >
                   <X size={20} />
                 </button>
@@ -374,12 +321,7 @@ export function Navbar({ openAuth }: { openAuth: (mode: 'login' | 'signup') => v
                       setDrawerOpen(false);
                       setShowHealthLog(true);
                     }}
-                    className="flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all w-full"
-                    style={{
-                      background: 'rgba(232,168,56,0.12)',
-                      border: 'none',
-                      color: '#E8A838',
-                    }}
+                    className="flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all w-full bg-[#E8A838]/10 text-[#E8A838]"
                   >
                     <Plus size={20} />
                     <span className="text-[15px] font-bold">기록하기</span>
@@ -416,7 +358,6 @@ export function Navbar({ openAuth }: { openAuth: (mode: 'login' | 'signup') => v
                     <button
                       onClick={handleLogout}
                       className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-white/40 hover:bg-white/5 hover:text-white/60 transition-all"
-                      style={{ background: 'none', border: 'none' }}
                     >
                       <LogOut size={18} />
                       <span className="text-sm font-bold">로그아웃</span>
@@ -429,12 +370,7 @@ export function Navbar({ openAuth }: { openAuth: (mode: 'login' | 'signup') => v
                         setDrawerOpen(false);
                         openAuth('login');
                       }}
-                      className="w-full py-3 rounded-2xl text-sm font-bold transition-all"
-                      style={{
-                        background: 'rgba(255,255,255,0.08)',
-                        color: 'rgba(255,255,255,0.8)',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                      }}
+                      className="w-full py-3 rounded-2xl text-sm font-bold transition-all bg-white/10 text-white/80 border border-white/10"
                     >
                       로그인
                     </button>
@@ -443,12 +379,7 @@ export function Navbar({ openAuth }: { openAuth: (mode: 'login' | 'signup') => v
                         setDrawerOpen(false);
                         openAuth('signup');
                       }}
-                      className="w-full py-3 rounded-2xl text-sm font-bold transition-all"
-                      style={{
-                        background: '#E8A838',
-                        color: '#1A2B27',
-                        border: 'none',
-                      }}
+                      className="w-full py-3 rounded-2xl text-sm font-bold transition-all bg-[#E8A838] text-[#1A2B27]"
                     >
                       회원가입
                     </button>

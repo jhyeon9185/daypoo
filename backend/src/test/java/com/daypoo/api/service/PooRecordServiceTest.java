@@ -1,7 +1,6 @@
 package com.daypoo.api.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -12,10 +11,11 @@ import com.daypoo.api.dto.PooRecordResponse;
 import com.daypoo.api.entity.PooRecord;
 import com.daypoo.api.entity.Toilet;
 import com.daypoo.api.entity.User;
+import com.daypoo.api.event.PooRecordCreatedEvent;
 import com.daypoo.api.mapper.PooRecordMapper;
 import com.daypoo.api.repository.PooRecordRepository;
 import com.daypoo.api.repository.ToiletRepository;
-import com.daypoo.api.repository.UserRepository;
+import com.daypoo.api.repository.VisitLogRepository;
 import java.util.Collections;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,6 +27,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,13 +39,14 @@ class PooRecordServiceTest {
 
   @Mock private PooRecordRepository recordRepository;
   @Mock private ToiletRepository toiletRepository;
-  @Mock private UserRepository userRepository;
+  @Mock private UserService userService;
   @Mock private LocationVerificationService locationVerificationService;
   @Mock private GeocodingService geocodingService;
-  @Mock private TitleAchievementService titleAchievementService;
-  @Mock private RankingService rankingService;
-  @Mock private AiClient aiClient;
+  @Mock private ApplicationEventPublisher eventPublisher;
   @Mock private PooRecordMapper recordMapper;
+  @Mock private VisitLogRepository visitLogRepository;
+  @Mock private AiClient aiClient;
+  @Mock private com.daypoo.api.repository.UserRepository userRepository;
 
   private User testUser;
   private Toilet testToilet;
@@ -75,11 +77,12 @@ class PooRecordServiceTest {
   @DisplayName("성공: 배변 기록 생성 및 보상 지급")
   void createRecord_success() {
     // given
-    given(userRepository.findByEmail("test@test.com")).willReturn(Optional.of(testUser));
+    given(userService.getByEmail("test@test.com")).willReturn(testUser);
     given(toiletRepository.findById(100L)).willReturn(Optional.of(testToilet));
-    given(locationVerificationService.isWithinAllowedDistance(eq(100L), anyDouble(), anyDouble()))
-        .willReturn(true);
-    given(locationVerificationService.hasStayedLongEnough(eq(1L), eq(100L))).willReturn(true);
+    given(locationVerificationService.getDistanceToToilet(eq(100L), anyDouble(), anyDouble()))
+        .willReturn(50.0);
+    given(locationVerificationService.getOrSetArrivalTime(anyLong(), anyLong(), any()))
+        .willReturn(System.currentTimeMillis());
     given(geocodingService.reverseGeocode(anyDouble(), anyDouble())).willReturn("역삼1동");
 
     PooRecord savedRecord =
@@ -92,6 +95,7 @@ class PooRecordServiceTest {
     ReflectionTestUtils.setField(savedRecord, "id", 500L);
 
     given(recordRepository.save(any(PooRecord.class))).willReturn(savedRecord);
+    given(userRepository.save(any(User.class))).willReturn(testUser);
 
     PooRecordResponse mockResponse =
         PooRecordResponse.builder().toiletName("강남역 화장실").bristolScale(4).color("Brown").build();
@@ -103,14 +107,48 @@ class PooRecordServiceTest {
     // then
     assertThat(response).isNotNull();
     assertThat(response.toiletName()).isEqualTo("강남역 화장실");
-    assertThat(testUser.getExp()).isEqualTo(10L);
-    assertThat(testUser.getPoints()).isEqualTo(5L);
 
     verify(recordRepository).save(any(PooRecord.class));
-    verify(userRepository).save(testUser);
-    verify(rankingService).updateGlobalRank(testUser);
-    verify(rankingService).updateRegionRank(eq(testUser), eq("역삼1동"));
-    verify(titleAchievementService).checkAndGrantTitles(testUser);
+    verify(eventPublisher).publishEvent(any(PooRecordCreatedEvent.class));
+  }
+
+  @Test
+  @DisplayName("성공: 화장실 정보 없이 배변 기록 생성")
+  void createRecord_withoutToilet_success() {
+    // given
+    PooRecordCreateRequest noToiletRequest =
+        new PooRecordCreateRequest(
+            null,
+            4,
+            "Brown",
+            Collections.singletonList("Good"),
+            Collections.singletonList("Coffee"),
+            37.123,
+            127.123,
+            null);
+
+    given(userService.getByEmail("test@test.com")).willReturn(testUser);
+    given(geocodingService.reverseGeocode(anyDouble(), anyDouble())).willReturn("역삼1동");
+
+    PooRecord savedRecord =
+        PooRecord.builder().user(testUser).toilet(null).bristolScale(4).color("Brown").build();
+    ReflectionTestUtils.setField(savedRecord, "id", 501L);
+
+    given(recordRepository.save(any(PooRecord.class))).willReturn(savedRecord);
+    given(userRepository.save(any(User.class))).willReturn(testUser);
+
+    PooRecordResponse mockResponse =
+        PooRecordResponse.builder().toiletName(null).bristolScale(4).color("Brown").build();
+    given(recordMapper.toResponse(any(PooRecord.class))).willReturn(mockResponse);
+
+    // when
+    PooRecordResponse response = pooRecordService.createRecord("test@test.com", noToiletRequest);
+
+    // then
+    assertThat(response).isNotNull();
+    assertThat(response.toiletName()).isNull();
+    verify(recordRepository).save(any(PooRecord.class));
+    verify(eventPublisher).publishEvent(any(PooRecordCreatedEvent.class));
   }
 
   @Test
@@ -128,11 +166,10 @@ class PooRecordServiceTest {
             127.123,
             "base64image");
 
-    given(userRepository.findByEmail("test@test.com")).willReturn(Optional.of(testUser));
+    given(userService.getByEmail("test@test.com")).willReturn(testUser);
     given(toiletRepository.findById(100L)).willReturn(Optional.of(testToilet));
-    given(locationVerificationService.isWithinAllowedDistance(eq(100L), anyDouble(), anyDouble()))
-        .willReturn(true);
-    given(locationVerificationService.hasStayedLongEnough(eq(1L), eq(100L))).willReturn(true);
+    given(locationVerificationService.getDistanceToToilet(eq(100L), anyDouble(), anyDouble()))
+        .willReturn(50.0);
     given(geocodingService.reverseGeocode(anyDouble(), anyDouble())).willReturn("역삼1동");
 
     AiAnalysisResponse aiResponse =
@@ -153,8 +190,9 @@ class PooRecordServiceTest {
             .bristolScale(5)
             .color("Golden")
             .build();
-    ReflectionTestUtils.setField(savedRecord, "id", 501L);
+    ReflectionTestUtils.setField(savedRecord, "id", 502L);
     given(recordRepository.save(any(PooRecord.class))).willReturn(savedRecord);
+    given(userRepository.save(any(User.class))).willReturn(testUser);
 
     PooRecordResponse mockResponseAi =
         PooRecordResponse.builder().bristolScale(5).color("Golden").build();
@@ -167,55 +205,5 @@ class PooRecordServiceTest {
     assertThat(response.bristolScale()).isEqualTo(5);
     assertThat(response.color()).isEqualTo("Golden");
     verify(aiClient).analyzePoopImage(anyString());
-  }
-
-  @Test
-  @org.junit.jupiter.api.Disabled("개발 모드로 인해 예외 발생 비활성화됨")
-  @DisplayName("실패: 화장실 반경 밖에서 인증 시도")
-  void createRecord_fail_distance() {
-    // given
-    given(userRepository.findByEmail("test@test.com")).willReturn(Optional.of(testUser));
-    given(toiletRepository.findById(100L)).willReturn(Optional.of(testToilet));
-    given(locationVerificationService.isWithinAllowedDistance(eq(100L), anyDouble(), anyDouble()))
-        .willReturn(false);
-
-    // when & then
-    assertThatThrownBy(() -> pooRecordService.createRecord("test@test.com", request))
-        .isInstanceOf(RuntimeException.class)
-        .hasMessageContaining("화장실 반경(150m) 밖");
-  }
-
-  @Test
-  @org.junit.jupiter.api.Disabled("개발 모드로 인해 예외 발생 비활성화됨")
-  @DisplayName("실패: 쿨다운 기간 내 중복 인증 시도")
-  void createRecord_fail_cooldown() {
-    // given
-    given(userRepository.findByEmail("test@test.com")).willReturn(Optional.of(testUser));
-    given(toiletRepository.findById(100L)).willReturn(Optional.of(testToilet));
-    given(locationVerificationService.isWithinAllowedDistance(eq(100L), anyDouble(), anyDouble()))
-        .willReturn(true);
-    given(locationVerificationService.hasStayedLongEnough(eq(1L), eq(100L))).willReturn(true);
-
-    // when & then
-    assertThatThrownBy(() -> pooRecordService.createRecord("test@test.com", request))
-        .isInstanceOf(RuntimeException.class)
-        .hasMessageContaining("이미 최근 코인/경험치를 획득한 화장실");
-  }
-
-  @Test
-  @org.junit.jupiter.api.Disabled("개발 모드로 인해 예외 발생 비활성화됨")
-  @DisplayName("실패: 최소 체류 시간(1분) 미달")
-  void createRecord_fail_stay_time() {
-    // given
-    given(userRepository.findByEmail("test@test.com")).willReturn(Optional.of(testUser));
-    given(toiletRepository.findById(100L)).willReturn(Optional.of(testToilet));
-    given(locationVerificationService.isWithinAllowedDistance(eq(100L), anyDouble(), anyDouble()))
-        .willReturn(true);
-    given(locationVerificationService.hasStayedLongEnough(eq(1L), eq(100L))).willReturn(false);
-
-    // when & then
-    assertThatThrownBy(() -> pooRecordService.createRecord("test@test.com", request))
-        .isInstanceOf(RuntimeException.class)
-        .hasMessageContaining("최소 1분 이상 화장실에 머물러야 합니다");
   }
 }
