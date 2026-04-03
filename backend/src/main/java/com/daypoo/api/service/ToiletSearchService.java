@@ -93,17 +93,17 @@ public class ToiletSearchService {
 
     List<Object> shouldClauses = new ArrayList<>();
 
-    if (!isChosung) {
-      // 일반 텍스트: nori 형태소 분석 기반 매칭
+    if (isChosung) {
+      // 순수 초성 검색: n-gram 배열 term 조회만 사용
+      shouldClauses.add(Map.of("term", Map.of("nameChosungNgrams", chosungQuery)));
+    } else {
+      // 일반 텍스트 검색: 텍스트 매칭만 사용 (초성 혼용 금지)
       shouldClauses.add(
           Map.of(
               "multi_match",
               Map.of("query", query, "fields", List.of("name", "address"), "type", "best_fields")));
       shouldClauses.add(Map.of("match_phrase_prefix", Map.of("name", Map.of("query", query))));
     }
-
-    // 초성 검색: 이름만 대상 (주소 초성 제외)
-    shouldClauses.add(Map.of("term", Map.of("nameChosungNgrams", chosungQuery)));
 
     java.util.LinkedHashMap<String, Object> boolQuery = new java.util.LinkedHashMap<>();
     boolQuery.put("should", shouldClauses);
