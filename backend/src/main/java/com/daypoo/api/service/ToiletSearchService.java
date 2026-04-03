@@ -102,9 +102,9 @@ public class ToiletSearchService {
       shouldClauses.add(Map.of("match_phrase_prefix", Map.of("name", Map.of("query", query))));
     }
 
-    // 초성 검색: n-gram 인덱스 활용 (prefix/middle 모두 지원)
-    shouldClauses.add(Map.of("match", Map.of("nameChosung", chosungQuery)));
-    shouldClauses.add(Map.of("match", Map.of("addressChosung", chosungQuery)));
+    // 초성 검색: Java 사전 계산 n-gram 배열에서 term 조회 (prefix/middle 모두 지원)
+    shouldClauses.add(Map.of("term", Map.of("nameChosungNgrams", chosungQuery)));
+    shouldClauses.add(Map.of("term", Map.of("addressChosungNgrams", chosungQuery)));
 
     java.util.LinkedHashMap<String, Object> boolQuery = new java.util.LinkedHashMap<>();
     boolQuery.put("should", shouldClauses);

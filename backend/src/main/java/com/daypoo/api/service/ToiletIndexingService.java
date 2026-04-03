@@ -5,6 +5,7 @@ import com.daypoo.api.repository.ToiletRepository;
 import com.daypoo.api.util.ChosungUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class ToiletIndexingService {
 
   private static final String INDEX_NAME = "toilets_v2";
   private static final int PAGE_SIZE = 200;
+  private static final int NGRAM_MAX = 6;
 
   private final ToiletRepository toiletRepository;
   private final WebClient.Builder webClientBuilder;
@@ -149,10 +151,10 @@ public class ToiletIndexingService {
               .block();
       JsonNode node = objectMapper.readTree(response);
       JsonNode properties = node.path(INDEX_NAME).path("mappings").path("properties");
-      // n-gram 전환 여부: nameChosung이 text 타입이어야 함
-      String chosungType = properties.path("nameChosung").path("type").asText("");
+      // nameChosungNgrams 필드가 keyword 타입으로 존재하는지 확인
+      String ngramsType = properties.path("nameChosungNgrams").path("type").asText("");
       String locationType = properties.path("location").path("type").asText("");
-      return "text".equals(chosungType) && "geo_point".equals(locationType);
+      return "keyword".equals(ngramsType) && "geo_point".equals(locationType);
     } catch (Exception e) {
       return false;
     }
@@ -173,51 +175,28 @@ public class ToiletIndexingService {
   }
 
   private void createIndex(WebClient client) {
+    // 커스텀 분석기 없이 표준 필드만 사용 (AWS 관리형 OpenSearch 호환)
     String mapping =
         """
         {
           "settings": {
             "index": {
               "number_of_shards": 1,
-              "number_of_replicas": 0,
-              "max_ngram_diff": 10
-            },
-            "analysis": {
-              "tokenizer": {
-                "kor_tokenizer": {
-                  "type": "nori_tokenizer",
-                  "decompound_mode": "mixed"
-                },
-                "chosung_ngram_tokenizer": {
-                  "type": "ngram",
-                  "min_gram": 1,
-                  "max_gram": 6,
-                  "token_chars": ["letter"]
-                }
-              },
-              "analyzer": {
-                "nori_analyzer": {
-                  "type": "custom",
-                  "tokenizer": "kor_tokenizer",
-                  "filter": ["lowercase", "nori_readingform", "nori_part_of_speech"]
-                },
-                "chosung_ngram_analyzer": {
-                  "type": "custom",
-                  "tokenizer": "chosung_ngram_tokenizer"
-                }
-              }
+              "number_of_replicas": 0
             }
           },
           "mappings": {
             "properties": {
-              "id":             {"type": "long"},
-              "name":           {"type": "text", "analyzer": "nori_analyzer"},
-              "nameChosung":    {"type": "text", "analyzer": "chosung_ngram_analyzer", "search_analyzer": "keyword"},
-              "address":        {"type": "text", "analyzer": "nori_analyzer"},
-              "addressChosung": {"type": "text", "analyzer": "chosung_ngram_analyzer", "search_analyzer": "keyword"},
-              "latitude":       {"type": "double"},
-              "longitude":      {"type": "double"},
-              "location":       {"type": "geo_point"}
+              "id":                  {"type": "long"},
+              "name":                {"type": "text"},
+              "nameChosung":         {"type": "keyword"},
+              "nameChosungNgrams":   {"type": "keyword"},
+              "address":             {"type": "text"},
+              "addressChosung":      {"type": "keyword"},
+              "addressChosungNgrams":{"type": "keyword"},
+              "latitude":            {"type": "double"},
+              "longitude":           {"type": "double"},
+              "location":            {"type": "geo_point"}
             }
           }
         }
@@ -231,7 +210,7 @@ public class ToiletIndexingService {
           .retrieve()
           .bodyToMono(String.class)
           .block();
-      log.info("[OpenSearch] 인덱스 '{}' 생성 완료 (n-gram + geo_point)", INDEX_NAME);
+      log.info("[OpenSearch] 인덱스 '{}' 생성 완료", INDEX_NAME);
     } catch (Exception e) {
       log.warn("[OpenSearch] 인덱스 생성 실패: {}", e.getMessage());
     }
@@ -259,14 +238,18 @@ public class ToiletIndexingService {
     try {
       String name = t.getName() != null ? t.getName() : "";
       String address = t.getAddress() != null ? t.getAddress() : "";
+      String nameChosung = ChosungUtils.extractChosung(name);
+      String addressChosung = ChosungUtils.extractChosung(address);
       return objectMapper.writeValueAsString(
           new java.util.LinkedHashMap<>() {
             {
               put("id", t.getId());
               put("name", name);
-              put("nameChosung", ChosungUtils.extractChosung(name));
+              put("nameChosung", nameChosung);
+              put("nameChosungNgrams", computeNgrams(nameChosung));
               put("address", address);
-              put("addressChosung", ChosungUtils.extractChosung(address));
+              put("addressChosung", addressChosung);
+              put("addressChosungNgrams", computeNgrams(addressChosung));
               put("latitude", t.getLocation().getY());
               put("longitude", t.getLocation().getX());
               put("location", Map.of("lat", t.getLocation().getY(), "lon", t.getLocation().getX()));
@@ -276,6 +259,20 @@ public class ToiletIndexingService {
       log.warn("[OpenSearch] 문서 직렬화 실패 id={}: {}", t.getId(), e.getMessage());
       return "{}";
     }
+  }
+
+  /**
+   * 초성 문자열의 모든 부분 문자열(n-gram)을 계산합니다. 예: "ㄴㅂㅅㄱ" → ["ㄴ", "ㄴㅂ", "ㄴㅂㅅ", "ㄴㅂㅅㄱ", "ㅂ", "ㅂㅅ", "ㅂㅅㄱ", "ㅅ",
+   * "ㅅㄱ", "ㄱ"]
+   */
+  private List<String> computeNgrams(String chosung) {
+    List<String> ngrams = new ArrayList<>();
+    for (int start = 0; start < chosung.length(); start++) {
+      for (int end = start + 1; end <= Math.min(start + NGRAM_MAX, chosung.length()); end++) {
+        ngrams.add(chosung.substring(start, end));
+      }
+    }
+    return ngrams;
   }
 
   private void cleanupOldIndex() {
