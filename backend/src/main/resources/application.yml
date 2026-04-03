@@ -119,7 +119,7 @@ opensearch:
 logging:
   level:
     root: INFO
-    com.daypoo: DEBUG
+    com.daypoo: INFO
 
 management:
   endpoints:
