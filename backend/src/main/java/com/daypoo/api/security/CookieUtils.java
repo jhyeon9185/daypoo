@@ -54,4 +54,3 @@ public class CookieUtils {
     return cls.cast(SerializationUtils.deserialize(decoded));
   }
 }
-
