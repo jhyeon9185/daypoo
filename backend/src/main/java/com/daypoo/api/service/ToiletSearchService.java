@@ -131,9 +131,7 @@ public class ToiletSearchService {
               Map.of(
                   "geo_distance",
                   Map.of(
-                      "distance", "50km",
-                      "location",
-                      Map.of("lat", latitude, "lon", longitude)))));
+                      "distance", "50km", "location", Map.of("lat", latitude, "lon", longitude)))));
     }
 
     Map<String, Object> finalQuery = Map.of("bool", boolQuery);
