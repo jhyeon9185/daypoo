@@ -1,7 +1,7 @@
 {
-  "name": "Day.Poo - AI 장 건강 분석 & 화장실 지도",
+  "name": "DayPoo - AI 장 건강 분석 & 화장실 지도",
   "short_name": "DayPoo",
-  "description": "AI 닥터 푸가 분석하는 나만의 배변 건강 리포트. 전국 7만 개 화장실 실시간 지도와 함께.",
+  "description": "데이푸가 분석하는 나만의 배변 건강 리포트. 전국 7만 개 화장실 실시간 지도와 함께.",
   "lang": "ko-KR",
   "dir": "ltr",
   "id": "/",
