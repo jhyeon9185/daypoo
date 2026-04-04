@@ -82,17 +82,12 @@ export function HeroSection({ onCtaClick, openAuth }: HeroSectionProps) {
   });
 
   useEffect(() => {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude, longitude } = pos.coords;
-        setUserLocation({ lat: latitude, lng: longitude });
-        setLocationName('내 주변 지역');
-      },
-      () => {
-        setUserLocation({ lat: 37.5666, lng: 126.9784 });
-        setLocationName('서울시 중구');
-      },
-    );
+    // We removed the automatic geolocation prompt from here to avoid double-pops
+    // The LocationConsentBanner now handles the first intent.
+    
+    // Default location to Seoul while waiting
+    setUserLocation({ lat: 37.5666, lng: 126.9784 });
+    setLocationName('서울시 중구');
 
     const interval = setInterval(() => {
       setStats((prev) => ({
@@ -124,10 +119,10 @@ export function HeroSection({ onCtaClick, openAuth }: HeroSectionProps) {
   return (
     <>
       <section className="relative min-h-screen flex items-center justify-center bg-[#111E18] overflow-hidden px-4 sm:px-8 pt-24 pb-16 sm:pt-32 sm:pb-32">
-        {/* Deep Ambient Background */}
+        {/* Deep Ambient Background — mobile-optimized */}
         <div className="absolute inset-0 opacity-[0.2] pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-emerald-500/10 blur-[180px] rounded-full" />
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/5 blur-[120px] rounded-full" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] sm:w-[1000px] sm:h-[1000px] bg-emerald-500/10 blur-[60px] sm:blur-[180px] rounded-full" />
+          <div className="absolute top-0 right-0 w-[300px] h-[300px] sm:w-[500px] sm:h-[500px] bg-blue-500/5 blur-[40px] sm:blur-[120px] rounded-full" />
         </div>
 
         <div className="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-16 items-center relative z-20">
@@ -179,7 +174,7 @@ export function HeroSection({ onCtaClick, openAuth }: HeroSectionProps) {
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-              className="relative p-6 sm:p-10 rounded-[48px] bg-[#1a2b22]/40 backdrop-blur-3xl border border-white/5 shadow-3xl space-y-6 sm:space-y-10"
+              className="relative p-6 sm:p-10 rounded-[48px] bg-[#1a2b22]/70 sm:bg-[#1a2b22]/40 backdrop-blur-md sm:backdrop-blur-3xl border border-white/5 shadow-xl sm:shadow-3xl space-y-6 sm:space-y-10"
             >
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-6 rounded-3xl bg-emerald-500/[0.08] border border-emerald-500/10 text-center space-y-2">
@@ -237,36 +232,33 @@ export function HeroSection({ onCtaClick, openAuth }: HeroSectionProps) {
 
                   {/* Central Glow Hub */}
                   <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 flex items-center justify-center">
-                    <m.div
-                      className="absolute w-20 h-20 rounded-full bg-emerald-400/10 blur-xl"
-                      animate={{ scale: [1, 1.4, 1], opacity: [0.4, 0.7, 0.4] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                    />
-                    <div className="relative w-12 h-12 rounded-2xl border border-emerald-400/20 bg-emerald-950/40 backdrop-blur-md flex items-center justify-center shadow-[0_0_20px_rgba(52,211,153,0.1)]">
+                    <div className="absolute w-20 h-20 rounded-full bg-emerald-400/10 blur-lg" />
+                    <div className="relative w-12 h-12 rounded-2xl border border-emerald-400/20 bg-emerald-950/60 flex items-center justify-center">
                       <m.div
-                        className="w-3 h-3 rounded bg-emerald-400 shadow-[0_0_15px_#34d399]"
+                        className="w-3 h-3 rounded bg-emerald-400"
                         animate={{ rotate: 360 }}
                         transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+                        style={{ willChange: 'transform' }}
                       />
                     </div>
                   </div>
 
-                  {/* Flowing Data Particles with Fixed Pathing */}
+                  {/* Flowing Data Particles — GPU-accelerated via translateX */}
                   {FLOW_DOTS.map((dot, i) => (
                     <m.div
                       key={i}
-                      className="absolute rounded-full z-20 shadow-[0_0_8px_rgba(52,211,153,0.8)]"
+                      className="absolute rounded-full z-20"
                       style={{
                         width: dot.size,
                         height: dot.size,
                         top: `${FLOW_LANES[dot.lane]}%`,
-                        left: '-10%',
-                        background: 'radial-gradient(circle, #a7f3d0, #10b981)',
+                        left: 0,
+                        background: '#34d399',
+                        willChange: 'transform, opacity',
                       }}
                       animate={{ 
-                        left: ['0%', '100%'],
+                        x: ['-10%', '110%'],
                         opacity: [0, 1, 1, 0],
-                        scale: [1, 1.2, 1] 
                       }}
                       transition={{
                         duration: dot.speed,
@@ -308,7 +300,7 @@ export function HeroSection({ onCtaClick, openAuth }: HeroSectionProps) {
                     {locationName}
                     <m.span animate={{ opacity: [0, 1, 0] }} transition={{ duration: 2, repeat: Infinity }} className="text-emerald-400 text-[10px]">CURRENT</m.span>
                   </div>
-                  <div className="relative h-6 overflow-hidden">
+                  <div className="relative min-h-[1.5rem] flex items-center overflow-hidden">
                     <AnimatePresence mode="wait">
                       <m.div
                         key={messageIndex}
@@ -316,7 +308,7 @@ export function HeroSection({ onCtaClick, openAuth }: HeroSectionProps) {
                         animate={{ y: 0, opacity: 1 }}
                         exit={{ y: -15, opacity: 0 }}
                         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                        className="text-[13px] text-slate-400 font-bold whitespace-nowrap absolute inset-0 flex items-center"
+                        className="text-[11px] sm:text-[13px] text-slate-400 font-bold leading-tight"
                       >
                         {messages[messageIndex]}
                       </m.div>

@@ -39,6 +39,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { NotificationSubscriber } from './components/NotificationSubscriber';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { LocationConsentBanner } from './components/LocationConsentBanner';
 
 // 동적 로드될 Framer Motion 기능들
 const loadFeatures = () => import('./utils/framerFeatures').then((res) => res.default);
@@ -132,6 +133,7 @@ function App() {
             <TransitionProvider>
               <NotificationProvider>
                 <NotificationSubscriber />
+                <LocationConsentBanner />
                 <Suspense fallback={<LoadingPage />}>
                   <Routes>
                     <Route path="/" element={<SplashPage />} />

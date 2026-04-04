@@ -466,7 +466,7 @@ export function MapPage({ openAuth }: { openAuth: (mode: 'login' | 'signup') => 
         <AnimatePresence>
           {selectedToilet && pos && (
             <div className="absolute inset-0 z-[1001] pointer-events-none flex items-end sm:items-center justify-center">
-              <div className="pointer-events-auto w-full sm:w-auto p-4 sm:p-0">
+              <div className="pointer-events-auto w-full sm:w-auto px-4 mb-12 sm:m-0">
                 <ToiletPopup
                   toilet={selectedToilet}
                   onClose={() => handleSelectToilet(null)}
