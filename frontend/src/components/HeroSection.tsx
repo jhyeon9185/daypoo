@@ -208,99 +208,82 @@ export function HeroSection({ onCtaClick, openAuth }: HeroSectionProps) {
                 </div>
               </div>
 
-              <div className="space-y-5">
-                <div className="flex justify-between items-center text-[10px] uppercase font-black tracking-widest">
-                  <span className="text-slate-500 flex items-center gap-2">
-                    <Activity size={12} className="text-emerald-500" /> 실시간 AI 데이터 분석 파이프라인
-                  </span>
-                  <span className="text-emerald-400 animate-pulse flex items-center gap-1.5 bg-emerald-500/10 px-2 py-1 rounded-md">
-                    <span className="w-1 h-1 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" /> LIVE
-                  </span>
-                </div>
-
-                {/* Fixed Data Analysis Pipeline */}
-                <div
-                  className="h-32 w-full relative overflow-hidden rounded-[24px] border border-emerald-500/[0.1] shadow-inner"
-                  style={{ background: '#0a1410' }}
-                >
-                  <div
-                    className="absolute inset-0 opacity-[0.03] pointer-events-none"
-                    style={{
-                      backgroundImage: 'radial-gradient(circle, #34d399 1.5px, transparent 1.5px)',
-                      backgroundSize: '24px 24px',
-                    }}
-                  />
-
-                  {/* Enhanced Data Flow Lanes */}
-                  {FLOW_LANES.map((y, i) => (
-                    <div
-                      key={i}
-                      className="absolute left-0 right-0 h-[1.5px]"
-                      style={{
-                        top: `${y}%`,
-                        background: 'linear-gradient(to right, transparent, rgba(52,211,153,0.1), transparent)',
-                      }}
-                    />
-                  ))}
-
-                  {/* Central Glow Hub */}
-                  <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 flex items-center justify-center">
-                    <div className="absolute w-20 h-20 rounded-full bg-emerald-400/10 blur-lg" />
-                    <div className="relative w-12 h-12 rounded-2xl border border-emerald-400/20 bg-emerald-950/60 flex items-center justify-center">
-                      <m.div
-                        className="w-3 h-3 rounded bg-emerald-400"
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-                        style={{ willChange: 'transform' }}
-                      />
-                    </div>
+              {/* Data Analysis Pipeline — Completely removed on mobile for zero lag */}
+              {!isMobile && (
+                <div className="space-y-5">
+                  <div className="flex justify-between items-center text-[10px] uppercase font-black tracking-widest">
+                    <span className="text-slate-500 flex items-center gap-2">
+                      <Activity size={12} className="text-emerald-500" /> 실시간 AI 데이터 분석 파이프라인
+                    </span>
+                    <span className="text-emerald-400 animate-pulse flex items-center gap-1.5 bg-emerald-500/10 px-2 py-1 rounded-md">
+                      <span className="w-1 h-1 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" /> LIVE
+                    </span>
                   </div>
 
-                  {/* Flowing Data Particles — disabled on mobile for performance */}
-                  {!isMobile && FLOW_DOTS.map((dot, i) => (
-                    <m.div
-                      key={i}
-                      className="absolute rounded-full z-20"
+                  <div
+                    className="h-32 w-full relative overflow-hidden rounded-[24px] border border-emerald-500/[0.1] shadow-inner"
+                    style={{ background: '#0a1410' }}
+                  >
+                    <div
+                      className="absolute inset-0 opacity-[0.03] pointer-events-none"
                       style={{
-                        width: dot.size,
-                        height: dot.size,
-                        top: `${FLOW_LANES[dot.lane]}%`,
-                        background: '#34d399',
-                        willChange: 'left, opacity',
-                      }}
-                      animate={{ 
-                        left: ['0%', '100%'],
-                        opacity: [0, 1, 1, 0],
-                      }}
-                      transition={{
-                        duration: dot.speed,
-                        delay: dot.delay,
-                        repeat: Infinity,
-                        ease: 'linear',
+                        backgroundImage: 'radial-gradient(circle, #34d399 1.5px, transparent 1.5px)',
+                        backgroundSize: '24px 24px',
                       }}
                     />
-                  ))}
 
-                  {/* Mobile: static glow dots instead of animated particles */}
-                  {isMobile && (
-                    <>
-                      <div className="absolute w-2 h-2 rounded-full bg-emerald-400/60 z-20" style={{ top: '20%', left: '25%' }} />
-                      <div className="absolute w-1.5 h-1.5 rounded-full bg-emerald-400/40 z-20" style={{ top: '48%', left: '60%' }} />
-                      <div className="absolute w-2 h-2 rounded-full bg-emerald-400/50 z-20" style={{ top: '76%', left: '80%' }} />
-                    </>
-                  )}
-
-                  {/* Pipeline Status Labels — static on mobile */}
-                  {PIPELINE_LABELS.map((label, i) => (
-                    isMobile ? (
-                      <span
+                    {/* Enhanced Data Flow Lanes */}
+                    {FLOW_LANES.map((y, i) => (
+                      <div
                         key={i}
-                        className="absolute text-[8px] font-black uppercase tracking-wider text-emerald-400/30 pointer-events-none z-20"
-                        style={{ left: label.x, top: label.y }}
-                      >
-                        {label.text}
-                      </span>
-                    ) : (
+                        className="absolute left-0 right-0 h-[1.5px]"
+                        style={{
+                          top: `${y}%`,
+                          background: 'linear-gradient(to right, transparent, rgba(52,211,153,0.1), transparent)',
+                        }}
+                      />
+                    ))}
+
+                    {/* Central Glow Hub */}
+                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 flex items-center justify-center">
+                      <div className="absolute w-20 h-20 rounded-full bg-emerald-400/10 blur-lg" />
+                      <div className="relative w-12 h-12 rounded-2xl border border-emerald-400/20 bg-emerald-950/60 flex items-center justify-center">
+                        <m.div
+                          className="w-3 h-3 rounded bg-emerald-400"
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+                          style={{ willChange: 'transform' }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Flowing Data Particles */}
+                    {FLOW_DOTS.map((dot, i) => (
+                      <m.div
+                        key={i}
+                        className="absolute rounded-full z-20"
+                        style={{
+                          width: dot.size,
+                          height: dot.size,
+                          top: `${FLOW_LANES[dot.lane]}%`,
+                          background: '#34d399',
+                          willChange: 'left, opacity',
+                        }}
+                        animate={{ 
+                          left: ['0%', '100%'],
+                          opacity: [0, 1, 1, 0],
+                        }}
+                        transition={{
+                          duration: dot.speed,
+                          delay: dot.delay,
+                          repeat: Infinity,
+                          ease: 'linear',
+                        }}
+                      />
+                    ))}
+
+                    {/* Pipeline Status Labels */}
+                    {PIPELINE_LABELS.map((label, i) => (
                       <m.span
                         key={i}
                         className="absolute text-[8px] font-black uppercase tracking-wider text-emerald-400/40 pointer-events-none z-20"
@@ -310,13 +293,13 @@ export function HeroSection({ onCtaClick, openAuth }: HeroSectionProps) {
                       >
                         {label.text}
                       </m.span>
-                    )
-                  ))}
+                    ))}
 
-                  <div className="absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-[#0a1410] to-transparent z-30 pointer-events-none" />
-                  <div className="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-[#0a1410] to-transparent z-30 pointer-events-none" />
+                    <div className="absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-[#0a1410] to-transparent z-30 pointer-events-none" />
+                    <div className="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-[#0a1410] to-transparent z-30 pointer-events-none" />
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Real-time Location Widget */}
               <div
