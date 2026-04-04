@@ -63,6 +63,15 @@ export function HeroSection({ onCtaClick, openAuth }: HeroSectionProps) {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
+  // Mobile detection for performance optimization
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
   const onRecordClick = useCallback(() => {
     navigate('/map');
   }, [navigate]);
@@ -119,11 +128,15 @@ export function HeroSection({ onCtaClick, openAuth }: HeroSectionProps) {
   return (
     <>
       <section className="relative min-h-screen flex items-center justify-center bg-[#111E18] overflow-hidden px-4 sm:px-8 pt-24 pb-16 sm:pt-32 sm:pb-32">
-        {/* Deep Ambient Background — mobile-optimized */}
-        <div className="absolute inset-0 opacity-[0.2] pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] sm:w-[1000px] sm:h-[1000px] bg-emerald-500/10 blur-[60px] sm:blur-[180px] rounded-full" />
-          <div className="absolute top-0 right-0 w-[300px] h-[300px] sm:w-[500px] sm:h-[500px] bg-blue-500/5 blur-[40px] sm:blur-[120px] rounded-full" />
-        </div>
+        {/* Deep Ambient Background — mobile uses simple gradient, desktop keeps blur */}
+        {isMobile ? (
+          <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, rgba(16,185,129,0.06) 0%, transparent 70%)' }} />
+        ) : (
+          <div className="absolute inset-0 opacity-[0.2] pointer-events-none">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-emerald-500/10 blur-[180px] rounded-full" />
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/5 blur-[120px] rounded-full" />
+          </div>
+        )}
 
         <div className="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-16 items-center relative z-20">
           {/* Left Content: Fade In Layout */}
@@ -174,7 +187,7 @@ export function HeroSection({ onCtaClick, openAuth }: HeroSectionProps) {
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-              className="relative p-6 sm:p-10 rounded-[48px] bg-[#1a2b22]/70 sm:bg-[#1a2b22]/40 backdrop-blur-md sm:backdrop-blur-3xl border border-white/5 shadow-xl sm:shadow-3xl space-y-6 sm:space-y-10"
+              className={`relative p-6 sm:p-10 rounded-[48px] border border-white/5 shadow-xl sm:shadow-3xl space-y-6 sm:space-y-10 ${isMobile ? 'bg-[#1a2b22]/90' : 'bg-[#1a2b22]/40 backdrop-blur-3xl'}`}
             >
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-6 rounded-3xl bg-emerald-500/[0.08] border border-emerald-500/10 text-center space-y-2">
@@ -243,8 +256,8 @@ export function HeroSection({ onCtaClick, openAuth }: HeroSectionProps) {
                     </div>
                   </div>
 
-                  {/* Flowing Data Particles — GPU-accelerated via translateX */}
-                  {FLOW_DOTS.map((dot, i) => (
+                  {/* Flowing Data Particles — disabled on mobile for performance */}
+                  {!isMobile && FLOW_DOTS.map((dot, i) => (
                     <m.div
                       key={i}
                       className="absolute rounded-full z-20"
@@ -268,17 +281,36 @@ export function HeroSection({ onCtaClick, openAuth }: HeroSectionProps) {
                     />
                   ))}
 
-                  {/* Pipeline Status Labels */}
+                  {/* Mobile: static glow dots instead of animated particles */}
+                  {isMobile && (
+                    <>
+                      <div className="absolute w-2 h-2 rounded-full bg-emerald-400/60 z-20" style={{ top: '20%', left: '25%' }} />
+                      <div className="absolute w-1.5 h-1.5 rounded-full bg-emerald-400/40 z-20" style={{ top: '48%', left: '60%' }} />
+                      <div className="absolute w-2 h-2 rounded-full bg-emerald-400/50 z-20" style={{ top: '76%', left: '80%' }} />
+                    </>
+                  )}
+
+                  {/* Pipeline Status Labels — static on mobile */}
                   {PIPELINE_LABELS.map((label, i) => (
-                    <m.span
-                      key={i}
-                      className="absolute text-[8px] font-black uppercase tracking-wider text-emerald-400/40 pointer-events-none z-20"
-                      style={{ left: label.x, top: label.y }}
-                      animate={{ opacity: [0, 0.8, 0] }}
-                      transition={{ duration: 4, delay: label.delay, repeat: Infinity }}
-                    >
-                      {label.text}
-                    </m.span>
+                    isMobile ? (
+                      <span
+                        key={i}
+                        className="absolute text-[8px] font-black uppercase tracking-wider text-emerald-400/30 pointer-events-none z-20"
+                        style={{ left: label.x, top: label.y }}
+                      >
+                        {label.text}
+                      </span>
+                    ) : (
+                      <m.span
+                        key={i}
+                        className="absolute text-[8px] font-black uppercase tracking-wider text-emerald-400/40 pointer-events-none z-20"
+                        style={{ left: label.x, top: label.y }}
+                        animate={{ opacity: [0, 0.8, 0] }}
+                        transition={{ duration: 4, delay: label.delay, repeat: Infinity }}
+                      >
+                        {label.text}
+                      </m.span>
+                    )
                   ))}
 
                   <div className="absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-[#0a1410] to-transparent z-30 pointer-events-none" />
@@ -320,8 +352,12 @@ export function HeroSection({ onCtaClick, openAuth }: HeroSectionProps) {
               </div>
             </m.div>
 
-            <div className="absolute -top-16 -right-16 w-60 h-60 bg-emerald-500/10 blur-[150px] rounded-full pointer-events-none" />
-            <div className="absolute -bottom-24 -left-16 w-80 h-80 bg-blue-500/5 blur-[150px] rounded-full pointer-events-none" />
+            {!isMobile && (
+              <>
+                <div className="absolute -top-16 -right-16 w-60 h-60 bg-emerald-500/10 blur-[150px] rounded-full pointer-events-none" />
+                <div className="absolute -bottom-24 -left-16 w-80 h-80 bg-blue-500/5 blur-[150px] rounded-full pointer-events-none" />
+              </>
+            )}
           </div>
         </div>
 
