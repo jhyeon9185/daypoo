@@ -298,13 +298,20 @@ export function MapPage({ openAuth }: { openAuth: (mode: 'login' | 'signup') => 
 
   const handleVisitComplete = useCallback(
     async (result: VisitModalResult) => {
+      // 1. 위치 정보(pos) 방어 로직 추가
+      if (!pos) {
+        console.error('인증 실패: 사용자 위치 정보를 찾을 수 없습니다.');
+        alert('📍 현재 위치 정보를 가져오지 못했습니다. 잠시 후 다시 시도해주세요.');
+        return;
+      }
+
       try {
         const payload: CreateRecordRequest = {
           toiletId: Number(result.toiletId),
           conditionTags: result.conditionTags,
           dietTags: result.foodTags,
-          latitude: pos!.lat,
-          longitude: pos!.lng,
+          latitude: pos.lat,
+          longitude: pos.lng,
           // Fast-Track: bristolType / color가 null이면 AI 자동 분석
           ...(result.bristolType !== null && { bristolScale: result.bristolType }),
           ...(result.color !== null && { color: result.color }),
@@ -322,6 +329,8 @@ export function MapPage({ openAuth }: { openAuth: (mode: 'login' | 'signup') => 
         // alert('방문 인증이 완료되었습니다! 💩✨');
       } catch (e: any) {
         const code = e.code || 'UNKNOWN';
+        const errorMsg = e.message || (typeof e === 'string' ? e : JSON.stringify(e));
+        
         switch (code) {
           case 'R007':
             throw e; // VisitModal에서 카메라 복귀 처리
@@ -336,7 +345,8 @@ export function MapPage({ openAuth }: { openAuth: (mode: 'login' | 'signup') => 
             alert('🤖 AI 분석 서비스에 일시적 문제가 발생했습니다. 잠시 후 다시 시도해주세요.');
             break;
           default:
-            alert(`인증 오류: ${e.message || '서버 오류'}`);
+            console.error('인증 실패:', e);
+            alert(`인증 오류: ${errorMsg}\n\n(문제가 지속되면 고객센터로 문의해주세요.)`);
         }
       }
     },

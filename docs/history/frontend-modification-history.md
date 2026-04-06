@@ -1,11 +1,29 @@
 # Frontend Modification History
 
-## [2026-04-06 11:35:00] 글로벌 기록 모달(HealthLogModal) 사진 촬영 후 자동 제출 로직 적용
+## [2026-04-06 11:45:00] AI 인식 실패(R007) 시 성공 화면 진입 버그 수정
+
 **작업 내용:**
+
+- **에러 전파 로직 강화**: AI 분석 결과 대변 사진이 아닐 때(에러 코드 R007) 알림창은 뜨지만 뒤에서 '성공' 처리가 되어버리는 문제를 해결했습니다.
+- **상태 초기화**: `R007` 에러 발생 시 찍었던 사진을 초기화하고 다시 촬영 단계로 되돌려 사용자가 즉시 재시도할 수 있도록 개선했습니다. (VisitModal, HealthLogModal, Navbar 모두 적용)
+
+**수정된 파일:**
+
+- `frontend/src/components/map/VisitModal.tsx`
+- `frontend/src/components/map/HealthLogModal.tsx`
+- `frontend/src/components/Navbar.tsx`
+
+---
+
+## [2026-04-06 11:35:00] 글로벌 기록 모달(HealthLogModal) 사진 촬영 후 자동 제출 로직 적용
+
+**작업 내용:**
+
 - **플로우 일치**: 방문 인증(VisitModal)과 동일하게, `HealthLogModal`에서도 사진을 찍으면 수동 입력 단계를 거치지 않고 바로 '기록 완료하기'가 가능하게 수정했습니다.
 - **버튼 반응성**: 사진 촬영 직후, 하단 버튼이 '다음 단계' 대신 '기록 완료하기'로 자동 변경되며 클릭 시 바로 AI 분석 요청을 포함한 기록이 제출됩니다.
 
 **수정된 파일:**
+
 - `frontend/src/components/map/HealthLogModal.tsx`
 
 ---

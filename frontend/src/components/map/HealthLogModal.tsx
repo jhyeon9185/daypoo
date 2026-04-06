@@ -126,8 +126,11 @@ export function HealthLogModal({
           imageBase64: capturedImage,
         });
         setIsSuccess(true);
-      } catch (e) {
+      } catch (e: any) {
         console.error('기록 저장 실패:', e);
+        if (e.code === 'R007') {
+          setCapturedImage(null); // AI 인식 실패 시 촬영 이미지 초기화
+        }
       }
       return;
     }
@@ -144,8 +147,12 @@ export function HealthLogModal({
           imageBase64: capturedImage,
         });
         setIsSuccess(true);
-      } catch (e) {
+      } catch (e: any) {
         console.error('기록 저장 실패:', e);
+        if (e.code === 'R007') {
+          setCapturedImage(null);
+          setStep(0); // 촬영 단계로 되돌림
+        }
       }
     }
   };

@@ -98,7 +98,12 @@ export function Navbar({ openAuth }: { openAuth: (mode: 'login' | 'signup') => v
       };
       await api.post('/records', payload);
     } catch (e: any) {
-      alert(`기록 저장 실패: ${e.message || '서버 오류'}`);
+      if (e.code === 'R007') {
+        alert('똥 사진이 아닌 것 같아요!\n변기 안의 변을 다시 촬영해주세요. 💩');
+      } else {
+        alert(`기록 저장 실패: ${e.message || '서버 오류'}`);
+      }
+      throw e;
     }
   };
 

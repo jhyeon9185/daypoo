@@ -186,9 +186,8 @@ export function VisitModal({ toilet, onClose, onComplete, checkInTime }: VisitMo
         setVisitDone(false);
         setShowHealthLog(false);
         await startCamera();
-      } else {
-        throw e; // 다른 오류(체류 시간 미달 등)는 위로 던져서 HealthLogModal이 성공으로 인식하지 않게 함
       }
+      throw e; // 모든 에러(R007 포함)를 다시 던져서 HealthLogModal의 성공 화면 진입을 방지
     }
   };
 
