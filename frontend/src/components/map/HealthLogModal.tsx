@@ -104,6 +104,16 @@ export function HealthLogModal({
     setTimeout(() => setStep(1), 800);
   };
 
+  useEffect(() => {
+    if (isCameraActive && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+    }
+  }, [isCameraActive]);
+
+  useEffect(() => {
+    return () => stopCamera();
+  }, [stopCamera]);
+
   const handleNext = async () => {
     if (step < 3) {
       setStep(step + 1);
