@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import type React from 'react';
-import { motion, AnimatePresence, useInView, useMotionValue, useSpring } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
 import { WaveDivider } from '../components/WaveDivider';
@@ -115,7 +115,7 @@ const cardVariants = {
 const containerVariants = {
   animate: {
     transition: {
-      staggerChildren: 0.08, // 폭포수 효과 핵심 (2번 효과)
+      staggerChildren: 0.03,
     },
   },
 };
@@ -132,38 +132,10 @@ const listItemVariants = {
 // ── 1번 효과: Magnetic Search Bar ────────────────────────────────────
 function ModernSearch({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [isFocused, setIsFocused] = useState(false);
-  const searchRef = useRef<HTMLDivElement>(null);
-
-  // 마우스 트래킹을 위한 모션 밸류
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-
-  // 반응형 감도 조절 (Spring으로 부드럽게)
-  const springX = useSpring(mouseX, { stiffness: 150, damping: 20 });
-  const springY = useSpring(mouseY, { stiffness: 150, damping: 20 });
-
-  function handleMouseMove(e: React.MouseEvent) {
-    if (!searchRef.current) return;
-    const rect = searchRef.current.getBoundingClientRect();
-    const x = e.clientX - (rect.left + rect.width / 2);
-    const y = e.clientY - (rect.top + rect.height / 2);
-    // 살짝만 따라오도록 배율 조정 (Magnetic 효과)
-    mouseX.set(x * 0.15);
-    mouseY.set(y * 0.15);
-  }
-
-  function handleMouseLeave() {
-    mouseX.set(0);
-    mouseY.set(0);
-  }
 
   return (
     <div className="relative w-full max-w-2xl mx-auto mb-4 sm:mb-8">
       <motion.div
-        ref={searchRef}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        style={{ x: springX, y: springY }}
         animate={{
           scale: isFocused ? 1.02 : 1,
           boxShadow: isFocused ? '0 15px 45px rgba(27,67,50,0.15)' : '0 4px 25px rgba(0,0,0,0.06)',
@@ -200,64 +172,11 @@ function TrendyFaqItem({
   isOpen: boolean;
   onToggle: () => void;
 }) {
-  const [isHovered, setIsHovered] = useState(false);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-
-  // Magnetic pull effect (subtle cursor following)
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const springX = useSpring(x, { stiffness: 150, damping: 20 });
-  const springY = useSpring(y, { stiffness: 150, damping: 20 });
-
-  function handleMouseMove(event: React.MouseEvent<HTMLDivElement>) {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-
-    // Magnetic pull (subtle)
-    const deltaX = (event.clientX - centerX) * 0.08;
-    const deltaY = (event.clientY - centerY) * 0.08;
-    x.set(deltaX);
-    y.set(deltaY);
-
-    // Track mouse for glow effect
-    setMousePosition({
-      x: event.clientX - rect.left,
-      y: event.clientY - rect.top,
-    });
-  }
-
-  function handleMouseLeave() {
-    x.set(0);
-    y.set(0);
-    setIsHovered(false);
-  }
-
   return (
     <motion.div
       variants={listItemVariants}
-      layout
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={handleMouseLeave}
-      style={{ x: springX, y: springY }}
       className="group relative mb-4"
     >
-      {/* 동적 커서 추적 Glow 효과 */}
-      <AnimatePresence>
-        {isHovered && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 z-0 pointer-events-none"
-            style={{
-              background: `radial-gradient(600px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(82, 183, 136, 0.15), transparent 40%)`,
-            }}
-          />
-        )}
-      </AnimatePresence>
-
       {/* Open 상태 글로우 (기존 유지) */}
       <AnimatePresence>
         {isOpen && (
@@ -271,18 +190,9 @@ function TrendyFaqItem({
         )}
       </AnimatePresence>
 
-      <motion.div
-        animate={{
-          scale: isHovered ? 1.02 : 1,
-          boxShadow: isHovered
-            ? '0 20px 60px rgba(27, 67, 50, 0.15)'
-            : isOpen
-              ? '0 10px 40px rgba(27, 67, 50, 0.1)'
-              : '0 2px 8px rgba(0, 0, 0, 0.04)',
-        }}
-        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className={`relative z-10 bg-white rounded-[26px] border overflow-hidden ${
-          isOpen ? 'border-[#52B788]/40' : isHovered ? 'border-[#52B788]/20' : 'border-black/[0.04]'
+      <div
+        className={`relative z-10 bg-white rounded-[26px] border overflow-hidden transition-all duration-200 hover:scale-[1.01] hover:shadow-xl ${
+          isOpen ? 'border-[#52B788]/40 shadow-[0_10px_40px_rgba(27,67,50,0.1)]' : 'border-black/[0.04] shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:border-[#52B788]/20'
         }`}
       >
         <button
@@ -324,7 +234,7 @@ function TrendyFaqItem({
             </motion.div>
           )}
         </AnimatePresence>
-      </motion.div>
+      </div>
     </motion.div>
   );
 }
