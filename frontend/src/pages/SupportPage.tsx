@@ -185,7 +185,7 @@ function TrendyFaqItem({
             animate={{ opacity: 1, scale: 1.02 }}
             exit={{ opacity: 0, scale: 0.95 }}
             className="absolute -inset-1 bg-gradient-to-r from-[#52B788]/20 via-[#E8A838]/10 to-[#52B788]/20 blur-xl rounded-[32px] z-0"
-            transition={{ duration: 1.5, repeat: Infinity, repeatType: 'reverse' }}
+            transition={window.matchMedia("(hover: none)").matches ? { duration: 0 } : { duration: 1.5, repeat: Infinity, repeatType: 'reverse' }}
           />
         )}
       </AnimatePresence>

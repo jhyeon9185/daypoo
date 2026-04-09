@@ -101,6 +101,7 @@ export function PaintCurtain({ isVisible, onComplete, phase }: PaintCurtainProps
         height: '100%',
         zIndex: 9999,
         pointerEvents: 'none',
+        willChange: 'transform, contents',
       }}
       preserveAspectRatio="none"
     >

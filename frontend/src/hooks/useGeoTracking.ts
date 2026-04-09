@@ -151,7 +151,7 @@ export function useGeoTracking(
       if (permissionStatus) permissionStatus.onchange = null;
       if (fallbackTimer) clearTimeout(fallbackTimer);
     };
-  }, [isEnabled, toilets, refreshUser]); 
+  }, [isEnabled, refreshUser]); // toilets 제거: toiletsRef를 통해 실시간 참조하므로 불필요한 watch 재시작 방지
 
   return { position, granted };
 }

@@ -189,8 +189,16 @@ export function AnimatedUnderlink({
         ...style,
       }}
       className={className}
-      onMouseEnter={handleHoverStart}
-      onMouseLeave={handleHoverEnd}
+    onMouseEnter={() => {
+      if (window.matchMedia("(hover: hover)").matches) {
+        handleHoverStart();
+      }
+    }}
+    onMouseLeave={() => {
+      if (window.matchMedia("(hover: hover)").matches) {
+        handleHoverEnd();
+      }
+    }}
     >
       <span
         ref={textRef}

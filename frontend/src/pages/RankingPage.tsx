@@ -60,8 +60,8 @@ function RankAvatarEffect({ emoji, size = 96 }: { emoji: string; size?: number }
           marginTop: -auraSize / 2,
           background: `radial-gradient(circle, ${auraColor} 0%, transparent 70%)`,
         }}
-        animate={{ scale: [1, 1.12, 1], opacity: [0.5, 0.9, 0.5] }}
-        transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+        animate={window.matchMedia("(hover: none)").matches ? { opacity: 0.6, scale: 1.05 } : { scale: [1, 1.12, 1], opacity: [0.5, 0.9, 0.5] }}
+        transition={window.matchMedia("(hover: none)").matches ? { duration: 0 } : { duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
       />
       {particles.map((i) => {
         const angle = (i / 4) * 360;
@@ -97,8 +97,8 @@ function ConicGlow({ color, thickness = 1.5, borderRadius = '16px' }: { color: s
           inset: '-200%',
           background: `conic-gradient(from 0deg, transparent 0%, ${color} 15%, transparent 30%, transparent 50%, ${color} 65%, transparent 80%, transparent 100%)`,
         }}
-        animate={{ rotate: 360 }}
-        transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+        animate={window.matchMedia("(hover: none)").matches ? { rotate: 0 } : { rotate: 360 }}
+        transition={window.matchMedia("(hover: none)").matches ? { duration: 0 } : { duration: 4, repeat: Infinity, ease: "linear" }}
       />
     </div>
   );
@@ -513,7 +513,7 @@ function RankItem({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.04 }}
       onClick={() => onSelect(user)}
-      whileHover={{ x: 4, scale: isTop3 ? 1.01 : 1 }}
+      whileHover={window.matchMedia("(hover: hover)").matches ? { x: 4, scale: isTop3 ? 1.01 : 1 } : {}}
       className="relative flex items-center gap-4 px-5 py-4.5 rounded-2xl cursor-pointer transition-all"
       style={{
         background: '#FFFFFF',
