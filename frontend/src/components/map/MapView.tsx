@@ -132,8 +132,16 @@ export const MapView = memo(
       useEffect(() => {
         if (!mapContainerRef.current || mapRef.current) return;
 
+        let retryCount = 0;
+        const MAX_SDK_RETRIES = 100; // 100 * 100ms = 최대 10초 대기
+
         const initMap = () => {
           if (!window.kakao?.maps) {
+            if (retryCount++ >= MAX_SDK_RETRIES) {
+              // SDK 로드 실패 (네트워크 오류, iOS PWA 등) — 무한 루프 방지
+              console.error('[MapView] Kakao Maps SDK 로드 타임아웃. 네트워크 연결을 확인해 주세요.');
+              return;
+            }
             setTimeout(initMap, 100);
             return;
           }

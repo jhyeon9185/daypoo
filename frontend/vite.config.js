@@ -14,6 +14,25 @@ export default defineConfig({
       workbox: {
         // 이 경로들은 서비스 워커가 가로채지 않고 서버로 직접 요청을 보냅니다.
         navigateFallbackDenylist: [/^\/api/, /^\/oauth2/, /^\/login/, /^\/swagger-ui/, /^\/v3\/api-docs/],
+        runtimeCaching: [
+          {
+            // 카카오맵 SDK (dapi.kakao.com) — iOS PWA에서 외부 스크립트 로드 실패 방지
+            // NetworkFirst: 항상 최신 SDK를 우선 시도, 네트워크 실패 시 캐시 폴백
+            urlPattern: /^https:\/\/dapi\.kakao\.com\//,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'kakao-maps-sdk',
+              networkTimeoutSeconds: 10,
+              expiration: {
+                maxEntries: 5,
+                maxAgeSeconds: 60 * 60 * 24 * 3, // 3일
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+        ],
       },
       manifest: {
         name: 'DayPoo - 데이푸',
