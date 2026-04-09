@@ -6,6 +6,7 @@ import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
 import { WaveDivider } from '../components/WaveDivider';
 import { api } from '../services/apiClient';
+import { useIsTouchDevice } from '../hooks/useIsTouchDevice';
 import {
   Search,
   ChevronDown,
@@ -172,6 +173,7 @@ function TrendyFaqItem({
   isOpen: boolean;
   onToggle: () => void;
 }) {
+  const isTouch = useIsTouchDevice();
   return (
     <motion.div
       variants={listItemVariants}
@@ -185,7 +187,7 @@ function TrendyFaqItem({
             animate={{ opacity: 1, scale: 1.02 }}
             exit={{ opacity: 0, scale: 0.95 }}
             className="absolute -inset-1 bg-gradient-to-r from-[#52B788]/20 via-[#E8A838]/10 to-[#52B788]/20 blur-xl rounded-[32px] z-0"
-            transition={window.matchMedia("(hover: none)").matches ? { duration: 0 } : { duration: 1.5, repeat: Infinity, repeatType: 'reverse' }}
+            transition={{ duration: 1.5, repeat: Infinity, repeatType: 'reverse' }}
           />
         )}
       </AnimatePresence>

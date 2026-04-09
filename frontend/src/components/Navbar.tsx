@@ -210,8 +210,8 @@ export function Navbar({ openAuth }: { openAuth: (mode: 'login' | 'signup') => v
           {/* 알림 벨 (로그인 상태에서만 표시) */}
           {isAuthenticated && (
             <m.button
-              whileHover={window.matchMedia("(hover: hover)").matches ? { scale: 1.1 } : {}}
-              whileTap={window.matchMedia("(hover: hover)").matches ? { scale: 0.9 } : {}}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
               onClick={() => setNotifOpen(!notifOpen)}
               className="relative p-2 rounded-full transition-colors hover:bg-white/10 hidden md:flex items-center justify-center text-white/60"
               aria-label={unreadCount > 0 ? `알림 (읽지 않은 알림 ${unreadCount}개)` : '알림'}

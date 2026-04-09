@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import WaveButtonComponent from '../components/WaveButton';
 import { GridFlipReveal } from '../components/GridFlipReveal';
+import { useIsTouchDevice } from '../hooks/useIsTouchDevice';
 
 // ── 타입 ──────────────────────────────────────────────────────────────
 type TabKey = 'total' | 'local' | 'health';
@@ -44,6 +45,7 @@ const EFFECT_AURA_COLORS: Record<string, string> = {
 };
 
 function RankAvatarEffect({ emoji, size = 96 }: { emoji: string; size?: number }) {
+  const isTouch = useIsTouchDevice();
   const particles = Array.from({ length: 4 }, (_, i) => i);
   const auraColor = EFFECT_AURA_COLORS[emoji] || 'rgba(250, 204, 21, 0.4)';
   const auraSize = size + 20;
@@ -60,8 +62,8 @@ function RankAvatarEffect({ emoji, size = 96 }: { emoji: string; size?: number }
           marginTop: -auraSize / 2,
           background: `radial-gradient(circle, ${auraColor} 0%, transparent 70%)`,
         }}
-        animate={window.matchMedia("(hover: none)").matches ? { opacity: 0.6, scale: 1.05 } : { scale: [1, 1.12, 1], opacity: [0.5, 0.9, 0.5] }}
-        transition={window.matchMedia("(hover: none)").matches ? { duration: 0 } : { duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+        animate={{ scale: [1, 1.12, 1], opacity: [0.5, 0.9, 0.5] }}
+        transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
       />
       {particles.map((i) => {
         const angle = (i / 4) * 360;
@@ -89,6 +91,7 @@ function RankAvatarEffect({ emoji, size = 96 }: { emoji: string; size?: number }
 
 // ── 애니메이션 보더 ───────────────────────────────────────────────────
 function ConicGlow({ color, thickness = 1.5, borderRadius = '16px' }: { color: string; thickness?: number; borderRadius?: string }) {
+  const isTouch = useIsTouchDevice();
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ borderRadius }}>
       <motion.div
@@ -97,8 +100,8 @@ function ConicGlow({ color, thickness = 1.5, borderRadius = '16px' }: { color: s
           inset: '-200%',
           background: `conic-gradient(from 0deg, transparent 0%, ${color} 15%, transparent 30%, transparent 50%, ${color} 65%, transparent 80%, transparent 100%)`,
         }}
-        animate={window.matchMedia("(hover: none)").matches ? { rotate: 0 } : { rotate: 360 }}
-        transition={window.matchMedia("(hover: none)").matches ? { duration: 0 } : { duration: 4, repeat: Infinity, ease: "linear" }}
+        animate={{ rotate: 360 }}
+        transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
       />
     </div>
   );
@@ -504,6 +507,7 @@ function Podium({ users, onSelect }: { users: RankUser[]; onSelect: (u: RankUser
 function RankItem({
   user, index, onSelect,
 }: { user: RankUser; index: number; onSelect: (u: RankUser) => void }) {
+  const isTouch = useIsTouchDevice();
   const rankColor = user.rank === 1 ? '#E8A838' : user.rank === 2 ? '#B0B8B4' : user.rank === 3 ? '#CD7C4A' : 'rgba(27,67,50,0.08)';
   const isTop3 = user.rank <= 3;
 
@@ -513,7 +517,7 @@ function RankItem({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.04 }}
       onClick={() => onSelect(user)}
-      whileHover={window.matchMedia("(hover: hover)").matches ? { x: 4, scale: isTop3 ? 1.01 : 1 } : {}}
+      whileHover={{ x: 4, scale: isTop3 ? 1.01 : 1 }}
       className="relative flex items-center gap-4 px-5 py-4.5 rounded-2xl cursor-pointer transition-all"
       style={{
         background: '#FFFFFF',
