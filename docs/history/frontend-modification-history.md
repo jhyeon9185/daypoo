@@ -1,5 +1,35 @@
 # Frontend Modification History
 
+## [2026-04-09 14:30:00] iOS 더블탭 근본 해결 + FAQ 크래시 방어 + SW 캐시 강제갱신
+
+**작업 내용:**
+
+- **CSS `:hover` 근본 해결 (더블탭 원인 제거):**
+  - `index.css`의 `.nav-link:hover::after` 규칙을 `@media (hover: hover) and (pointer: fine)` 미디어 쿼리로 감싸, 터치 전용 기기에서 CSS 호버 규칙이 아예 적용되지 않도록 처리
+  - 전역 인터랙티브 요소에 `-webkit-tap-highlight-color: transparent` 추가하여 iOS 탭 하이라이트 제거
+  - Navbar 모바일 드로어 메뉴의 모든 버튼에서 `hover:` Tailwind 클래스를 `active:`로 교체하여 터치 기기에서 첫 탭이 가로채이지 않도록 처리
+  - `transition-all` 제거로 iOS가 트랜지션 대상 요소를 호버 감지 대상으로 오인하는 문제도 동시 해결
+- **`useIsTouchDevice` 완전 재작성 (FAQ 크래시 방어):**
+  - `window.matchMedia()` 호출을 완전히 제거하고, `ontouchstart in window` + `navigator.maxTouchPoints`만 사용
+  - 모든 API 호출을 `try-catch`로 보호하여 iOS Safari 특정 버전에서의 예외를 원천 차단
+  - 결과를 모듈 레벨에서 캐싱하여 반복 호출 비용 제거
+  - React Hook이 아닌 **순수 함수**로 전환하여 Hook 규칙 관련 잠재적 문제 제거
+- **SupportPage 불필요 코드 제거:** 사용하지 않는 `useIsTouchDevice` import 및 `isTouch` 변수 제거로 잠재적 에러 원인 완전 소거
+- **RankingPage 동일 정리:** 미사용 `isTouch` 변수 3곳 제거, `whileHover`는 `isTouchDevice()` 조건부 `undefined` 처리
+- **서비스워커 강제 업데이트:** `main.tsx`에서 앱 시작 시 등록된 SW를 강제 `update()` 호출하여 iOS 캐시 문제 해결
+
+**수정된 파일:**
+
+- `frontend/src/hooks/useIsTouchDevice.ts` (완전 재작성)
+- `frontend/src/index.css` (hover 미디어 쿼리 + 탭 하이라이트)
+- `frontend/src/main.tsx` (SW 강제 업데이트)
+- `frontend/src/components/Navbar.tsx` (드로어 hover→active, 순수 함수 전환)
+- `frontend/src/components/AnimatedUnderlink.tsx` (기존 유지 — isTouchDevice 순수 함수 사용 중)
+- `frontend/src/pages/SupportPage.tsx` (불필요 import/변수 제거)
+- `frontend/src/pages/RankingPage.tsx` (미사용 변수 제거, whileHover 조건부)
+
+**결과/영향:** CSS 레벨에서 hover를 완전히 격리하여 iOS 더블탭 근본 원인 제거. matchMedia 제거로 FAQ 크래시 원인 소거. SW 강제 갱신으로 캐시된 구버전 코드 문제 해결.
+
 ## [2026-04-09 12:53:00] iOS PWA 모바일 기기 크래시(FAQ 에러), 내비바 더블 탭 및 위치 권한 마비 버그 긴급 해결
 
 **작업 내용:**
