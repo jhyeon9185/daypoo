@@ -30,9 +30,9 @@ import {
 
 // ── 타입 ──────────────────────────────────────────────────────────────
 type SupportTab = 'faq' | 'inquiry' | 'myinquiry';
-type FaqCategory = '전체' | '건강/AI분석' | '이용방법' | '결제/아바타' | '계정/보안';
+type FaqCategory = '전체' | '배변 패턴/AI분석' | '이용방법' | '결제/아바타' | '계정/보안';
 type InquiryStatus = '답변 대기' | '답변 완료';
-type InquiryCategory = '결제/아이템 문의' | '건강 분석 오류' | '기타';
+type InquiryCategory = '결제/아이템 문의' | '배변 패턴 분석 오류' | '기타';
 
 interface FaqItem {
   id: string;
@@ -57,16 +57,16 @@ const FALLBACK_FAQ: FaqItem[] = [
   {
     id: 'f1',
     num: '01',
-    category: '건강/AI분석',
-    q: 'AI 건강 분석 결과는 의학적으로 정확한가요?',
+    category: '배변 패턴/AI분석',
+    q: 'AI 배변 패턴 분석 결과는 의학적으로 정확한가요?',
     a: '본 서비스의 AI 분석은 사용자가 입력한 데이터를 바탕으로 한 일반적인 가이드일 뿐, 전문적인 의학적 진단을 대신할 수 없습니다.',
   },
   {
     id: 'f2',
     num: '02',
-    category: '건강/AI분석',
+    category: '배변 패턴/AI분석',
     q: '브리스톨 척도란 무엇인가요?',
-    a: '브리스톨 척도는 대변의 형태를 7가지 유형으로 분류한 기준입니다. Day.Poo는 이를 기반으로 장 건강을 시각화합니다.',
+    a: '브리스톨 척도는 대변의 형태를 7가지 유형으로 분류한 기준입니다. Day.Poo는 이를 기반으로 배변 패턴을 시각화합니다.',
   },
   {
     id: 'f3',
@@ -98,7 +98,13 @@ const FALLBACK_FAQ: FaqItem[] = [
   },
 ];
 
-const CATEGORIES: FaqCategory[] = ['전체', '건강/AI분석', '이용방법', '결제/아바타', '계정/보안'];
+const CATEGORIES: FaqCategory[] = [
+  '전체',
+  '배변 패턴/AI분석',
+  '이용방법',
+  '결제/아바타',
+  '계정/보안',
+];
 
 // ── 애니메이션 베리언츠 ───────────────────────────────────────
 const cardVariants = {
@@ -173,10 +179,7 @@ function TrendyFaqItem({
   onToggle: () => void;
 }) {
   return (
-    <motion.div
-      variants={listItemVariants}
-      className="group relative mb-4"
-    >
+    <motion.div variants={listItemVariants} className="group relative mb-4">
       {/* Open 상태 글로우 (기존 유지) */}
       <AnimatePresence>
         {isOpen && (
@@ -192,7 +195,9 @@ function TrendyFaqItem({
 
       <div
         className={`relative z-10 bg-white rounded-[26px] border overflow-hidden transition-all duration-200 hover:scale-[1.01] hover:shadow-xl ${
-          isOpen ? 'border-[#52B788]/40 shadow-[0_10px_40px_rgba(27,67,50,0.1)]' : 'border-black/[0.04] shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:border-[#52B788]/20'
+          isOpen
+            ? 'border-[#52B788]/40 shadow-[0_10px_40px_rgba(27,67,50,0.1)]'
+            : 'border-black/[0.04] shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:border-[#52B788]/20'
         }`}
       >
         <button
@@ -263,7 +268,7 @@ function ModernInquiryForm({ onSuccess }: { onSuccess: () => void }) {
     }
   };
 
-  const CATEGORY_OPTIONS: InquiryCategory[] = ['결제/아이템 문의', '건강 분석 오류', '기타'];
+  const CATEGORY_OPTIONS: InquiryCategory[] = ['결제/아이템 문의', '배변 패턴 분석 오류', '기타'];
 
   return (
     <motion.div
@@ -565,7 +570,7 @@ function EditInquiryForm({
     }
   };
 
-  const CATEGORY_OPTIONS: InquiryCategory[] = ['결제/아이템 문의', '건강 분석 오류', '기타'];
+  const CATEGORY_OPTIONS: InquiryCategory[] = ['결제/아이템 문의', '배변 패턴 분석 오류', '기타'];
 
   return (
     <form onSubmit={submit} className="space-y-8">
@@ -715,7 +720,7 @@ export function SupportPage({
           >
             <div className="overflow-hidden py-2">
               <motion.span
-                initial={{ y: "100%" }}
+                initial={{ y: '100%' }}
                 animate={{ y: 0 }}
                 transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                 className="block"
@@ -725,7 +730,7 @@ export function SupportPage({
             </div>
             <div className="overflow-hidden py-2 -mt-2">
               <motion.span
-                initial={{ y: "100%" }}
+                initial={{ y: '100%' }}
                 animate={{ y: 0 }}
                 transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
                 className="block text-transparent bg-clip-text bg-[length:300%_auto] bg-gradient-to-r from-[#1B4332] via-[#E8A838] to-[#52B788] animate-text-shimmer"

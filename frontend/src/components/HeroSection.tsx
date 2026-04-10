@@ -10,7 +10,17 @@ import { WaveDivider } from './WaveDivider';
 import { useToilets } from '../hooks/useToilets';
 
 // Premium Rolling Counter Component
-function RollingCounter({ value, duration = 2, delay = 0, suffix = "" }: { value: number, duration?: number, delay?: number, suffix?: string }) {
+function RollingCounter({
+  value,
+  duration = 2,
+  delay = 0,
+  suffix = '',
+}: {
+  value: number;
+  duration?: number;
+  delay?: number;
+  suffix?: string;
+}) {
   const [displayValue, setDisplayValue] = useState(0);
   const nodeRef = useRef<HTMLSpanElement>(null);
 
@@ -19,17 +29,18 @@ function RollingCounter({ value, duration = 2, delay = 0, suffix = "" }: { value
       const controls = animate(0, value, {
         duration,
         ease: [0.16, 1, 0.3, 1], // Custom cubic-bezier for a "Framer" feel
-        onUpdate: (latest) => setDisplayValue(Math.floor(latest))
+        onUpdate: (latest) => setDisplayValue(Math.floor(latest)),
       });
       return () => controls.stop();
     }, delay * 1000);
-    
+
     return () => clearTimeout(timeout);
   }, [value, duration, delay]);
 
   return (
     <span ref={nodeRef} className="tabular-nums">
-      {displayValue.toLocaleString()}{suffix}
+      {displayValue.toLocaleString()}
+      {suffix}
     </span>
   );
 }
@@ -93,7 +104,7 @@ export function HeroSection({ onCtaClick, openAuth }: HeroSectionProps) {
   useEffect(() => {
     // We removed the automatic geolocation prompt from here to avoid double-pops
     // The LocationConsentBanner now handles the first intent.
-    
+
     // Default location to Seoul while waiting
     setUserLocation({ lat: 37.5666, lng: 126.9784 });
     setLocationName('서울시 중구');
@@ -110,12 +121,14 @@ export function HeroSection({ onCtaClick, openAuth }: HeroSectionProps) {
 
   const [messageIndex, setMessageIndex] = useState(0);
   const messages = [
-    toiletsLoading ? '데이터 동기화 중...' : `근처에서 가장 청결한 ${toilets.length}개의 화장실 발견`,
+    toiletsLoading
+      ? '데이터 동기화 중...'
+      : `근처에서 가장 청결한 ${toilets.length}개의 화장실 발견`,
     'AI가 분석한 오늘의 최적 쾌변 장소 추천',
     '실시간으로 업데이트되는 깨끗한 한 칸 찾기',
     '지금 내 주변 평점 높은 화장실 리스트',
     '급할 때 가장 빠르게 가는 비밀 장소 공개',
-    '데이터로 확인하는 안심 화장실 네트워크'
+    '데이터로 확인하는 안심 화장실 네트워크',
   ];
 
   useEffect(() => {
@@ -130,7 +143,13 @@ export function HeroSection({ onCtaClick, openAuth }: HeroSectionProps) {
       <section className="relative min-h-screen flex items-center justify-center bg-[#111E18] overflow-hidden px-4 sm:px-8 pt-24 pb-16 sm:pt-32 sm:pb-32">
         {/* Deep Ambient Background — mobile uses simple gradient, desktop keeps blur */}
         {isMobile ? (
-          <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, rgba(16,185,129,0.06) 0%, transparent 70%)' }} />
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                'radial-gradient(ellipse at center, rgba(16,185,129,0.06) 0%, transparent 70%)',
+            }}
+          />
         ) : (
           <div className="absolute inset-0 opacity-[0.2] pointer-events-none">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-emerald-500/10 blur-[180px] rounded-full" />
@@ -161,8 +180,9 @@ export function HeroSection({ onCtaClick, openAuth }: HeroSectionProps) {
               </h1>
 
               <p className="text-base sm:text-lg text-slate-400 font-medium leading-relaxed max-w-lg">
-                단순한 지도가 아닙니다. 사용자의 기록과 AI 분석이 결합된 <br className="hidden md:block" />
-                프리미엄 라이프스타일 헬스케어 시스템.
+                단순한 지도가 아닙니다. 사용자의 기록과 AI 분석이 결합된{' '}
+                <br className="hidden md:block" />
+                프리미엄 라이프 케어 시스템.
               </p>
             </m.div>
 
@@ -175,7 +195,11 @@ export function HeroSection({ onCtaClick, openAuth }: HeroSectionProps) {
               <WaveButton onClick={onCtaClick} variant="primary" className="px-8 py-4 text-[15px]">
                 가까운 화장실 찾기
               </WaveButton>
-              <WaveButton onClick={onRecordClick} variant="accent" className="px-8 py-4 text-[15px] shadow-lg shadow-amber-500/20">
+              <WaveButton
+                onClick={onRecordClick}
+                variant="accent"
+                className="px-8 py-4 text-[15px] shadow-lg shadow-amber-500/20"
+              >
                 기록하러 가기
               </WaveButton>
             </m.div>
@@ -213,10 +237,12 @@ export function HeroSection({ onCtaClick, openAuth }: HeroSectionProps) {
                 <div className="hidden md:block space-y-5">
                   <div className="flex justify-between items-center text-[10px] uppercase font-black tracking-widest">
                     <span className="text-slate-500 flex items-center gap-2">
-                      <Activity size={12} className="text-emerald-500" /> 실시간 AI 데이터 분석 파이프라인
+                      <Activity size={12} className="text-emerald-500" /> 실시간 AI 데이터 분석
+                      파이프라인
                     </span>
                     <span className="text-emerald-400 animate-pulse flex items-center gap-1.5 bg-emerald-500/10 px-2 py-1 rounded-md">
-                      <span className="w-1 h-1 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" /> LIVE
+                      <span className="w-1 h-1 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />{' '}
+                      LIVE
                     </span>
                   </div>
 
@@ -227,7 +253,8 @@ export function HeroSection({ onCtaClick, openAuth }: HeroSectionProps) {
                     <div
                       className="absolute inset-0 opacity-[0.03] pointer-events-none"
                       style={{
-                        backgroundImage: 'radial-gradient(circle, #34d399 1.5px, transparent 1.5px)',
+                        backgroundImage:
+                          'radial-gradient(circle, #34d399 1.5px, transparent 1.5px)',
                         backgroundSize: '24px 24px',
                       }}
                     />
@@ -239,7 +266,8 @@ export function HeroSection({ onCtaClick, openAuth }: HeroSectionProps) {
                         className="absolute left-0 right-0 h-[1.5px]"
                         style={{
                           top: `${y}%`,
-                          background: 'linear-gradient(to right, transparent, rgba(52,211,153,0.1), transparent)',
+                          background:
+                            'linear-gradient(to right, transparent, rgba(52,211,153,0.1), transparent)',
                         }}
                       />
                     ))}
@@ -269,7 +297,7 @@ export function HeroSection({ onCtaClick, openAuth }: HeroSectionProps) {
                           background: '#34d399',
                           willChange: 'left, opacity',
                         }}
-                        animate={{ 
+                        animate={{
                           left: ['0%', '100%'],
                           opacity: [0, 1, 1, 0],
                         }}
@@ -312,7 +340,13 @@ export function HeroSection({ onCtaClick, openAuth }: HeroSectionProps) {
                 <div className="flex-1 space-y-1 min-w-0">
                   <div className="text-sm font-black text-white flex items-center gap-2">
                     {locationName}
-                    <m.span animate={{ opacity: [0, 1, 0] }} transition={{ duration: 2, repeat: Infinity }} className="text-emerald-400 text-[10px]">CURRENT</m.span>
+                    <m.span
+                      animate={{ opacity: [0, 1, 0] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="text-emerald-400 text-[10px]"
+                    >
+                      CURRENT
+                    </m.span>
                   </div>
                   <div className="relative min-h-[1.5rem] flex items-center overflow-hidden">
                     <AnimatePresence mode="wait">
@@ -347,13 +381,23 @@ export function HeroSection({ onCtaClick, openAuth }: HeroSectionProps) {
         <WaveDivider fill="#F8FAF9" />
       </section>
 
-      <section id="steps-section" className="relative pt-12 sm:pt-20 pb-20 sm:pb-32 px-4 sm:px-6 overflow-hidden bg-[#F8FAF9]">
+      <section
+        id="steps-section"
+        className="relative pt-12 sm:pt-20 pb-20 sm:pb-32 px-4 sm:px-6 overflow-hidden bg-[#F8FAF9]"
+      >
         <div className="max-w-5xl mx-auto mb-12">
-          <m.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
-            <p className="text-xs font-black uppercase tracking-[0.2em] mb-4 text-emerald-600">HOW IT WORKS</p>
+          <m.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <p className="text-xs font-black uppercase tracking-[0.2em] mb-4 text-emerald-600">
+              HOW IT WORKS
+            </p>
             <h2 className="text-3xl sm:text-4xl md:text-6xl font-black text-slate-900 tracking-tight leading-tight">
               3단계로 끝나는 <br />
-              <span className="text-emerald-600">스마트 헬스케어</span>
+              <span className="text-emerald-600">스마트 라이프</span>
             </h2>
           </m.div>
           <TimelineSteps openAuth={openAuth} />

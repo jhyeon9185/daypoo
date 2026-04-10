@@ -30,7 +30,7 @@ const PLANS = [
       { text: '데일리 한 줄 평 분석', ok: true },
       { text: '인근 화장실 정보 조회', ok: true },
       { text: '7일 정밀 분석 리포트', ok: false },
-      { text: '30일 건강 추세 분석', ok: false },
+      { text: '30일 배변 패턴 분석', ok: false },
       { text: 'AI 맞춤형 식단 조언', ok: false },
     ],
     accent: '#52b788',
@@ -41,13 +41,13 @@ const PLANS = [
     name: 'PRO',
     price: '4,900원',
     period: '/월',
-    desc: '체계적인 건강 관리를 위한 첫 걸음',
+    desc: '체계적인 생활 습관 관리를 위한 첫 걸음',
     features: [
       { text: '무제한 배변 기록', ok: true },
       { text: '데일리 한 줄 평 분석', ok: true },
       { text: '인근 화장실 정보 조회', ok: true },
       { text: '7일 정밀 분석 리포트', ok: true },
-      { text: '30일 건강 추세 분석', ok: true },
+      { text: '30일 배변 패턴 분석', ok: true },
       { text: 'AI 맞춤형 식단 조언', ok: false },
     ],
     accent: '#E8A838',
@@ -58,13 +58,13 @@ const PLANS = [
     name: 'PREMIUM',
     price: '9,900원',
     period: '/월',
-    desc: 'AI가 완벽하게 케어하는 나의 장 건강',
+    desc: 'AI가 스마트하게 관리하는 나의 배변 습관',
     features: [
       { text: '무제한 배변 기록', ok: true },
       { text: '데일리 한 줄 평 분석', ok: true },
       { text: '인근 화장실 정보 조회', ok: true },
       { text: '7일 정밀 분석 리포트', ok: true },
-      { text: '30일 건강 추세 분석', ok: true },
+      { text: '30일 배변 패턴 분석', ok: true },
       { text: 'AI 맞춤형 식단 조언', ok: true },
     ],
     accent: '#1B4332',
@@ -261,22 +261,26 @@ export function PremiumPage({ openAuth }: { openAuth: (mode: 'login' | 'signup')
           <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
             <div className="flex-1 w-full text-center md:text-left">
               <h3 className="text-lg sm:text-2xl font-black mb-4 flex flex-col md:flex-row items-center md:items-start gap-1 sm:gap-2 leading-tight">
-                <span className="whitespace-nowrap">지금 결제하고 장 건강 관리를</span>
+                <span className="whitespace-nowrap">지금 결제하고 배변 패턴 관리를</span>
                 <span className="whitespace-nowrap flex items-center gap-2">
                   업그레이드 하세요! <Sparkles size={20} className="text-amber-400 shrink-0" />
                 </span>
               </h3>
               <p className="text-emerald-100/70 font-medium mb-0 text-sm sm:text-base flex flex-col items-center md:items-start">
-                <span className="whitespace-nowrap">선택하신 {selectedPlan} 플랜으로 한 달간 모든 혜택을</span>
+                <span className="whitespace-nowrap">
+                  선택하신 {selectedPlan} 플랜으로 한 달간 모든 혜택을
+                </span>
                 <span className="whitespace-nowrap mb-1">누릴 수 있습니다.</span>
-                
+
                 {selectedPlan !== 'BASIC' && (
                   <span className="text-amber-300 font-bold whitespace-nowrap mb-1">
-                    신청 시 {PLANS.find(p => p.id === selectedPlan)?.price}이 결제됩니다.
+                    신청 시 {PLANS.find((p) => p.id === selectedPlan)?.price}이 결제됩니다.
                   </span>
                 )}
-                
-                <span className="whitespace-nowrap opacity-80 mt-1">언제든 해지가 가능하며 첫 결제 시</span>
+
+                <span className="whitespace-nowrap opacity-80 mt-1">
+                  언제든 해지가 가능하며 첫 결제 시
+                </span>
                 <span className="whitespace-nowrap opacity-80">포인트 보너스를 드려요.</span>
               </p>
             </div>
@@ -322,8 +326,12 @@ export function PremiumPage({ openAuth }: { openAuth: (mode: 'login' | 'signup')
         <div className="mt-10 sm:mt-16 text-center space-y-3 sm:space-y-4">
           <p className="text-gray-400 text-[11px] sm:text-xs font-bold leading-relaxed flex flex-col items-center gap-1">
             <span className="whitespace-nowrap">구독은 매월 자동 갱신되며, 언제든지</span>
-            <span className="whitespace-nowrap">마이페이지 설정에서 멤버십을 변경할 수 있습니다.</span>
-            <span className="whitespace-nowrap mt-1 opacity-60 italic">결제와 관련된 문의는 고객센터 1:1 문의하기를 이용해주세요.</span>
+            <span className="whitespace-nowrap">
+              마이페이지 설정에서 멤버십을 변경할 수 있습니다.
+            </span>
+            <span className="whitespace-nowrap mt-1 opacity-60 italic">
+              결제와 관련된 문의는 고객센터 1:1 문의하기를 이용해주세요.
+            </span>
           </p>
           <button
             onClick={() => navigate('/mypage')}

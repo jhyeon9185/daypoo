@@ -30,7 +30,7 @@ export function HeroOption1({ onCtaClick, openAuth }: HeroProps) {
   };
 
   return (
-    <section 
+    <section
       onMouseMove={handleMouseMove}
       className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-[#F8FAF9] px-6 py-20"
     >
@@ -50,19 +50,19 @@ export function HeroOption1({ onCtaClick, openAuth }: HeroProps) {
           <motion.div
             key={i}
             initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ 
-              opacity: [0.1, 0.3, 0.1], 
+            animate={{
+              opacity: [0.1, 0.3, 0.1],
               y: [0, -20, 0],
-              rotate: [0, 45, 0]
+              rotate: [0, 45, 0],
             }}
-            transition={{ 
-              duration: 8 + i, 
-              repeat: Infinity, 
-              delay: i * 0.5 
+            transition={{
+              duration: 8 + i,
+              repeat: Infinity,
+              delay: i * 0.5,
             }}
-            style={{ 
-              left: `${15 + i * 15}%`, 
-              top: `${20 + (i % 3) * 25}%` 
+            style={{
+              left: `${15 + i * 15}%`,
+              top: `${20 + (i % 3) * 25}%`,
             }}
             className="absolute w-32 h-32 rounded-3xl bg-white/20 backdrop-blur-xl border border-white/30 hidden md:block"
           />
@@ -74,7 +74,7 @@ export function HeroOption1({ onCtaClick, openAuth }: HeroProps) {
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
           className="space-y-6"
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 text-emerald-700 text-sm font-bold border border-emerald-100 mb-4">
@@ -88,27 +88,27 @@ export function HeroOption1({ onCtaClick, openAuth }: HeroProps) {
           </h1>
 
           <p className="text-lg md:text-2xl text-slate-600 max-w-2xl mx-auto font-medium leading-relaxed">
-            전국 약 50만 건의 화장실 데이터와 지능형 AI 분석으로 <br className="hidden md:block" />
+            전국 약 5만 건의 화장실 데이터와 지능형 AI 분석으로 <br className="hidden md:block" />
             당신의 건강한 하루를 완벽하게 서포트합니다.
           </p>
         </motion.div>
 
         {/* Floating Feature Cards */}
-        <motion.div 
+        <motion.div
           style={{ x: cardX, y: cardY }}
           className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto"
         >
-          <FeatureCard 
+          <FeatureCard
             icon={<MapPin className="text-emerald-500" />}
             title="스마트 화장실 지도"
             desc="전국 위치 기반 정밀 안내"
           />
-          <FeatureCard 
+          <FeatureCard
             icon={<Activity className="text-amber-500" />}
             title="실시간 위생 모니터링"
             desc="사용자 참여형 데이터 서비스"
           />
-          <FeatureCard 
+          <FeatureCard
             icon={<ShieldCheck className="text-blue-500" />}
             title="AI 개인 건강 분석"
             desc="프라이버시 중심 로컬 연동"
@@ -118,7 +118,7 @@ export function HeroOption1({ onCtaClick, openAuth }: HeroProps) {
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.5, type: "spring" }}
+          transition={{ delay: 0.5, type: 'spring' }}
           className="pt-8"
         >
           <WaveButton onClick={onCtaClick} variant="primary" className="px-12 py-5 text-xl">
@@ -130,9 +130,17 @@ export function HeroOption1({ onCtaClick, openAuth }: HeroProps) {
   );
 }
 
-function FeatureCard({ icon, title, desc }: { icon: React.ReactNode, title: string, desc: string }) {
+function FeatureCard({
+  icon,
+  title,
+  desc,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+}) {
   return (
-    <motion.div 
+    <motion.div
       whileHover={{ y: -8, scale: 1.02 }}
       className="p-6 rounded-3xl bg-white/60 backdrop-blur-2xl border border-white/40 shadow-xl shadow-emerald-900/5 text-left space-y-3"
     >
