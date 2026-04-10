@@ -59,7 +59,7 @@ export interface VisitRecord {
   createdAt: string; // ISO 8601
 }
 
-// ── 건강 기록 타입 (Bristol + 색상 + 태그, 화장실과 optional 연결) ──
+// ── 배변 패턴 기록 타입 (Bristol + 색상 + 태그, 화장실과 optional 연결) ──
 export interface HealthRecord {
   visitRecordId?: number | null; // VisitRecord와의 optional 연결
   toiletId?: string | null; // 화장실 방문 없이도 독립 기록 가능

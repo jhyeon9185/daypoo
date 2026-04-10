@@ -108,7 +108,7 @@ export interface VisitRecordRequest {
 }
 
 /**
- * 건강 기록 생성 요청 (배변 데이터 전용)
+ * 배변 패턴 기록 생성 요청 (배변 데이터 전용)
  * imageBase64: 전송 후 서버에서 즉시 폐기 (In-memory pipeline, DB 미저장)
  */
 export interface HealthRecordRequest {
@@ -121,7 +121,7 @@ export interface HealthRecordRequest {
 }
 
 /**
- * 방문인증 + 건강 기록 통합 생성 요청 (POST /records)
+ * 방문인증 + 배변 패턴 기록 통합 생성 요청 (POST /records)
  * 현재 백엔드 단일 엔드포인트 대응용 — 추후 엔드포인트 분리 시 제거 예정
  */
 export type CreateRecordRequest = VisitRecordRequest & HealthRecordRequest;
